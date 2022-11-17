@@ -1,0 +1,13 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions & Support
+    url: https://github.com/orgs/StanfordBDHG/discussions
+    about: We use GitHub Discussions for any discussions and support

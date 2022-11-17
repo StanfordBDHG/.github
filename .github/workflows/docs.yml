@@ -1,0 +1,89 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Generate DocC Documentation Using the Swift Package Manager
+
+on:
+  workflow_call:
+    inputs:
+      scheme:
+        description: 'Name of the Scheme used to build the documentation'
+        required: false
+        type: string
+        default: ''
+      targetname:
+        description: 'Name of the Swift Package Manager target using DocC'
+        required: true
+        type: string
+      usexcodebuild:
+        description: 'A flag indicating if the DocC documentation should be generated using DocC'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  generate:
+    name: Generate DocC Documentation
+    runs-on: macos-12
+    steps:
+    - uses: actions/checkout@v3
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    - uses: actions/cache@v2
+      if: inputs.usexcodebuild == false
+      with:
+        path: .build
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+    - name: Check Environment
+      run: |
+          xcodebuild -version
+          swift --version
+          echo "inputs.scheme: ${{ inputs.scheme }}"
+          echo "inputs.targetname: ${{ inputs.targetname }}"
+          echo "github.event.repository.name: ${{ github.event.repository.name }}"
+    - name: Generate Documentation
+      if: inputs.usexcodebuild == false
+      run: |
+          swift package --allow-writing-to-directory ./docs \
+            generate-documentation --target ${{ inputs.targetname }} \
+            --disable-indexing \
+            --transform-for-static-hosting \
+            --hosting-base-path ${{ github.event.repository.name }} \
+            --output-path ./docs
+    - name: Generate Documentation Using Xcodebuild
+      if: inputs.usexcodebuild
+      run: |
+          INPUT_SCHEME=${{ inputs.scheme }}
+          SCHEME=${INPUT_SCHEME:-"${{ inputs.targetname }}-Package"}
+          xcodebuild docbuild \
+            -scheme $SCHEME \
+            -sdk iphonesimulator \
+            -destination "name=iPhone 14 Pro Max" \
+            -derivedDataPath .xcodebuild/ \
+            CODE_SIGNING_ALLOWED="NO"
+          xcrun docc process-archive \
+            transform-for-static-hosting .xcodebuild/Build/Products/Debug-iphonesimulator/${{ inputs.targetname }}.doccarchive \
+            --hosting-base-path ${{ github.event.repository.name }} \
+            --output-path ./docs
+    - uses: actions/upload-pages-artifact@v1
+      with:
+        path: ./docs
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: generate
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1

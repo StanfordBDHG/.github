@@ -1,0 +1,72 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Swift Package Update
+
+on:
+  workflow_call:
+    inputs:
+      author:
+        description: 'The author of the resulting PR containing the updated Swift package'
+        required: false
+        type: string
+        default: PaulsAutomationBot
+      reviewers:
+        description: 'The reviewers of the resulting pull request containing the updated Swift package'
+        required: false
+        type: string
+        default: PSchmiedmayer
+      branch:
+        description: 'The branch that should be used to create the pull request'
+        required: false
+        type: string
+        default: bots/update-dependencies
+    secrets:
+      token:
+        description: 'The Personal Access Token with permissions to push to the repository. Unfortunately, the GITHUB_TOKEN does not trigger GitHub Actions in the resulting pull request.'
+        required: true
+  
+jobs:
+  createPR:
+    name: Create Pull Request
+    container:
+      image: swift:focal
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Check Environment
+      run: |
+          swift --version
+          echo "inputs.author: ${{ inputs.author }}"
+          echo "inputs.reviewers: ${{ inputs.reviewers }}"
+          echo "inputs.branch: ${{ inputs.branch }}"
+    - name: Update Swift Packages
+      run: swift package update
+    - name: Add Safe Directory
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+    - uses: peter-evans/create-pull-request@v4
+      id: cpr
+      with:
+        token: ${{ secrets.token }}
+        commit-message: Update dependencies
+        title: Update Dependencies
+        body: Update the Swift Package Manager dependencies.
+        delete-branch: true
+        base: develop
+        branch: bots/update-dependencies
+        assignees: ${{ inputs.author }}
+        committer: ${{ inputs.author }} <${{ inputs.author }}@users.noreply.github.com>
+        author: ${{ inputs.author }} <${{ inputs.author }}@users.noreply.github.com>
+        reviewers: ${{ inputs.reviewers }}
+    - name: Enable Pull Request Automerge
+      if: steps.cpr.outputs.pull-request-operation == 'created'
+      uses: peter-evans/enable-pull-request-automerge@v2
+      with:
+        token: ${{ secrets.token }}
+        pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+        merge-method: squash

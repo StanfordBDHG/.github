@@ -1,0 +1,47 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: 🏎 Minor feature request
+description: Suggest an improvement for this project
+title: "🏎 Minor feature request: Remove this title with a descriptive title."
+labels: ["enhancement", "minor version bump"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to share the minor feature request!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Please provide a description of the problem the feature will address.
+      placeholder: A description of the problem the feature will address.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution
+      description: Please provide a clear and concise description of the feature and how it should work.
+      placeholder: A clear and concise description of the feature and how it should work.
+    validations:
+      required: true
+  - type: textarea
+    id: additionalcontext
+    attributes:
+      label: Additional context
+      description: Please provide any additional context that might be relevant for your feature report.
+      placeholder: Any additional context that might be relevant for your feature report.
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/StanfordBDHG/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/StanfordBDHG/.github/blob/main/CONTRIBUTING.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct and Contributing Guidelines
+          required: true

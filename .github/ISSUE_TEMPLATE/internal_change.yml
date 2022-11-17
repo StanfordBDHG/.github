@@ -1,0 +1,47 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: 💾 Internal change
+description: Suggest an internal improvement for this project
+title: "💾 Internal change: Remove this title with a descriptive title."
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest an internal improvement for this project!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Please provide a description of the problem the improvement will address.
+      placeholder: A description of the problem the improvement will address.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution
+      description: Please provide a clear and concise description of the improvement and how it should work.
+      placeholder: A clear and concise description of the improvement and how it should work.
+    validations:
+      required: true
+  - type: textarea
+    id: additionalcontext
+    attributes:
+      label: Additional context
+      description: Please provide any additional context that might be relevant for your improvement.
+      placeholder: Any additional context that might be relevant for your improvement.
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/StanfordBDHG/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/StanfordBDHG/.github/blob/main/CONTRIBUTING.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct and Contributing Guidelines
+          required: true

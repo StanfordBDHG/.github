@@ -1,0 +1,61 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Build and Test iOS Application Xcodebuild 
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: 'The path where the Swift Package is located. Defaults to $GITHUB_WORKSPACE'
+        required: false
+        type: string
+        default: '.'
+      xcodeprojname:
+        description: 'The name of the Xcode project used to build the iOS application'
+        required: true
+        type: string
+      scheme:
+        description: 'The scheme in the Xcode project'
+        required: true
+        type: string
+
+jobs:
+  build_and_test:
+    name: Build and Test iOS Application
+    runs-on: macos-12
+    defaults:
+      run:
+        working-directory: ${{ inputs.path }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    - name: Check Environment
+      run: |
+          xcodebuild -version
+          swift --version
+          echo "inputs.xcodeprojname: ${{ inputs.xcodeprojname }}"
+          echo "inputs.scheme: ${{ inputs.scheme }}"
+    - name: Build and Test Example App
+      run: |
+          xcodebuild test \
+            -project ${{ inputs.xcodeprojname }} \
+            -scheme ${{ inputs.scheme }} \
+            -destination 'name=iPhone 14 Pro Max' \
+            -enableCodeCoverage YES \
+            -resultBundlePath ${{ inputs.scheme }}.xcresult \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
+    - name: Upload Artifact
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.scheme }}.xcresult
+        path: ${{ inputs.scheme }}.xcresult

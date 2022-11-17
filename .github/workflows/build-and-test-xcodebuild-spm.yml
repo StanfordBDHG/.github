@@ -1,0 +1,56 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Build and Test Swift Package using Xcodebuild
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: 'The path where the Swift Package is located. Defaults to $GITHUB_WORKSPACE'
+        required: false
+        type: string
+        default: '.'
+      scheme:
+        description: 'Name of the Scheme used to build the Swift Package'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  build_and_test:
+    name: Build and Test Swift Package
+    runs-on: macos-12
+    defaults:
+      run:
+        working-directory: ${{ inputs.path }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    - name: Check Environment
+      run: |
+          xcodebuild -version
+          swift --version
+          echo "inputs.path: ${{ inputs.path }}"
+          echo "inputs.scheme: ${{ inputs.scheme }}"
+    - name: Build and Test
+      run: |
+          xcodebuild test \
+            -scheme ${{ inputs.scheme }} \
+            -sdk iphonesimulator \
+            -destination "name=iPhone 14 Pro Max" \
+            -enableCodeCoverage YES \
+            -resultBundlePath ${{ inputs.scheme }}.xcresult \
+            CODE_SIGNING_ALLOWED="NO"
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.scheme }}.xcresult
+        path: ${{ inputs.scheme }}.xcresult

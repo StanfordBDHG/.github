@@ -1,0 +1,22 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: REUSE Compliance Check
+
+on:
+  pull_request:
+  workflow_call:
+
+jobs:
+  reuse:
+    name: REUSE Compliance Check
+    runs-on: ubuntu-latest
+    steps: 
+    - uses: actions/checkout@v3
+    - name: REUSE Compliance Check
+      uses: fsfe/reuse-action@v1

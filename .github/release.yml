@@ -1,0 +1,23 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+changelog:
+  exclude:
+    authors:
+      - PaulsAutomationBot
+  categories:
+    - title: Semantic Version Major
+      labels:
+        - major version bump
+    - title: Semantic Version Minor
+      labels:
+        - bug
+        - enhancement
+    - title: Other Changes
+      labels:
+        - "*"
