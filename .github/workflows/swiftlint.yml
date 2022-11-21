@@ -22,5 +22,5 @@ jobs:
       - name: SwiftLint
         uses: sinoru/actions-swiftlint@v6
         with:
-          swiftlint-version: '0.50.0-rc.2'
+          swiftlint-version: '0.50.0'
           swiftlint-args: --strict
