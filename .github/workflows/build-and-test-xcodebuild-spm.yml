@@ -40,6 +40,9 @@ jobs:
           swift --version
           echo "inputs.path: ${{ inputs.path }}"
           echo "inputs.scheme: ${{ inputs.scheme }}"
+    - name: Resolve Dependencies
+      run: |
+          xcodebuild -resolvePackageDependencies
     - name: Build and Test
       run: |
           xcodebuild test \
