@@ -42,8 +42,11 @@ jobs:
           echo "inputs.scheme: ${{ inputs.scheme }}"
     - name: Build and Test
       run: |
+          xcodebuild -resolvePackageDependencies
+            -scheme ${{ inputs.scheme }} \
+            -sdk iphonesimulator \
+            -destination "name=iPhone 14 Pro Max"
           xcodebuild test \
-            -resolvePackageDependencies
             -scheme ${{ inputs.scheme }} \
             -sdk iphonesimulator \
             -destination "name=iPhone 14 Pro Max" \
