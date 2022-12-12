@@ -43,6 +43,7 @@ jobs:
     - name: Build and Test
       run: |
           xcodebuild test \
+            -resolvePackageDependencies
             -scheme ${{ inputs.scheme }} \
             -sdk iphonesimulator \
             -destination "name=iPhone 14 Pro Max" \
