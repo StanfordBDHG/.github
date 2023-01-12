@@ -1,0 +1,67 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+title: "[Ideas] "
+labels: ["Ideas"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to share your improvement idea!
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use Case
+      description: Please provide a description of the use case or context in which the feature will be used.
+      placeholder: A clear and concise description of the use case or context in which the feature will be used.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Please provide a description of the problem the feature will address.
+      placeholder: A description of the problem the feature will address.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution
+      description: Please provide a clear and concise description of the feature and how it should work.
+      placeholder: A clear and concise description of the feature and how it should work.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: |
+        Please provide a clear and concise description of any alternative solutions or features you've considered. 
+        
+        Is there already software that has the behavior you're interested in? What is it, and how does it work?
+      placeholder: |
+        A clear and concise description of any alternative solutions or features you've considered. 
+        
+        Is there already software that has the behavior you're interested in? What is it, and how does it work?
+    validations:
+      required: true
+  - type: textarea
+    id: additionalcontext
+    attributes:
+      label: Additional context
+      description: Please provide any additional context that might be relevant for your feature report
+      placeholder: Any additional context that might be relevant for your feature report
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/StanfordBDHG/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/StanfordBDHG/.github/blob/main/CONTRIBUTING.md)
+      options:
+        - label: I agree to follow this projects's Code of Conduct and Contributing Guidelines
+          required: true
