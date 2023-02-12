@@ -34,6 +34,8 @@ jobs:
     - uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: latest-stable
+    - name: Install xcpretty
+      run: gem install xcpretty
     - name: Check Environment
       run: |
           xcodebuild -version
@@ -45,13 +47,15 @@ jobs:
           xcodebuild -resolvePackageDependencies
     - name: Build and Test
       run: |
-          xcodebuild test \
+          set -o pipefail \
+          && xcodebuild test \
             -scheme ${{ inputs.scheme }} \
             -sdk iphonesimulator \
             -destination "name=iPhone 14 Pro Max" \
             -enableCodeCoverage YES \
             -resultBundlePath ${{ inputs.scheme }}.xcresult \
-            CODE_SIGNING_ALLOWED="NO"
+            CODE_SIGNING_ALLOWED="NO" \
+          | xcpretty
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
