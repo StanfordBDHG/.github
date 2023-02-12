@@ -45,6 +45,11 @@ jobs:
           swift --version
           echo "inputs.xcodeprojname: ${{ inputs.xcodeprojname }}"
           echo "inputs.scheme: ${{ inputs.scheme }}"
+    - name: Resolve Dependencies
+      run: |
+          set -o pipefail \
+          $$ xcodebuild -resolvePackageDependencies \
+          | xcpretty
     - name: Build and Test Example App
       run: |
           set -o pipefail \
