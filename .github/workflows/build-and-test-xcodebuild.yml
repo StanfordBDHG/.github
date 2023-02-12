@@ -46,10 +46,7 @@ jobs:
           echo "inputs.xcodeprojname: ${{ inputs.xcodeprojname }}"
           echo "inputs.scheme: ${{ inputs.scheme }}"
     - name: Resolve Dependencies
-      run: |
-          set -o pipefail \
-          $$ xcodebuild -resolvePackageDependencies \
-          | xcpretty
+      run: xcodebuild -resolvePackageDependencies
     - name: Build and Test Example App
       run: |
           set -o pipefail \
