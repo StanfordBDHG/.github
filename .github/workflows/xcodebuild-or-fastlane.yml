@@ -61,6 +61,11 @@ jobs:
     - name: Install xcpretty
       if: ${{ inputs.scheme != '' }}
       run: gem install xcpretty
+    - name: Shutdown and erase iOS simulators
+      if: "contains(inputs.runsonlabels, 'self-hosted')"
+      run: |
+          xcrun simctl shutdown all
+          xcrun simctl erase all
     - name: Install the Apple certificate and provisioning profile
       if: ${{ inputs.setupsigning }}
       env:
