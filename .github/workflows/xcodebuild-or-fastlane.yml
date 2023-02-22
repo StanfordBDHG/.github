@@ -39,7 +39,7 @@ on:
 
 jobs:
   build_and_test:
-    name: Build and Test iOS Application
+    name: Test using xcodebuild or run fastlane
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
     defaults:
       run:
@@ -50,9 +50,7 @@ jobs:
       if: "!contains(inputs.runsonlabels, 'self-hosted')"
       with:
         xcode-version: latest-stable
-    - name: Install xcpretty
-      run: gem install xcpretty
-    - name: Check Environment
+    - name: Check environment
       run: |
           xcodebuild -version
           swift --version
@@ -60,6 +58,9 @@ jobs:
           echo "inputs.runsonlabels: ${{ inputs.runsonlabels }}"
           echo "inputs.scheme: ${{ inputs.scheme }}"
           echo "inputs.setupsigning: ${{ inputs.setupsigning }}"
+    - name: Install xcpretty
+      if: ${{ inputs.scheme != '' }}
+      run: gem install xcpretty
     - name: Install the Apple certificate and provisioning profile
       if: ${{ inputs.setupsigning }}
       env:
@@ -118,7 +119,7 @@ jobs:
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
         APPLE_ID: ${{ secrets.APPLE_ID }}
-    - name: Upload Artifact
+    - name: Upload artifact
       if: always()
       uses: actions/upload-artifact@v3
       with:
