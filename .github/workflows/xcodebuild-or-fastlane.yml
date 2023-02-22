@@ -22,17 +22,27 @@ on:
         type: string
         default: '["macos-12"]'
       scheme:
-        description: 'The scheme in the Xcode project. Either use scheme to use xcodebuild or fastlanelane to use fastlane.'
+        description: 'The scheme in the Xcode project. Either use `scheme` to use xcodebuild, `fastlanelane` to use fastlane, or a custom command using `customcommand`'
         required: false
         type: string
         default: ''
       fastlanelane:
-        description: 'The lane of the fastlane command. Either use scheme to use xcodebuild or fastlanelane to use fastlane.'
+        description: 'The lane of the fastlane command. Either use `scheme` to use xcodebuild, `fastlanelane` to use fastlane, or a custom command using `customcommand`'
+        required: false
+        type: string
+        default: ''
+      customcommand:
+        description: 'A custom command that should be run after the setup. Either use `scheme` to use xcodebuild, `fastlanelane` to use fastlane, or a custom command using `customcommand`'
         required: false
         type: string
         default: ''
       setupsigning:
         description: 'Setup the keychain to include Apple certificate and provisioning profile'
+        required: false
+        type: boolean
+        default: false
+      setupfirebaseemulator:
+        description: 'Setup the Firebase Emulator'
         required: false
         type: boolean
         default: false
@@ -61,6 +71,24 @@ jobs:
     - name: Install xcpretty
       if: ${{ inputs.scheme != '' }}
       run: gem install xcpretty
+    - name: Cache Firebase Emulators
+      if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/firebase/emulators
+        key: ${{ runner.os }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
+    - name: Setup NodeJS
+      if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
+      uses: actions/setup-node@v3
+    - name: Setup Java
+      if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'microsoft'
+        java-version: '17'
+    - name: Install Firebase CLI Tools
+      if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
+      run: npm install -g firebase-tools
     - name: Shutdown and erase iOS simulators
       if: "contains(inputs.runsonlabels, 'self-hosted')"
       run: |
@@ -95,6 +123,9 @@ jobs:
         # apply provisioning profile
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+    - name: Run custom command
+      if: ${{ inputs.customcommand != '' }}
+      run: ${{ inputs.customcommand }}
     - name: Resolve dependencies (xcodebuild)
       if: ${{ inputs.scheme != '' }}
       run: |
