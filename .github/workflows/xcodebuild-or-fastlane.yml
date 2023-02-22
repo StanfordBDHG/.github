@@ -162,7 +162,7 @@ jobs:
         name: ${{ inputs.scheme }}.xcresult
         path: ${{ inputs.scheme }}.xcresult
     - name: Clean up keychain and provisioning profile
-      if: ${{ inputs.setupsigning || failure() }}
+      if: "(inputs.setupsigning && contains(inputs.runsonlabels, 'self-hosted')) || failure()"
       run: |
         security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
         rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
