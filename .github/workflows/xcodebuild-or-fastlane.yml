@@ -69,7 +69,7 @@ jobs:
           echo "inputs.scheme: ${{ inputs.scheme }}"
           echo "inputs.setupsigning: ${{ inputs.setupsigning }}"
     - name: Install xcpretty
-      if: ${{ inputs.scheme != '' }}
+      if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.scheme != ''"
       run: gem install xcpretty
     - name: Cache Firebase Emulators
       if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
