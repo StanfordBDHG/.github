@@ -17,10 +17,10 @@ on:
         type: string
         default: '.'
       runsonlabels:
-        description: 'List of labels indicating which type of github runner should be chosen'
+        description: 'JSON-based collection of labels indicating which type of github runner should be chosen'
         required: false
         type: string
-        default: '[macos-12]'
+        default: '["macos-12"]'
       scheme:
         description: 'The scheme in the Xcode project. Either use scheme to use xcodebuild or fastlanelane to use fastlane.'
         required: false
@@ -40,7 +40,7 @@ on:
 jobs:
   build_and_test:
     name: Build and Test iOS Application
-    runs-on: ${{ inputs.runsonlabels }}
+    runs-on: ${{ fromJson(inputs.runsonlabels) }}
     defaults:
       run:
         working-directory: ${{ inputs.path }}
