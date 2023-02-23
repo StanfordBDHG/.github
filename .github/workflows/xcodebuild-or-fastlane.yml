@@ -89,11 +89,6 @@ jobs:
     - name: Install Firebase CLI Tools
       if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
       run: npm install -g firebase-tools
-    - name: Shutdown and erase iOS simulators
-      if: "contains(inputs.runsonlabels, 'self-hosted')"
-      run: |
-          xcrun simctl shutdown all
-          xcrun simctl erase all
     - name: Install the Apple certificate and provisioning profile
       if: ${{ inputs.setupsigning }}
       env:
