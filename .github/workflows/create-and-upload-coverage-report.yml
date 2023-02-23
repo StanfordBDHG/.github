@@ -6,13 +6,13 @@
 # SPDX-License-Identifier: MIT
 #
 
-name: Create and Upload Coverage Report
+name: Create and upload coverage report
 
 on:
   workflow_call:
     inputs:
       coveragereports:
-        description: 'A string containing all names of the .xcresult files that are downloaded from the artifacts of previous jobs.'
+        description: 'A string containing all names of the .xcresult files that are downloaded from the artifacts of previous jobs separated by a space character.'
         required: true
         type: string
     secrets:
@@ -22,19 +22,24 @@ on:
 
 jobs:
   create-and-upload-coverage-report:
-    name: Create and Upload Coverage Report
+    name: Create and upload coverage report
     runs-on: macos-12
     steps:
     - uses: actions/checkout@v3
     - uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: latest-stable
-    - name: Check Environment
+    - name: Check environment
       run: |
           xcodebuild -version
           swift --version
     - uses: actions/download-artifact@v3
-    - name: Merge Coverage Reports
+    - name: Rename single code coverage report
+      if: "!contains(inputs.coveragereports, ' ')"
+      run: |
+          mv ${{ inputs.coveragereports }} CodeCoverage.xcresult
+    - name: Merge coverage reports
+      if: "contains(inputs.coveragereports, ' ')"
       run: |
           xcrun xcresulttool merge ${{ inputs.coveragereports }} --output-path CodeCoverage.xcresult
           rm -rf ${{ inputs.coveragereports }}
