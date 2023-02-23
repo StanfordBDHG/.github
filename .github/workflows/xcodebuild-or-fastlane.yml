@@ -166,8 +166,8 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ inputs.artifactname }}.xcresult
-        path: ${{ inputs.artifactname }}.xcresult
+        name: ${{ inputs.artifactname }}
+        path: ${{ inputs.artifactname }}
     - name: Clean up keychain and provisioning profile
       if: "(inputs.setupsigning && contains(inputs.runsonlabels, 'self-hosted')) || failure()"
       run: |
