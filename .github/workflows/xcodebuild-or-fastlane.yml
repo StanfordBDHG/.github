@@ -76,6 +76,13 @@ jobs:
     - name: Install xcpretty
       if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.scheme != ''"
       run: gem install xcpretty
+    - name: Cache .derivedData folder
+      uses: actions/cache@v3
+      with:
+        path: .derivedData
+        key: ${{ runner.os }}-derivedData-${{ hashFiles('**/Package.swift', '**/*.pbxproj') }}
+        restore-keys: |
+          ${{ runner.os }}-derivedData-
     - name: Cache Firebase Emulators
       if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
       uses: actions/cache@v3
