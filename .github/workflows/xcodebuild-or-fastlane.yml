@@ -36,6 +36,11 @@ on:
         required: false
         type: string
         default: ''
+      artifactname:
+        description: 'The name & path of the artifact that should be uploaded at the end of the build.'
+        required: false
+        type: string
+        default: ''
       setupsigning:
         description: 'Setup the keychain to include Apple certificate and provisioning profile'
         required: false
@@ -154,8 +159,8 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ inputs.scheme }}.xcresult
-        path: ${{ inputs.scheme }}.xcresult
+        name: ${{ inputs.artifactname }}.xcresult
+        path: ${{ inputs.artifactname }}.xcresult
     - name: Clean up keychain and provisioning profile
       if: "(inputs.setupsigning && contains(inputs.runsonlabels, 'self-hosted')) || failure()"
       run: |
