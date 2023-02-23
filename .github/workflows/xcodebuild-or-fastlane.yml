@@ -46,6 +46,11 @@ on:
         required: false
         type: boolean
         default: false
+      cacheDerivedData:
+        description: 'Cache the derived data folder for a build using xcodebuild'
+        required: false
+        type: boolean
+        default: false
       setupfirebaseemulator:
         description: 'Setup the Firebase Emulator'
         required: false
@@ -77,6 +82,7 @@ jobs:
       if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.scheme != ''"
       run: gem install xcpretty
     - name: Cache .derivedData folder
+      if: "inputs.cacheDerivedData"
       uses: actions/cache@v3
       with:
         path: .derivedData
