@@ -80,15 +80,15 @@ jobs:
       uses: actions/cache@v3
       with:
         path: .derivedData
-        key: ${{ runner.os }}-derivedData-${{ hashFiles('**/Package.swift', '**/*.pbxproj') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-derivedData-${{ hashFiles('**/Package.swift', '**/*.pbxproj') }}
         restore-keys: |
-          ${{ runner.os }}-derivedData-
+          ${{ runner.os }}-${{ runner.arch }}-derivedData-
     - name: Cache Firebase Emulators
       if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
       uses: actions/cache@v3
       with:
         path: ~/.cache/firebase/emulators
-        key: ${{ runner.os }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
     - name: Setup NodeJS
       if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
       uses: actions/setup-node@v3
