@@ -75,15 +75,6 @@ jobs:
           xcodebuild -version
           swift --version
           echo "env.selfhosted: ${{ env.selfhosted }}"
-          echo "inputs.path: ${{ inputs.path }}"
-          echo "inputs.runsonlabels: ${{ inputs.runsonlabels }}"
-          echo "inputs.scheme: ${{ inputs.scheme }}"
-          echo "inputs.fastlanelane: ${{ inputs.fastlanelane }}"
-          echo "inputs.customcommand: ${{ inputs.customcommand }}"
-          echo "inputs.artifactname: ${{ inputs.artifactname }}"
-          echo "inputs.setupsigning: ${{ inputs.setupsigning }}"
-          echo "inputs.cacheDerivedData: ${{ inputs.cacheDerivedData }}"
-          echo "inputs.setupfirebaseemulator: ${{ inputs.setupfirebaseemulator }}"
     - name: Install xcpretty
       if: "!env.selfhosted && inputs.scheme != ''"
       run: gem install xcpretty
