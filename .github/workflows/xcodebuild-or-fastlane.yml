@@ -162,7 +162,7 @@ jobs:
           | xcpretty
     - name: Fastlane
       if: ${{ inputs.fastlanelane != '' }}
-      run: bundler install && bundle exec fastlane ${{ inputs.fastlanelane }}
+      run: fastlane ${{ inputs.fastlanelane }}
       env:
         APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
