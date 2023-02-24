@@ -20,7 +20,7 @@ on:
         description: 'JSON-based collection of labels indicating which type of github runner should be chosen'
         required: false
         type: string
-        default: '["macos-12"]'
+        default: '["macos-latest"]'
       scheme:
         description: 'The scheme in the Xcode project. Either use `scheme` to use xcodebuild, `fastlanelane` to use fastlane, or a custom command using `customcommand`'
         required: false
@@ -67,7 +67,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: maxim-lobanov/setup-xcode@v1
-      if: "!contains(inputs.runsonlabels, 'self-hosted')"
+      if: "!env.action_state"
       with:
         xcode-version: latest-stable
     - name: Check environment
@@ -79,7 +79,7 @@ jobs:
           echo "inputs.scheme: ${{ inputs.scheme }}"
           echo "inputs.setupsigning: ${{ inputs.setupsigning }}"
     - name: Install xcpretty
-      if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.scheme != ''"
+      if: "!env.action_state && inputs.scheme != ''"
       run: gem install xcpretty
     - name: Cache .derivedData folder
       if: "inputs.cacheDerivedData"
@@ -90,22 +90,22 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-${{ runner.arch }}-derivedData-
     - name: Cache Firebase Emulators
-      if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
+      if: "!env.action_state && inputs.setupfirebaseemulator"
       uses: actions/cache@v3
       with:
         path: ~/.cache/firebase/emulators
         key: ${{ runner.os }}-${{ runner.arch }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
     - name: Setup NodeJS
-      if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
+      if: "!env.action_state && inputs.setupfirebaseemulator"
       uses: actions/setup-node@v3
     - name: Setup Java
-      if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
+      if: "!env.action_state && inputs.setupfirebaseemulator"
       uses: actions/setup-java@v3
       with:
         distribution: 'microsoft'
         java-version: '17'
     - name: Install Firebase CLI Tools
-      if: "!contains(inputs.runsonlabels, 'self-hosted') && inputs.setupfirebaseemulator"
+      if: "!env.action_state && inputs.setupfirebaseemulator"
       run: npm install -g firebase-tools
     - name: Install the Apple certificate and provisioning profile
       if: ${{ inputs.setupsigning }}
@@ -175,7 +175,7 @@ jobs:
         name: ${{ inputs.artifactname }}
         path: ${{ inputs.artifactname }}
     - name: Clean up keychain and provisioning profile
-      if: "(inputs.setupsigning && contains(inputs.runsonlabels, 'self-hosted')) || failure()"
+      if: "(inputs.setupsigning && env.action_state) || failure()"
       run: |
         security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
         rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
