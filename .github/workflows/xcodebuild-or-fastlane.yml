@@ -142,7 +142,8 @@ jobs:
           xcodebuild \
             -scheme ${{ inputs.scheme }} \
             -resolvePackageDependencies \
-            -derivedDataPath ".derivedData"
+            -derivedDataPath ".derivedData" \
+            || true
     - name: Build and test (xcodebuild)
       if: ${{ inputs.scheme != '' }}
       run: |
