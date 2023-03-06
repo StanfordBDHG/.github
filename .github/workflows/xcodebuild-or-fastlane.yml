@@ -171,7 +171,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifactname }}
-        path: ${{ inputs.artifactname }}
+        path: ${{ inputs.path }}/${{ inputs.artifactname }}
     - name: Clean up keychain and provisioning profile
       if: "(inputs.setupsigning && env.selfhosted) || failure()"
       run: |
