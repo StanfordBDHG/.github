@@ -44,8 +44,9 @@ jobs:
           xcrun xcresulttool merge ${{ inputs.coveragereports }} --output-path CodeCoverage.xcresult
           rm -rf ${{ inputs.coveragereports }}
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v3.1.1
       with:
         fail_ci_if_error: true
         token: ${{ secrets.token }}
-        swift: true
+        xcode: true
+        xcode_archive_path: CodeCoverage.xcresult
