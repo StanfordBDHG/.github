@@ -49,4 +49,3 @@ jobs:
         fail_ci_if_error: true
         token: ${{ secrets.token }}
         swift: true
-        swift_project: CodeCoverage.xcresult
