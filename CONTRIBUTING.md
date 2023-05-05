@@ -2,7 +2,7 @@
 
 This source file is part of the Stanford Biodesign for Digital Health open-source project
 
-SPDX-FileCopyrightText: 2022 Stanford Biodesign for Digital Health and the project authors (see CONTRIBUTORS.md)
+SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 
 SPDX-License-Identifier: MIT
 
@@ -23,6 +23,24 @@ Pull requests are the best way to propose changes to the codebase.
 ## Licensing
 
 Your submissions must be published and conform to the license currently used in the respective repository.
+
+## Attributions
+
+We use the [REUSE Software Conventions](https://reuse.software) to structure our attributions and contributor lists.
+
+Each file must contain the following header information with `Stanford` being replaced with the project name and [`MIT` with the SPDX License Identifier](https://spdx.org/ids).
+```
+This source file is part of the Stanford open-source project
+
+SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
+
+SPDX-License-Identifier: MIT
+```
+
+As referenced in the copyright text, we list all contributors in the CONTRIBUTORS.md at the root of every repository.
+Each contributor can add themselves to the CONTRIBUTORS.md in a pull request with a sizable and meaningful contribution to the project.
+
+If your code is based on another source, you must add a reference to the original source code to the specific code (e.g., using a comment) and make sure that the license of the original source allows the usage under the license used in the project.
 
 ## Bug Reporting
 
