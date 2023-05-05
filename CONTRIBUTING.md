@@ -28,13 +28,13 @@ Your submissions must be published and conform to the license currently used in 
 
 We use the [REUSE Software Conventions](https://reuse.software) to structure our attributions and contributor lists.
 
-Each file must contain the following header information with `PLACEHOLDER` being replaced with the project name and [`LICENSE_IDENTIFIER` with the SPDX License Identifier](https://spdx.org/ids).
+Each file must contain the following header information with `Stanford` being replaced with the project name and [`MIT` with the SPDX License Identifier](https://spdx.org/ids).
 ```
-This source file is part of the PLACEHOLDER open-source project
+This source file is part of the Stanford open-source project
 
 SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 
-SPDX-License-Identifier: LICENSE_IDENTIFIER
+SPDX-License-Identifier: MIT
 ```
 
 As referenced in the copyright text, we list all contributors in the CONTRIBUTORS.md at the root of every repository.
