@@ -21,7 +21,7 @@ Other featured projects include:
 - [HealthGPT](https://github.com/StanfordBDHG/HealthGPT) - querying Apple Health Data using natural language
 - [LLMonFHIR](https://github.com/StanfordBDHG/LLMonFHIR) - using large language models to explain health data
 
-For more information, check out our website at [bdh.sites.stanford.edu](https://bdh.sites.stanford.edu).
+For more information, check out our website at [biodesigndigitalhealth.stanford.edu](https://biodesigndigitalhealth.stanford.edu).
 
 ![Stanford Byers Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-light.png#gh-light-mode-only)
 ![Stanford Byers Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-dark.png#gh-dark-mode-only)
