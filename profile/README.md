@@ -17,7 +17,7 @@ Our flagship project is [Spezi](https://github.com/StanfordSpezi), an open-sourc
 Other featured projects include:
 - [ResearchKitOnFHIR](https://github.com/StanfordBDHG/ResearchKitOnFHIR) - FHIR questionnaires on iOS with ResearchKit
 - [HealthKitOnFHIR](https://github.com/StanfordBDHG/HealthKitOnFHIR) - converting HealthKit data to FHIR resources
-- [Phoenix](https://github.com/StanfordSpezi/Phoenix) - web-based builder for FHIR surveys
+- [Phoenix](https://github.com/StanfordBDHG/Phoenix) - web-based builder for FHIR surveys
 - [HealthGPT](https://github.com/StanfordBDHG/HealthGPT) - querying Apple Health Data using natural language
 - [LLMonFHIR](https://github.com/StanfordBDHG/LLMonFHIR) - using large language models to explain health data
 
