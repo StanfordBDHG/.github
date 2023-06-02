@@ -12,7 +12,7 @@ SPDX-License-Identifier: MIT
 
 We empower the digital health community to rapidly prototype and build modern, interoperable, scalable digital health solutions on a variety of platforms.
 
-Our flagship project is [Spezi](https://github.com/StanfordSpezi), an open-source framework for building digital health applications using a modular approach based upon healthcare data standards such as HL7® FHIR®.
+Our flagship project is [Spezi](https://github.com/StanfordSpezi), an open-source framework and ecosystem of modules for building modern, interoperable digital health applications.
 
 For more information, check out our website at [bdh.sites.stanford.edu](https://bdh.sites.stanford.edu).
 
