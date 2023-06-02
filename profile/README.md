@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 
 ### Stanford Biodesign for Digital Health
 
-We empower the digital health community to rapidly prototype and build modern, interoperable, scalable digital health solutions on a variety of platforms.
+We empower the digital health community to rapidly prototype and build digital health solutions on a variety of platforms.
 
 Our flagship project is [Spezi](https://github.com/StanfordSpezi), an open-source framework and ecosystem of modules for building modern, interoperable digital health applications.
 
