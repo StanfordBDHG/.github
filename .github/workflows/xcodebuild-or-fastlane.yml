@@ -21,11 +21,21 @@ on:
         required: false
         type: string
         default: '["macos-latest"]'
+      xcodeversion:
+        description: 'The Xcode version used for the build'
+        required: false
+        type: string
+        default: 'latest-stable'
       scheme:
         description: 'The scheme in the Xcode project. Either use `scheme` to use xcodebuild, `fastlanelane` to use fastlane, or a custom command using `customcommand`'
         required: false
         type: string
         default: ''
+      test:
+        description: 'A flag indicating if the tests of the Xcode project scheme should run'
+        required: false
+        type: boolean
+        default: true
       fastlanelane:
         description: 'The lane of the fastlane command. Either use `scheme` to use xcodebuild, `fastlanelane` to use fastlane, or a custom command using `customcommand`'
         required: false
@@ -56,6 +66,36 @@ on:
         required: false
         type: boolean
         default: false
+      codeql:
+        description: 'Use CodeQL code scanning'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      BUILD_CERTIFICATE_BASE64:
+        description: 'The Base64 version of the Apple signing certificate to build your iOS application.'
+        required: false
+      P12_PASSWORD:
+        description: 'The password for the Apple signing certificate.'
+        required: false
+      BUILD_PROVISION_PROFILE_BASE64:
+        description: 'The Base64 version of the Apple provisioning profile to build your iOS application.'
+        required: false
+      KEYCHAIN_PASSWORD:
+        description: 'A password for the keychain that will be created on the runner instance.'
+        required: false
+      APP_STORE_CONNECT_API_KEY_ID:
+        description: 'The key ID of the API key created in the App Store Connect API keys section.'
+        required: false
+      APP_STORE_CONNECT_ISSUER_ID:
+        description: 'The issuer ID of the App Store Connect API is displayed in the App Store Connect API keys section.'
+        required: false
+      APP_STORE_CONNECT_API_KEY_BASE64:
+        description: 'The content of the key created in App Store Connect condensed into a Base64 representation, e.g., using base64 -i AuthKey_ABCDEFGHIJ.p8 | pbcopy.'
+        required: false
+      APPLE_ID:
+        description: 'The Apple ID you use to access the App Store Connect API.'
+        required: false
 
 jobs:
   build_and_test:
@@ -69,7 +109,7 @@ jobs:
     - uses: maxim-lobanov/setup-xcode@v1
       if: "!env.selfhosted"
       with:
-        xcode-version: latest-stable
+        xcode-version: ${{ inputs.xcodeversion }}
     - name: Check environment
       run: |
           xcodebuild -version
@@ -133,6 +173,12 @@ jobs:
         # apply provisioning profile
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+    - name: Initialize CodeQL
+      if: ${{ inputs.codeql }}
+      uses: github/codeql-action/init@v2
+      with:
+        languages: swift
+        db-location: '${{ inputs.path }}/.codeql'
     - name: Run custom command
       if: ${{ inputs.customcommand != '' }}
       run: ${{ inputs.customcommand }}
@@ -147,12 +193,18 @@ jobs:
     - name: Build and test (xcodebuild)
       if: ${{ inputs.scheme != '' }}
       run: |
+          if ${{ inputs.test }}; then
+              XCODECOMMAND="test"
+              CODECOVERAGEFLAG="-enableCodeCoverage YES"
+          else
+              XCODECOMMAND="build"
+          fi
           set -o pipefail \
-          && xcodebuild test \
+          && xcodebuild $XCODECOMMAND \
             -scheme ${{ inputs.scheme }} \
             -sdk iphonesimulator \
-            -destination "name=iPhone 14 Pro Max" \
-            -enableCodeCoverage YES \
+            -destination "name=iPhone 14 Pro" \
+            $CODECOVERAGEFLAG \
             -derivedDataPath ".derivedData" \
             -resultBundlePath ${{ inputs.scheme }}.xcresult \
             CODE_SIGN_IDENTITY="" \
@@ -166,8 +218,11 @@ jobs:
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
         APPLE_ID: ${{ secrets.APPLE_ID }}
+    - name: Perform CodeQL Analysis
+      if: ${{ inputs.codeql }}
+      uses: github/codeql-action/analyze@v2
     - name: Upload artifact
-      if: always()
+      if: ${{ (success() || failure()) && inputs.artifactname != '' }}
       uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifactname }}

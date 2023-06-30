@@ -1,0 +1,23 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Release
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  releasetag:
+    name: Tag Release
+    uses: ./.github/workflows/action-release-tag.yml
+    secrets:
+      access-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    with:
+      user: PaulsAutomationBot
