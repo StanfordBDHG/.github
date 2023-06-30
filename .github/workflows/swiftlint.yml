@@ -20,7 +20,6 @@ jobs:
         with:
           fetch-depth: 0
       - name: SwiftLint
-        uses: sinoru/actions-swiftlint@v6
+        uses: stanfordbdhg/action-swiftlint@v4
         with:
-          swiftlint-version: '0.50.0'
-          swiftlint-args: --strict
+          args: --strict
