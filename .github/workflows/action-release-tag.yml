@@ -1,0 +1,59 @@
+#
+# This source file is part of the Stanford Biodesign for Digital Health open-source project
+#
+# SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Action Tag Release
+
+on:
+  workflow_call:
+    inputs:
+      user:
+        description: 'Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)'
+        type: string
+        required: false
+        default: ''
+    secrets:
+      access-token:
+        description: 'GitHub Personal Access Token (PAT) if the default branch is protected and needs a specific access token to push tags to the branch'
+        required: false
+
+jobs:
+  tagrelease:
+    name: Action Tag Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.access-token || github.token }}
+      - name: Retrieve version
+        run: |
+          VERSION=$(git describe --tags --abbrev=0 --match="v[0-9]*.[0-9]*.[0-9]*" || echo "")
+
+          if [ -z "$VERSION" ]
+          then
+            echo "Did not identify a tag using semantic versioning in the commit history"
+            exit 0
+          fi
+
+          MAJOR=${VERSION%%.*}
+          MINOR=${VERSION%.*}
+
+          echo "Push Tags $MAJOR and $MINOR for $VERSION"
+          
+          git config user.name "${{ inputs.user || github.actor }}"
+          git config user.email "${{ inputs.user || github.actor }}@users.noreply.github.com"
+          
+          git switch --detach ${VERSION}
+          
+          git push origin :refs/tags/${MAJOR}
+          git tag -fa "${MAJOR}" -m "${MAJOR}"
+          git push origin --tags
+
+          git push origin :refs/tags/${MINOR}
+          git tag -fa "${MINOR}" -m "${MINOR}"
+          git push origin --tags
