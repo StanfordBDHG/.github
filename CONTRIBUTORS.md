@@ -1,6 +1,6 @@
 <!--
 
-This source file is part of the Stanford Biodesign for Digital Health open-source project
+This source file is part of the Stanford Biodesign Digital Health Group open-source organization
 
 SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 
@@ -8,7 +8,8 @@ SPDX-License-Identifier: MIT
 
 -->
 
-# Stanford Biodesign for Digital Health .github Contributors
+# Stanford Biodesign Digital Health Group .github Contributors
 
-* [Vishnu Ravi](https://github.com/vishnuravi)
 * [Paul Schmiedmayer](https://github.com/PSchmiedmayer)
+* [Vishnu Ravi](https://github.com/vishnuravi)
+* [Oliver Aalami](https://github.com/aalami5)

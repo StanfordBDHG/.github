@@ -1,5 +1,5 @@
 #
-# This source file is part of the Stanford Biodesign for Digital Health open-source project
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
 #
 # SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
@@ -28,6 +28,16 @@ on:
         default: 'latest-stable'
       scheme:
         description: 'The scheme in the Xcode project. Either use `scheme` to use xcodebuild, `fastlanelane` to use fastlane, or a custom command using `customcommand`'
+        required: false
+        type: string
+        default: ''
+      destination:
+        description: 'The destination parameter that should be passed to xcodebuild. Defaults to the iOS simulator using an iPhone 14 Pro'
+        required: false
+        type: string
+        default: 'platform=iOS Simulator,name=iPhone 14 Pro'
+      resultBundle:
+        description: 'The name of the Xcode result bundle that is passed to xcodebuild. If not defined, the name of the scheme + .xcresult is used.'
         required: false
         type: string
         default: ''
@@ -198,15 +208,20 @@ jobs:
           else
               XCODECOMMAND="build"
           fi
+
+          if ${{ inputs.resultBundle }}; then
+              RESULTBUNDLE=${{ inputs.resultBundle }}
+          else
+              RESULTBUNDLE=${{ inputs.scheme }}.xcresult
+          fi
+
           set -o pipefail \
           && xcodebuild $XCODECOMMAND \
-            -scheme ${{ inputs.scheme }} \
-            -sdk iphonesimulator \
-            -destination "name=iPhone 14 Pro" \
+            -scheme "${{ inputs.scheme }}" \
+            -destination "${{ inputs.destination }}" \
             $CODECOVERAGEFLAG \
             -derivedDataPath ".derivedData" \
-            -resultBundlePath ${{ inputs.scheme }}.xcresult \
-            CODE_SIGN_IDENTITY="" \
+            -resultBundlePath "$RESULTBUNDLE" \
             CODE_SIGNING_REQUIRED=NO \
           | xcpretty
     - name: Fastlane
