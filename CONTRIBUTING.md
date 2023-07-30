@@ -1,6 +1,6 @@
 <!--
 
-This source file is part of the Stanford Biodesign for Digital Health open-source project
+This source file is part of the Stanford Biodesign Digital Health Group open-source organization
 
 SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 
@@ -10,7 +10,7 @@ SPDX-License-Identifier: MIT
 
 # Contributing Guidelines
 
-Thank you for contributing to the Stanford Biodesign for Digital Health project! We value the time and effort you invest in the open-source project!
+Thank you for contributing to one of the Stanford Biodesign Digital Health Group projects! We value the time and effort you invest in the open-source project!
 
 We use [GitHub Discussions](https://docs.github.com/en/discussions) at [https://github.com/orgs/StanfordBDHG/discussions](https://github.com/orgs/StanfordBDHG/discussions) for any discussions about the project.
 Please follow our [Code of Conduct](https://github.com/StanfordBDHG/.github/blob/main/CODE_OF_CONDUCT.md).
