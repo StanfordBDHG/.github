@@ -210,7 +210,7 @@ jobs:
           fi
 
           if [ -z "${{ inputs.resultBundle }}" ]; then
-              RESULTBUNDLE${{ inputs.scheme }}.xcresult
+              RESULTBUNDLE=${{ inputs.scheme }}.xcresult
           else
               RESULTBUNDLE=${{ inputs.resultBundle }}
           fi
