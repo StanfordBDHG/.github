@@ -209,7 +209,7 @@ jobs:
               XCODECOMMAND="build"
           fi
 
-          if ${{ inputs.resultBundle }}; then
+          if [ -z "${{ inputs.resultBundle }}" ]; then
               RESULTBUNDLE=${{ inputs.resultBundle }}
           else
               RESULTBUNDLE=${{ inputs.scheme }}.xcresult
