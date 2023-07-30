@@ -210,9 +210,9 @@ jobs:
           fi
 
           if [ -z "${{ inputs.resultBundle }}" ]; then
-              RESULTBUNDLE=${{ inputs.resultBundle }}
+              RESULTBUNDLE${{ inputs.scheme }}.xcresult
           else
-              RESULTBUNDLE=${{ inputs.scheme }}.xcresult
+              RESULTBUNDLE=${{ inputs.resultBundle }}
           fi
 
           set -o pipefail \
