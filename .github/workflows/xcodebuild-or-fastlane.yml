@@ -191,6 +191,11 @@ jobs:
     - name: Run custom command
       if: ${{ inputs.customcommand != '' }}
       run: ${{ inputs.customcommand }}
+      env:
+        APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+        APPLE_ID: ${{ secrets.APPLE_ID }}
     - name: Resolve dependencies (xcodebuild)
       if: ${{ inputs.scheme != '' }}
       run: |
