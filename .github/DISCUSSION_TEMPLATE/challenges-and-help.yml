@@ -17,7 +17,7 @@ body:
     attributes:
       label: |
         What Stanford Biodesign Digital Health Group-related project challenge related to? 
-        Use the [Stanford Spezi GitHub Discussions](https://github.com/orgs/StanfordSpezi/discussions) page to discuss any Spezi-related challenges.
+        Use the Stanford Spezi GitHub Discussions page to discuss any Spezi-related challenges.
       options:
         - LLMonFHIR
         - HealthGPT
