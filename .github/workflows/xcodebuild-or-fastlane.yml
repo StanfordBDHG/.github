@@ -125,10 +125,10 @@ jobs:
           swift --version
           echo "env.selfhosted: ${{ env.selfhosted }}"
     - name: Install xcpretty
-      if: "!env.selfhosted && inputs.scheme != ''"
+      if: ${{ !env.selfhosted && inputs.scheme != '' }}
       run: gem install xcpretty
     - name: Cache .derivedData folder
-      if: "inputs.cacheDerivedData"
+      if: ${{ inputs.cacheDerivedData }}
       uses: actions/cache@v3
       with:
         path: .derivedData
@@ -136,22 +136,22 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-${{ runner.arch }}-derivedData-
     - name: Cache Firebase Emulators
-      if: "!env.selfhosted && inputs.setupfirebaseemulator"
+      if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
       uses: actions/cache@v3
       with:
         path: ~/.cache/firebase/emulators
         key: ${{ runner.os }}-${{ runner.arch }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
     - name: Setup NodeJS
-      if: "!env.selfhosted && inputs.setupfirebaseemulator"
+      if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
       uses: actions/setup-node@v3
     - name: Setup Java
-      if: "!env.selfhosted && inputs.setupfirebaseemulator"
+      if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
       uses: actions/setup-java@v3
       with:
         distribution: 'microsoft'
         java-version: '17'
     - name: Install Firebase CLI Tools
-      if: "!env.selfhosted && inputs.setupfirebaseemulator"
+      if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
       run: npm install -g firebase-tools
     - name: Install the Apple certificate and provisioning profile
       if: ${{ inputs.setupsigning }}
@@ -183,7 +183,7 @@ jobs:
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
     - name: Initialize CodeQL
-      if: ${{ inputs.codeql }}
+      if: ${{ !env.selfhosted && inputs.codeql }}
       uses: github/codeql-action/init@v2
       with:
         languages: swift
@@ -238,7 +238,7 @@ jobs:
         APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
         APPLE_ID: ${{ secrets.APPLE_ID }}
     - name: Perform CodeQL Analysis
-      if: ${{ inputs.codeql }}
+      if: ${{ !env.selfhosted && inputs.codeql }}
       uses: github/codeql-action/analyze@v2
     - name: Upload artifact
       if: ${{ (success() || failure()) && inputs.artifactname != '' }}
@@ -247,7 +247,7 @@ jobs:
         name: ${{ inputs.artifactname }}
         path: ${{ inputs.path }}/${{ inputs.artifactname }}
     - name: Clean up keychain and provisioning profile
-      if: "(inputs.setupsigning && env.selfhosted) || failure()"
+      if: ${{ (inputs.setupsigning && env.selfhosted) || failure() }}
       run: |
         security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
         rm -rf ~/Library/MobileDevice/Provisioning\ Profiles || true
