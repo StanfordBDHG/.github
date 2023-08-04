@@ -9,10 +9,14 @@
 title: "Challenges and Help"
 labels: ["Challenges and Help"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to share any questions or challenges you have with a Stanford Biodesign Digital Health Group-related project!
   - type: dropdown
     id: project
     attributes:
-      label: What Stanford Biodesign Digital Health Group-related project challenge related to? Use the [Stanford Spezi GitHub Discussions](https://github.com/orgs/StanfordSpezi/discussions) page to discuss any Spezi-related challenges.
+      label: What Stanford Biodesign Digital Health Group-related project challenge related to? Use the Stanford Spezi GitHub Discussions to discuss any Spezi-related challenges.
       options:
         - LLMonFHIR
         - HealthGPT
