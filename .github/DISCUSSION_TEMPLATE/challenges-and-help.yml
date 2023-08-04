@@ -6,8 +6,8 @@
 # SPDX-License-Identifier: MIT
 #
 
-title: ""
-labels: ["Challenges & Help"]
+title: "Challenges and Help"
+labels: ["Challenges and Help"]
 body:
   - type: markdown
     attributes:
