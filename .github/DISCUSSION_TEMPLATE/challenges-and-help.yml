@@ -9,10 +9,6 @@
 title: "Challenges and Help"
 labels: ["Challenges and Help"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to share any questions or challenges you have with a Stanford Biodesign Digital Health Group-related project!
   - type: dropdown
     id: project
     attributes:
