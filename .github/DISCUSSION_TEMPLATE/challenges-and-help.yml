@@ -6,10 +6,10 @@
 # SPDX-License-Identifier: MIT
 #
 
-title: "Challenges and Help"
-labels: ["Challenges and Help"]
+title: "[CardinalKit] "
+labels: ["CardinalKit"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to share any questions or challenges you have with a Stanford Biodesign Digital Health Group-related project!
+        Please use this form to describe your CardinalKit-related question.
