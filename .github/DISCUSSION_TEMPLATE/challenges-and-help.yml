@@ -32,6 +32,8 @@ body:
         - SwiftPackageTemplate
         - TemplateApplication
         - Other project
+    validations:
+      required: true
   - type: textarea
     id: reproduction
     attributes:
