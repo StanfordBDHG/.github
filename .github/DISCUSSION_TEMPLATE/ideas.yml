@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT
 #
 
-title: ""
+title: "Ideas"
 labels: ["Ideas"]
 body:
   - type: markdown
@@ -14,23 +14,25 @@ body:
       value: |
         Thanks for taking the time to share your improvement idea!
   - type: dropdown
-  attributes:
-    label: What Stanford Biodesign Digital Health Group-related project is your idea related to? Use the [Stanford Spezi GitHub Discussions](https://github.com/orgs/StanfordSpezi/discussions) page to discuss any Spezi-related improvements.
-    options:
-      - LLMonFHIR
-      - HealthGPT
-      - Phoenix
-      - HealthKitOnFHIR
-      - ResearchKitOnFHIR
-      - XCTRuntimeAssertions
-      - XCTHealthKit
-      - XCTestExtensions
-      - ImageSource
-      - action-swiftlint
-      - ContinousIntegration
-      - SwiftPackageTemplate
-      - TemplateApplication
-      - Other project
+    attributes:
+      label: |
+        What Stanford Biodesign Digital Health Group-related project challenge related to? 
+        Use the [Stanford Spezi GitHub Discussions](https://github.com/orgs/StanfordSpezi/discussions) page to discuss any Spezi-related challenges.
+      options:
+        - LLMonFHIR
+        - HealthGPT
+        - Phoenix
+        - HealthKitOnFHIR
+        - ResearchKitOnFHIR
+        - XCTRuntimeAssertions
+        - XCTHealthKit
+        - XCTestExtensions
+        - ImageSource
+        - action-swiftlint
+        - ContinousIntegration
+        - SwiftPackageTemplate
+        - TemplateApplication
+        - Other project
   - type: textarea
     id: usecase
     attributes:
