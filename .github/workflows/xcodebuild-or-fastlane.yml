@@ -123,9 +123,15 @@ jobs:
         working-directory: ${{ inputs.path }}
     steps:
     - uses: actions/checkout@v4
+      if: secrets.checkout_token != ''
       with:
         token: ${{ secrets.checkout_token }}
         submodules: ${{ inputs.checkout_submodules }}
+    - uses: actions/checkout@v4
+      if: secrets.checkout_token == ''
+      with:
+        submodules: ${{ inputs.checkout_submodules }}
+
     - uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: ${{ inputs.xcodeversion }}
