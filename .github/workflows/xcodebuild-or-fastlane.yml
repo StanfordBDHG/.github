@@ -123,13 +123,9 @@ jobs:
         working-directory: ${{ inputs.path }}
     steps:
     - uses: actions/checkout@v4
-      if: secrets.checkout_token != ''
       with:
-        token: ${{ secrets.checkout_token }}
-        submodules: ${{ inputs.checkout_submodules }}
-    - uses: actions/checkout@v4
-      if: secrets.checkout_token == ''
-      with:
+        # This is GitHubs way of implementing ternary expressions (see https://docs.github.com/en/actions/learn-github-actions/expressions)
+        token: ${{ secrets.checkout_token != '' && secrets.checkout_token || github.token }}
         submodules: ${{ inputs.checkout_submodules }}
 
     - uses: maxim-lobanov/setup-xcode@v1
