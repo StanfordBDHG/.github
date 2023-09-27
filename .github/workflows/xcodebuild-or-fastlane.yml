@@ -93,7 +93,10 @@ on:
         description: 'The password for the Apple signing certificate.'
         required: false
       BUILD_PROVISION_PROFILE_BASE64:
-        description: 'The Base64 version of the Apple provisioning profile to build your iOS application.'
+        description: 'The Base64 version of the Apple provisioning profile to build your main application (e.g. iOS app).'
+        required: false
+      BUILD_SECONDARY_PROVISION_PROFILE_BASE64:
+        description: 'The Base64 version of the Apple provisioning profile to build your an accompanying application (e.g. watchOS app).'
         required: false
       KEYCHAIN_PASSWORD:
         description: 'A password for the keychain that will be created on the runner instance.'
@@ -171,30 +174,39 @@ jobs:
         BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
         P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
         BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        BUILD_SECONDARY_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_SECONDARY_PROVISION_PROFILE_BASE64 }}
         KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
       run: |
-        # create variables
+        # Create Variables
         CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
         PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
         KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
-        # import certificate and provisioning profile from secrets
+        # Import Certificate and Provisioning Profile from Secrets
         echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
         echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
 
-        # create temporary keychain
+        # Create a Temporary Keychain
         security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
         security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
         security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-        # import certificate to keychain
+        # Import Certificate to the Keychain
         security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
         security list-keychain -d user -s $KEYCHAIN_PATH
 
-        # apply provisioning profile
+        # Apply Provisioning Profile
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         UUID=`grep UUID -A1 -a $PP_PATH | grep -io "[-A-F0-9]\{36\}"`
         cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+
+        # Secondary Provisioning Profile
+        if [ -n "$BUILD_SECONDARY_PROVISION_PROFILE_BASE64" ]; then
+          PP_SECONDARY_PATH=$RUNNER_TEMP/build_pp_secondary.mobileprovision
+          echo -n {{ secrets.BUILD_SECONDARY_PROVISION_PROFILE_BASE64 }} | base64 --decode -o $PP_SECONDARY_PATH
+          SECONDARY_UUID=`grep UUID -A1 -a $PP_SECONDARY_PATH | grep -io "[-A-F0-9]\{36\}"`
+          cp $PP_SECONDARY_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$SECONDARY_UUID.mobileprovision
+        fi
     - name: Initialize CodeQL
       if: ${{ !env.selfhosted && inputs.codeql }}
       uses: github/codeql-action/init@v2
