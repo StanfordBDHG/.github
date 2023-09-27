@@ -193,7 +193,8 @@ jobs:
 
         # apply provisioning profile
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-        cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+        UUID=`grep UUID -A1 -a $PP_PATH | grep -io "[-A-F0-9]\{36\}"`
+        cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
     - name: Initialize CodeQL
       if: ${{ !env.selfhosted && inputs.codeql }}
       uses: github/codeql-action/init@v2
