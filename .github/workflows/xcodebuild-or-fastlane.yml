@@ -203,7 +203,7 @@ jobs:
         # Secondary Provisioning Profile
         if [ -n "$BUILD_SECONDARY_PROVISION_PROFILE_BASE64" ]; then
           PP_SECONDARY_PATH=$RUNNER_TEMP/build_pp_secondary.mobileprovision
-          echo -n {{ secrets.BUILD_SECONDARY_PROVISION_PROFILE_BASE64 }} | base64 --decode -o $PP_SECONDARY_PATH
+          echo -n "$BUILD_SECONDARY_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_SECONDARY_PATH
           SECONDARY_UUID=`grep UUID -A1 -a $PP_SECONDARY_PATH | grep -io "[-A-F0-9]\{36\}"`
           cp $PP_SECONDARY_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$SECONDARY_UUID.mobileprovision
         fi
