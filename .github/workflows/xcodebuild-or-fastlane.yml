@@ -35,7 +35,7 @@ on:
         description: 'The destination parameter that should be passed to xcodebuild. Defaults to the iOS simulator using an iPhone 14 Pro'
         required: false
         type: string
-        default: 'platform=iOS Simulator,name=iPhone 14 Pro'
+        default: 'platform=iOS Simulator,name=iPhone 15 Pro'
       resultBundle:
         description: 'The name of the Xcode result bundle that is passed to xcodebuild. If not defined, the name of the scheme + .xcresult is used.'
         required: false
