@@ -1,0 +1,49 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+# Based on the Apodini workflow found at: https://github.com/Apodini/.github/workflows/docker-compose-test.yml
+#
+# SPDX-FileCopyrightText: 2023 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Docker Compose
+
+on:
+  workflow_call:
+    inputs:
+      dockerComposeFile:
+        description: 'Path or name of the Docker compose file. The default values is `docker-compose.yml`'
+        required: false
+        type: string
+        default: 'docker-compose.yml'
+      workingDirectory:
+        description: 'The workingDirectory of the GitHub Action. Defaults to $GITHUB_WORKSPACE'
+        required: false
+        type: string
+        default: '.'
+      testscript:
+        description: 'Optional path or name to a test script to test the Docker compose setup'
+        required: false
+        type: string
+
+jobs:
+  buildandtest:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.workingDirectory }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Docker compose up
+        run: docker-compose -f ${{ inputs.workingDirectory }}/${{ inputs.dockerComposeFile }} up -d --build
+      - name: Run test script
+        if: inputs.testscript != ''
+        run: |
+          sleep 5
+          sh ${{ inputs.testscript }}
+      - name: Docker compose down
+        if: always()
+        run: docker-compose down

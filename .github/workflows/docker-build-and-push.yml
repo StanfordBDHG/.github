@@ -1,0 +1,160 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+# Based on the Apodini workflow found at: https://github.com/Apodini/.github/workflows/docker-build-and-push.yml
+# and the docker documentation found at https://docs.docker.com/build/ci/github-actions/multi-platform/
+#
+# SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+
+name: Docker Build and Push
+
+on:
+  workflow_call:
+    inputs:
+      dockerFile:
+        description: 'Path or name of the Docker file. The default values is `Dockerfile`. The docker file can use the `baseimage` to get an architecture specific Swift base image'
+        required: false
+        type: string
+        default: 'Dockerfile'
+      imageName:
+        description: 'The name used to tag the docker image on the defined registry containing the organzation/account name and the name of the image, e.g.: stanfordbdhg/example'
+        required: true
+        type: string
+      registry:
+        description: 'Server address of Docker registry. If not set then will default to ghcr.io'
+        required: false
+        type: string
+        default: 'ghcr.io'
+      workingDirectory:
+        description: 'The working-directory of the GitHub Action. Defaults to $GITHUB_WORKSPACE'
+        required: false
+        type: string
+        default: '.'
+    secrets:
+      username:
+        description: 'Username for authenticating to the Docker registry. Uses the GitHub actor by default.'
+        required: false
+      password:
+        description: 'Password or personal access token for authenticating the Docker registry. Uses the GitHub token by default.'
+        required: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.workingDirectory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.imageName }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Setup Credentials
+        id: credentials
+        run: |
+          USERNAME=${{ secrets.username }}
+          PASSWORD=${{ secrets.password }}
+
+          if [ -z "$USERNAME" ]; then
+            USERNAME=${{ github.actor }}
+          fi
+
+          if [ -z "$PASSWORD" ]; then
+            PASSWORD=${{ secrets.GITHUB_TOKEN }}
+          fi
+
+          echo "username=$USERNAME" >> "$GITHUB_OUTPUT"
+          echo "password=$PASSWORD" >> "$GITHUB_OUTPUT"
+      - name: Log in to ${{ inputs.registry }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ steps.credentials.outputs.username }}
+          password: ${{ steps.credentials.outputs.password }}
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ inputs.dockerFile }}
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ inputs.registry }}/${{ inputs.imageName }},push-by-digest=true,name-canonical=true,push=true
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+      - name: Upload digest
+        uses: actions/upload-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+  merge:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.imageName }}
+      - name: Setup Credentials
+        id: credentials
+        run: |
+          USERNAME=${{ secrets.username }}
+          PASSWORD=${{ secrets.password }}
+
+          if [ -z "$USERNAME" ]; then
+            USERNAME=${{ github.actor }}
+          fi
+
+          if [ -z "$PASSWORD" ]; then
+            PASSWORD=${{ secrets.GITHUB_TOKEN }}
+          fi
+
+          echo "username=$USERNAME" >> "$GITHUB_OUTPUT"
+          echo "password=$PASSWORD" >> "$GITHUB_OUTPUT"
+      - name: Log in to ${{ inputs.registry }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ steps.credentials.outputs.username }}
+          password: ${{ steps.credentials.outputs.password }}
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t ${{ inputs.registry }}/" + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ inputs.registry }}/${{ inputs.imageName }}@sha256:%s ' *)
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ inputs.registry }}/${{ inputs.imageName }}:${{ steps.meta.outputs.version }}
