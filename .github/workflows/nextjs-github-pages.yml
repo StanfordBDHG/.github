@@ -1,0 +1,65 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+# Based on the GitHub default template workflow for building and deploying a Next.js site to GitHub Pages
+#
+# SPDX-FileCopyrightText: 2023 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Deploy Next.js site to GitHub Pages
+
+on:
+  workflow_call:
+    inputs:
+      nodeVersion:
+        description: 'Node version spec of the version to use in SemVer notation.'
+        required: false
+        type: string
+        default: '18'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.nodeVersion }}
+          cache: 'npm'
+      - name: Install Node Dependencies
+        run: npm ci
+        env:
+          CI: TRUE
+      - name: Build & Export with Next.js
+        run: npm run build
+        env:
+          NEXT_JS_OUTPUT: 'export'
+          NEXT_JS_BASE_PATH: '/${{ github.event.repository.name }}'
+          NEXT_JS_IMAGES_UNOPTIMIZED: true
+      - name: Build Docs
+        run: npm run docs:ci --if-present
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ./out
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

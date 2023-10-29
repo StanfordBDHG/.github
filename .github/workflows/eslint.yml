@@ -1,0 +1,49 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+#
+# SPDX-FileCopyrightText: 2023 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: ESLint
+
+on:
+  workflow_call:
+    inputs:
+      nodeVersion:
+        description: 'Node version spec of the version to use in SemVer notation.'
+        required: false
+        type: string
+        default: '18'
+
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.nodeVersion }}
+          cache: 'npm'
+      - name: Install Node Dependencies
+        run: npm ci
+        env:
+          CI: TRUE
+      - name: Save Code Linting Report JSON
+        run: npm run lint:ci
+        continue-on-error: true
+      - name: Annotate Code Linting Results
+        uses: ataylorme/eslint-annotate-action@v2
+        with:
+          only-pr-files: false
+          fail-on-warning: true
+          fail-on-error: true
+          markdown-report-on-step-summary: true
+      - name: Upload ESLint report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: eslint_report.json
+          path: eslint_report.json
