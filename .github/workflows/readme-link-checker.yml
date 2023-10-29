@@ -1,0 +1,26 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+#
+# SPDX-FileCopyrightText: 2023 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Check README Links
+
+on:
+  workflow_call:
+
+jobs:
+  check_links:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install linkchecker
+        run: sudo apt-get install -y linkchecker
+      
+      - name: Check for broken links in README
+        run: linkchecker --no-warnings --no-status --check-extern README.md

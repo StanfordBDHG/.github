@@ -19,3 +19,6 @@ jobs:
   reuse_action:
     name: REUSE Compliance Check
     uses: ./.github/workflows/reuse.yml
+  check_links:
+    name: README Link Check
+    uses: ./.github/workflows/readme-link-checker.yml
