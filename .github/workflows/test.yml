@@ -19,3 +19,6 @@ jobs:
   reuse_action:
     name: REUSE Compliance Check
     uses: ./.github/workflows/reuse.yml
+  markdown_link_check:
+    name: Markdown Link Check
+    uses: ./.github/workflows/markdown-link-check.yml
