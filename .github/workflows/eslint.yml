@@ -18,7 +18,6 @@ on:
         default: '18'
 
 permissions:
-  pull-requests: write
   checks: write
 
 jobs:
