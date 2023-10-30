@@ -19,6 +19,7 @@ on:
 
 permissions:
   pull-requests: write
+  checks: write
 
 jobs:
   eslint:
