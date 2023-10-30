@@ -17,6 +17,9 @@ on:
         type: string
         default: '18'
 
+permissions:
+  checks: write
+
 jobs:
   eslint:
     runs-on: ubuntu-latest
