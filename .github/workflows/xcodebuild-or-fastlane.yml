@@ -76,6 +76,11 @@ on:
         required: false
         type: boolean
         default: false
+      googleserviceinfoplistpath:
+        description: 'Path to the GoogleService-Info.plist file that is replaced using the content found in the secret GOOGLE_SERVICE_INFO_PLIST'
+        required: false
+        type: string
+        default: ''
       codeql:
         description: 'Use CodeQL code scanning'
         required: false
@@ -114,7 +119,10 @@ on:
         description: 'The Apple ID you use to access the App Store Connect API.'
         required: false
       CHECKOUT_TOKEN:
-        description: "The Personal access token (PAT) to use with the checkout action"
+        description: 'The Personal access token (PAT) to use with the checkout action'
+        required: false
+      GOOGLE_SERVICE_INFO_PLIST_BASE64:
+        description: 'The Base64 version of the GoogleService-Info.plist file that is used to replace the file found at googleserviceinfoplistpath if the arguemnt is set.'
         required: false
 
 jobs:
@@ -206,6 +214,10 @@ jobs:
           SECONDARY_UUID=`grep UUID -A1 -a $PP_SECONDARY_PATH | grep -io "[-A-F0-9]\{36\}"`
           cp $PP_SECONDARY_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$SECONDARY_UUID.mobileprovision
         fi
+    - name: Setup Google Services File
+      if: ${{ inputs.googleserviceinfoplistpath != '' }}
+      run: |
+        echo -n "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}" | base64 --decode -o "${{ inputs.googleserviceinfoplistpath }}"
     - name: Initialize CodeQL
       if: ${{ !env.selfhosted && inputs.codeql }}
       uses: github/codeql-action/init@v2
