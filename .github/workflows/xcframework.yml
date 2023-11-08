@@ -9,7 +9,7 @@
 name: Release
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       xcFrameworkName:
         description: 'The name of the XCFramework'
