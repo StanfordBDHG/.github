@@ -6,50 +6,57 @@
 # SPDX-License-Identifier: MIT
 #
 
-name: Release
+name: Create XCFramework and Release
 
 on:
   workflow_call:
     inputs:
-      xcFrameworkName:
-        description: 'The name of the XCFramework'
-        type: string
-        required: true
-      archiveName:
-        description: 'The name of the archive'
-        type: string
-        required: true
       workspaceFile:
-        description: 'The path to the workspace file'
+        description: 'The path of the Xcode Workspace file (including the file extension).'
+        type: string
+        required: true
+      XCFrameworkName:
+        description: 'The name of the to be created XCFramework. It must not include the default XCFramework extension ".xcframework" as the file naming is automatically done be the workflow.'
+        type: string
+        required: true
+      XCArchiveName:
+        description: 'The name of the to be created XCArchive. It must not include the default XCArchive extension ".xcarchive" as the file naming is automatically done be the workflow.'
         type: string
         required: true
       scheme:
-        description: 'The scheme to archive'
+        description: 'The project scheme that should be used for the archiving process.'
         type: string
         required: true
       version:
-          description: 'The version number of the framework embedded in the XCArchives'
+          description: 'The version number of the XCFramework embedded in the XCArchives. This version number is also used for the release tag.'
           type: string
           required: true
       configuration:
-        description: 'The configuration to use when archiving the scheme'
+        description: 'The build configuration to use when archiving the scheme, either Debug or Release.'
         type: string
         required: false
         default: 'Release'
+      runsonlabels:
+          description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
+          required: false
+          type: string
+          default: '["macos-13"]'
+  
 
 jobs:
   build-xcarchive:
     name: Build XCArchive
     uses: ./.github/workflows/archive.yml
     with:
-      archiveName: ${{ inputs.archiveName }}
+      archiveName: ${{ inputs.XCArchiveName }}
       workspaceFile: ${{ inputs.workspaceFile }}
       scheme: ${{ inputs.scheme }}
       version: ${{ inputs.version }}
       configuration: ${{ inputs.configuration }}
-  create-xcframework:
+      runs-on: ${{ fromJson(inputs.runsonlabels) }}
+  create-xcframework-and-release:
     name: Build XCFramework
-    runs-on: macos-13
+    runs-on: ${{ fromJson(inputs.runsonlabels) }}
     needs: build-xcarchive
     steps:
     - uses: actions/checkout@v3
@@ -66,26 +73,26 @@ jobs:
         path: ./.build
     - name: Create XCFramework
       run: |
-          rm -rf ${{ inputs.xcFrameworkName }}.xcframework
+          rm -rf ${{ inputs.XCFrameworkName }}.xcframework
           xcodebuild -create-xcframework \
-            -framework ./.build/${{ inputs.archiveName }}-iphoneos.xcarchive/Products/Library/Frameworks/${{ inputs.archiveName }}.framework \
-            -framework ./.build/${{ inputs.archiveName }}-iphonesimulator.xcarchive/Products/Library/Frameworks/${{ inputs.archiveName }}.framework \
-            -output ${{ inputs.xcFrameworkName }}.xcframework
+            -framework ./.build/${{ inputs.XCArchiveName }}-iphoneos.xcarchive/Products/Library/Frameworks/${{ inputs.XCArchiveName }}.framework \
+            -framework ./.build/${{ inputs.XCArchiveName }}-iphonesimulator.xcarchive/Products/Library/Frameworks/${{ inputs.XCArchiveName }}.framework \
+            -output ${{ inputs.XCFrameworkName }}.xcframework
           rm -rf .build
     - name: Commit and push XCFramework
       uses: EndBug/add-and-commit@v9
       with:
-        add: ${{ inputs.xcFrameworkName }}.xcframework
+        add: ${{ inputs.XCFrameworkName }}.xcframework
         message: Create XCFramework for release ${{ inputs.version }}
         tag: '${{ inputs.version }} --force'
         tag_push: '--force'
     - name: Create Artifacts
       run: |
-          tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
+          tar -zcvf ${{ inputs.XCFrameworkName }}.xcframework.tar.gz ${{ inputs.XCFrameworkName }}.xcframework
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ inputs.version }}
         generate_release_notes: true
         fail_on_unmatched_files: true
-        files: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
+        files: ${{ inputs.XCFrameworkName }}.xcframework.tar.gz

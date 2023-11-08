@@ -11,32 +11,37 @@ name: Build XCArchive
 on:
   workflow_call:
     inputs:
-      archiveName:
-        description: 'The name of the archive'
+      workspaceFile:
+        description: 'The path of the Xcode Workspace file (including the file extension).'
         type: string
         required: true
-      workspaceFile:
-        description: 'The path to the workspace file'
+      XCArchiveName:
+        description: 'The name of the to be created XCArchive. It must not include the default XCArchive extension ".xcarchive" as the file naming is automatically done be the workflow.'
         type: string
         required: true
       scheme:
-        description: 'The scheme to archive'
+        description: 'The project scheme that should be used for the archiving process.'
         type: string
         required: true
       version:
-          description: 'The version number of the framework embedded in the XCArchives'
+          description: 'The version number of the XCFramework embedded in the XCArchives.'
           type: string
           required: true
       configuration:
-        description: 'The configuration to use when archiving the scheme'
+        description: 'The build configuration to use when archiving the scheme, either Debug or Release.'
         type: string
         required: false
         default: 'Release'
+      runsonlabels:
+          description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
+          required: false
+          type: string
+          default: '["macos-13"]'
 
 jobs:
   build-xcarchive:
     name: Build XCArchive
-    runs-on: macos-13
+    runs-on: ${{ fromJson(inputs.runsonlabels) }}
     strategy:
       matrix:
         sdk: [iphoneos, iphonesimulator]
@@ -58,7 +63,7 @@ jobs:
             -scheme ${{ inputs.scheme }} \
             -configuration ${{ inputs.configuration }} \
             -sdk ${{ matrix.sdk }} \
-            -archivePath './.build/${{ inputs.archiveName }}-${{ matrix.sdk }}.xcarchive' \
+            -archivePath './.build/${{ inputs.XCArchiveName }}-${{ matrix.sdk }}.xcarchive' \
             SKIP_INSTALL=NO \
             BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
             ONLY_ACTIVE_ARCH=NO \
@@ -67,5 +72,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ inputs.archiveName }}-${{ matrix.sdk }}.xcarchive
-        path: ./.build/${{ inputs.archiveName }}-${{ matrix.sdk }}.xcarchive
+        name: ${{ inputs.XCArchiveName }}-${{ matrix.sdk }}.xcarchive
+        path: ./.build/${{ inputs.XCArchiveName }}-${{ matrix.sdk }}.xcarchive
