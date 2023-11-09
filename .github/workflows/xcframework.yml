@@ -49,6 +49,7 @@ jobs:
       scheme: ${{ inputs.scheme }}
       version: ${{ inputs.version }}
       configuration: ${{ inputs.configuration }}
+      runsonlabels: ${{ inputs.runsonlabels }}
   create-xcframework-and-release:
     name: Build XCFramework
     runs-on: ${{ fromJson(inputs.runsonlabels) }}

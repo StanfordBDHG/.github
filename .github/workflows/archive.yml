@@ -34,8 +34,8 @@ on:
         default: 'Release'
       runsonlabels:
         description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
-        required: false
         type: string
+        required: false
         default: '["macos-13"]'
 
 jobs:
