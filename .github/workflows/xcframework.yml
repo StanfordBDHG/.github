@@ -34,22 +34,22 @@ on:
         default: 'Release'
       runsonlabels:
         description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
-        required: false
         type: string
+        required: false
         default: '["macos-13"]'
   
 
 jobs:
   build-xcarchive:
     name: Build XCArchive
-    uses: ./.github/workflows/archive.yml
+    uses: StanfordBDHG/.github/.github/workflows/archive.yml@v2
     with:
-      archiveName: ${{ inputs.xcFrameworkName }}
       workspaceFile: ${{ inputs.workspaceFile }}
+      xcArchiveName: ${{ inputs.xcFrameworkName }}
       scheme: ${{ inputs.scheme }}
       version: ${{ inputs.version }}
       configuration: ${{ inputs.configuration }}
-      runs-on: ${{ fromJson(inputs.runsonlabels) }}
+      runsonlabels: ${{ inputs.runsonlabels }}
   create-xcframework-and-release:
     name: Build XCFramework
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
