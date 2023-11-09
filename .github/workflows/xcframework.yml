@@ -44,7 +44,7 @@ jobs:
     name: Build XCArchive
     uses: ./.github/workflows/archive.yml
     with:
-      archiveName: ${{ inputs.XCArchiveName }}
+      archiveName: ${{ inputs.xcFrameworkName }}
       workspaceFile: ${{ inputs.workspaceFile }}
       scheme: ${{ inputs.scheme }}
       version: ${{ inputs.version }}
