@@ -42,14 +42,14 @@ on:
 jobs:
   build-xcarchive:
     name: Build XCArchive
-    uses: ./.github/workflows/archive.yml
+    uses: StanfordBDHG/.github/.github/workflows/archive.yml@v2
     with:
-      archiveName: ${{ inputs.xcFrameworkName }}
       workspaceFile: ${{ inputs.workspaceFile }}
+      xcArchiveName: ${{ inputs.xcFrameworkName }}
       scheme: ${{ inputs.scheme }}
       version: ${{ inputs.version }}
       configuration: ${{ inputs.configuration }}
-      runs-on: ${{ fromJson(inputs.runsonlabels) }}
+      runsonlabels: ${{ fromJson(inputs.runsonlabels) }}
   create-xcframework-and-release:
     name: Build XCFramework
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
