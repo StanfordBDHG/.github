@@ -13,3 +13,4 @@ SPDX-License-Identifier: MIT
 * [Paul Schmiedmayer](https://github.com/PSchmiedmayer)
 * [Vishnu Ravi](https://github.com/vishnuravi)
 * [Oliver Aalami](https://github.com/aalami5)
+* [Philipp Zagar](https://github.com/philippzagar)

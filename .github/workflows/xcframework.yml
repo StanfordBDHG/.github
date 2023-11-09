@@ -1,0 +1,94 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+#
+# SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Create XCFramework and Release
+
+on:
+  workflow_call:
+    inputs:
+      workspaceFile:
+        description: 'The path of the Xcode Workspace file (including the file extension).'
+        type: string
+        required: true
+      xcFrameworkName:
+        description: 'The name of the to be created XCFramework. It must not include the default XCFramework extension ".xcframework" as the file naming is automatically done be the workflow.'
+        type: string
+        required: true
+      scheme:
+        description: 'The project scheme that should be used for the archiving process.'
+        type: string
+        required: true
+      version:
+        description: 'The version number of the XCFramework embedded in the XCArchives. This version number is also used for the release tag.'
+        type: string
+        required: true
+      configuration:
+        description: 'The build configuration to use when archiving the scheme, either Debug or Release.'
+        type: string
+        required: false
+        default: 'Release'
+      runsonlabels:
+        description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
+        required: false
+        type: string
+        default: '["macos-13"]'
+  
+
+jobs:
+  build-xcarchive:
+    name: Build XCArchive
+    uses: ./.github/workflows/archive.yml
+    with:
+      archiveName: ${{ inputs.xcFrameworkName }}
+      workspaceFile: ${{ inputs.workspaceFile }}
+      scheme: ${{ inputs.scheme }}
+      version: ${{ inputs.version }}
+      configuration: ${{ inputs.configuration }}
+      runs-on: ${{ fromJson(inputs.runsonlabels) }}
+  create-xcframework-and-release:
+    name: Build XCFramework
+    runs-on: ${{ fromJson(inputs.runsonlabels) }}
+    needs: build-xcarchive
+    steps:
+    - uses: actions/checkout@v4
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    - name: Check environment
+      run: |
+          xcodebuild -version
+          swift --version
+          echo Release version: ${{ inputs.version }}
+    - uses: actions/download-artifact@v3
+      with:
+        path: ./.build
+    - name: Create XCFramework
+      run: |
+          rm -rf ${{ inputs.xcFrameworkName }}.xcframework
+          xcodebuild -create-xcframework \
+            -framework ./.build/${{ inputs.xcFrameworkName }}-iphoneos.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework \
+            -framework ./.build/${{ inputs.xcFrameworkName }}-iphonesimulator.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework \
+            -output ${{ inputs.xcFrameworkName }}.xcframework
+          rm -rf .build
+    - name: Commit and push XCFramework
+      uses: EndBug/add-and-commit@v9
+      with:
+        add: ${{ inputs.xcFrameworkName }}.xcframework
+        message: Create XCFramework for release ${{ inputs.version }}
+        tag: '${{ inputs.version }} --force'
+        tag_push: '--force'
+    - name: Create Artifacts
+      run: |
+          tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ inputs.version }}
+        generate_release_notes: true
+        fail_on_unmatched_files: true
+        files: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
