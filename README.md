@@ -86,6 +86,42 @@ jobs:
       user: PaulsAutomationBot
 ```
 
+### Build XCArchive
+
+A GitHub Action that builds an XCArchive based on an Xcode Workspace file with a specific scheme. The resulting archive is uploaded and stored as an artifact.
+You can learn more about the arguments in the [`archive.yml` GitHub Action file](https://github.com/StanfordBDHG/.github/blob/main/.github/workflows/archive.yml).
+
+```yml
+jobs:
+  build-xcarchive:
+    name: Build XCArchive
+    uses: StanfordBDHG/.github/.github/workflows/archive.yml@v2
+    with:
+      workspaceFile: example.xcworkspace
+      xcArchiveName: exampleXCArchiveName
+      scheme: exampleScheme
+      version: 0.1.0
+```
+
+### Create XCFramework and Release
+
+A GitHub Action that creates an XCFramework from an Xcode Workspace file with a specific scheme. As an intermediate step, the action utilizes the [`archive.yml`](https://github.com/StanfordBDHG/.github/blob/main/.github/workflows/archive.yml) reusable workflow to create the XCArchives that are packaged within the XCFramework. The resulting XCFramework is committed to the respective branch and a tagged release is created.
+You can learn more about the arguments in the [`xcframework.yml` GitHub Action file](https://github.com/StanfordBDHG/.github/blob/main/.github/workflows/xcframework.yml).
+
+```yml
+jobs:
+  create-xcframework-and-release-workflow:
+    name: Create XCFramework and Release
+    uses: StanfordBDHG/.github/.github/workflows/xcframework.yml@v2
+    with:
+      workspaceFile: example.xcworkspace
+      xcFrameworkName: exampleXCFrameworkName
+      scheme: exampleScheme
+      version: 0.1.0
+      user: PaulsAutomationBot
+    secrets:
+      access-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+```
 
 ## Continous Integration Setup
 
