@@ -37,6 +37,15 @@ on:
         type: string
         required: false
         default: '["macos-13"]'
+      user:
+        description: 'Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)'
+        type: string
+        required: false
+        default: ''
+    secrets:
+      access-token:
+        description: 'GitHub Personal Access Token (PAT) if the to-be-commited-to branch is protected and needs a specific access token to push commits to the branch'
+        required: false
   
 
 jobs:
@@ -82,6 +91,9 @@ jobs:
         message: Create XCFramework for release ${{ inputs.version }}
         tag: '${{ inputs.version }} --force'
         tag_push: '--force'
+        github_token: ${{ secrets.access-token || github.token }}
+        author_name: ${{ inputs.user || github.actor }}
+        author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
     - name: Create Artifacts
       run: |
           tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
