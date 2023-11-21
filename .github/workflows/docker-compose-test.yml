@@ -26,6 +26,10 @@ on:
         description: 'Optional path or name to a test script to test the Docker compose setup'
         required: false
         type: string
+      secrets:
+        ENV_FILE:
+          description: 'Contents of a .env file'
+          required: false
 
 jobs:
   buildandtest:
@@ -37,6 +41,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > ${{ github.workspace }}/.env
       - name: Docker compose up
         run: docker-compose -f ${{ inputs.workingDirectory }}/${{ inputs.dockerComposeFile }} up -d --build
       - name: Run test script
