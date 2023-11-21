@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Create .env file
         run: |
-          echo "${{ secrets.ENV_FILE }}" > ${{ github.workspace }}/.env
+          echo "${{ secrets.ENV_FILE }}" > ${{ inputs.workingDirectory }}/.env
       - name: Docker compose up
         run: docker-compose -f ${{ inputs.workingDirectory }}/${{ inputs.dockerComposeFile }} up -d --build
       - name: Run test script
