@@ -26,10 +26,10 @@ on:
         description: 'Optional path or name to a test script to test the Docker compose setup'
         required: false
         type: string
-      secrets:
-        ENV_FILE:
-          description: 'Contents of a .env file'
-          required: false
+    secrets:
+      ENV_FILE:
+        description: 'Contents of a .env file'
+        required: false
 
 jobs:
   buildandtest:
