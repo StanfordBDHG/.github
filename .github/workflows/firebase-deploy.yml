@@ -23,7 +23,7 @@ on:
         default: ''
     secrets:
       GOOGLE_APPLICATION_CREDENTIALS_BASE64:
-        description: 'The Base64 version of the private key JSON file for the service account. You can lean more about how to generate the JSON at https://firebase.google.com/docs/app-distribution/authenticate-service-account. The service account must have the minimally required permissions as documented at https://firebase.google.com/docs/projects/iam/roles-predefined.'
+        description: 'The Base64 version of the private key JSON file for the service account. You can lean more about how to generate the JSON at https://cloud.google.com/iam/docs/service-accounts-create. The service account must have the minimally required permissions documented at https://firebase.google.com/docs/projects/iam/permissions.'
         required: true
 
 jobs:
