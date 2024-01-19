@@ -36,6 +36,11 @@ on:
         required: false
         type: string
         default: 'platform=iOS Simulator,name=iPhone 15 Pro'
+      setupSimulators:
+        description: 'Flag indicating if all iOS simulators matching the `destination` input shoud be setup (e.g. password autofill functionality should be disabled).'
+        required: false
+        type: boolean
+        default: true
       resultBundle:
         description: 'The name of the Xcode result bundle that is passed to xcodebuild. If not defined, the name of the scheme + .xcresult is used.'
         required: false
@@ -224,6 +229,64 @@ jobs:
       with:
         languages: swift
         db-location: '${{ inputs.path }}/.codeql'
+    - name: Disable Password Autofill in the iOS Simulator
+      if: ${{ inputs.setupSimulators && inputs.destination != '' }}
+      run: |
+        # Function to parse the device name from input string
+        parse_device_name() {
+            local input_str=$1
+            local IFS=',' # Set Internal Field Separator to comma for splitting
+
+            for kv in $input_str; do
+                key="${kv%%=*}"     # Extract key (everything before '=')
+                value="${kv#*=}"    # Extract value (everything after '=')
+                
+                if [ "$key" = "name" ]; then
+                    echo "$value"
+                    return
+                fi
+            done
+        }
+
+        # Function to check if a simulator is running
+        is_simulator_running() {
+            local simulator_id=$1
+            xcrun simctl list devices | grep -E "$simulator_id \(Booted\)" &> /dev/null
+            return $?
+        }
+
+        # Extract device name from the input (assuming it's passed as the first argument)
+        input=${1:-"platform=iOS Simulator,name=iPhone 15 Pro"}
+        DEVICE_NAME=$(parse_device_name "$input")
+
+        echo "Device name: $DEVICE_NAME"
+
+        # Retrieve the iOS simulator IDs for the specified device
+        SIMULATOR_IDS=$(xctrace list devices | grep "$DEVICE_NAME" | awk '{print $NF}' | tr -d '()')
+
+        # Check if SIMULATOR_IDS is empty
+        if [ -z "$SIMULATOR_IDS" ]; then
+            echo "No simulators found for the specified device."
+            exit 1
+        fi
+
+        # Loop through each Simulator ID
+        for SIMULATOR_ID in $SIMULATOR_IDS; do
+            echo "Processing Simulator ID: $SIMULATOR_ID"
+
+            # Disable AutoFillPasswords
+            plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO ~/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Containers/Shared/SystemGroup/systemgroup.com.apple.configurationprofiles/Library/ConfigurationProfiles/UserSettings.plist
+            plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO ~/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/UserConfigurationProfiles/EffectiveUserSettings.plist
+            plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO ~/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/UserConfigurationProfiles/PublicInfo/PublicEffectiveUserSettings.plist
+
+            # Check if the simulator is running and shut it down if it is
+            if is_simulator_running "$SIMULATOR_ID"; then
+                echo "Shutting down simulator $SIMULATOR_ID."
+                xcrun simctl shutdown "$SIMULATOR_ID"
+            else
+                echo "Simulator $SIMULATOR_ID is already shutdown."
+            fi
+        done
     - name: Run custom command
       if: ${{ inputs.customcommand != '' }}
       run: ${{ inputs.customcommand }}
