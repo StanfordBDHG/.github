@@ -1,10 +1,8 @@
-#!/bin/bash
-
 # Function to parse the device name from input string
 parse_device_name() {
     local input_str=$1
     local IFS=',' # Set Internal Field Separator to comma for splitting
-
+    
     for kv in $input_str; do
         key="${kv%%=*}"     # Extract key (everything before '=')
         value="${kv#*=}"    # Extract value (everything after '=')
@@ -17,13 +15,14 @@ parse_device_name() {
 }
 
 # Extract device name from the input (assuming it's passed as the first argument)
-input=${1:-"platform=iOS Simulator,name=iPhone 15 Pro Simulator"}
+input=${1:-"platform=iOS Simulator,name=iPhone 15 Pro"}
 DEVICE_NAME=$(parse_device_name "$input")
 
 echo "Device name: $DEVICE_NAME"
 
 # Retrieve the iOS simulator IDs for the specified device
-SIMULATOR_IDS=$(xctrace list devices | grep "$DEVICE_NAME" | awk '{print $NF}' | tr -d '()')
+REGEX_PATTERN="$DEVICE_NAME( Simulator)? \(.*\)"
+SIMULATOR_IDS=$(xctrace list devices | grep -E "$REGEX_PATTERN" | awk '{print $NF}' | tr -d '()')
 
 # Check if SIMULATOR_IDS is empty
 if [ -z "$SIMULATOR_IDS" ]; then
