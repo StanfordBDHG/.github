@@ -32,10 +32,15 @@ on:
         type: string
         default: ''
       destination:
-        description: 'The destination parameter that should be passed to xcodebuild. Defaults to the iOS simulator using an iPhone 14 Pro'
+        description: 'The destination parameter that should be passed to xcodebuild. Defaults to the iOS simulator using an iPhone 15 Pro'
         required: false
         type: string
         default: 'platform=iOS Simulator,name=iPhone 15 Pro'
+      setupSimulators:
+        description: 'Flag indicating if all iOS simulators matching the `destination` input shoud be setup (e.g. password autofill functionality should be disabled).'
+        required: false
+        type: boolean
+        default: false
       resultBundle:
         description: 'The name of the Xcode result bundle that is passed to xcodebuild. If not defined, the name of the scheme + .xcresult is used.'
         required: false
@@ -224,6 +229,85 @@ jobs:
       with:
         languages: swift
         db-location: '${{ inputs.path }}/.codeql'
+    - name: Disable Password Autofill in the iOS Simulator
+      if: ${{ inputs.setupSimulators && inputs.destination != '' }}
+      run: |
+        # Function to parse the device name from input string
+        parse_device_name() {
+            local input_str=$1
+            local IFS=',' # Set Internal Field Separator to comma for splitting
+            
+            for kv in $input_str; do
+                key="${kv%%=*}"     # Extract key (everything before '=')
+                value="${kv#*=}"    # Extract value (everything after '=')
+                
+                if [ "$key" = "name" ]; then
+                    echo "$value"
+                    return
+                fi
+            done
+        }
+
+        # Extract device name from the input
+        DEVICE_NAME=$(parse_device_name "${{ inputs.destination }}")
+
+        echo "Device name: $DEVICE_NAME"
+        
+        # Retrieve the iOS simulator IDs for the specified device
+        REGEX_PATTERN="$DEVICE_NAME( Simulator)? \(.*\)"
+        SIMULATOR_IDS=$(xctrace list devices | grep -E "$REGEX_PATTERN" | awk '{print $NF}' | tr -d '()')
+
+        # Check if SIMULATOR_IDS is empty
+        if [ -z "$SIMULATOR_IDS" ]; then
+            echo "No simulators found for the specified device."
+            exit 1
+        fi
+
+        # Loop through each Simulator ID
+        for SIMULATOR_ID in $SIMULATOR_IDS; do
+            echo "Processing Simulator ID: $SIMULATOR_ID"
+
+            PLIST1="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Containers/Shared/SystemGroup/systemgroup.com.apple.configurationprofiles/Library/ConfigurationProfiles/UserSettings.plist"
+            PLIST2="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/UserConfigurationProfiles/EffectiveUserSettings.plist"
+            PLIST3="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/UserConfigurationProfiles/PublicInfo/PublicEffectiveUserSettings.plist"
+
+            if [ ! -f "$PLIST1" ] || [ ! -f "$PLIST2" ] || [ ! -f "$PLIST3" ]; then
+                echo "Simulator $SIMULATOR_ID booting ..."
+                xcrun simctl boot "$SIMULATOR_ID"
+            fi
+
+            # Loop for a maximum of 30 seconds
+            for (( i=0; i<30; i++ )); do
+                if [ -f "$PLIST1" ] && [ -f "$PLIST2" ] && [ -f "$PLIST3" ]; then
+                    echo "All files found."
+                    break
+                fi
+                sleep 1
+            done
+
+            # Check if the loop exited because all files were found or because of timeout
+            if [ ! -f "$PLIST1" ] || [ ! -f "$PLIST2" ] || [ ! -f "$PLIST3" ]; then
+                echo "Error: Not all files were found within the 30-second timeout."
+                exit 1
+            fi
+
+            sleep 5
+
+            # Disable AutoFillPasswords
+            plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST1
+            plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST2
+            plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST3
+            /usr/libexec/PlistBuddy -c "Add :KeyboardContinuousPathEnabled bool false" /Users/githubaction/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/Preferences/com.apple.keyboard.ContinuousPath.plist
+
+            sleep 1
+
+            # Restart (shutdown if needed and boot) the iOS simulator for the changes to take effect
+            if xcrun simctl shutdown "$SIMULATOR_ID"; then
+                echo "Simulator $SIMULATOR_ID shutdown successfully."
+            else
+                echo "Unable to shutdown simulator $SIMULATOR_ID as it is already shutdown."
+            fi
+        done
     - name: Run custom command
       if: ${{ inputs.customcommand != '' }}
       run: ${{ inputs.customcommand }}
