@@ -55,10 +55,14 @@ for SIMULATOR_ID in $SIMULATOR_IDS; do
         exit 1
     fi
 
+    sleep 5
+
     # Disable AutoFillPasswords
     plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST1
     plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST2
     plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST3
+
+    sleep 1
 
     # Restart (shutdown if needed and boot) the iOS simulator for the changes to take effect
     if xcrun simctl shutdown "$SIMULATOR_ID"; then
