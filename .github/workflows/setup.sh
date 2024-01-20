@@ -34,11 +34,14 @@ fi
 for SIMULATOR_ID in $SIMULATOR_IDS; do
     echo "Processing Simulator ID: $SIMULATOR_ID"
 
-    xcrun simctl boot "$SIMULATOR_ID"
-
     PLIST1="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Containers/Shared/SystemGroup/systemgroup.com.apple.configurationprofiles/Library/ConfigurationProfiles/UserSettings.plist"
     PLIST2="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/UserConfigurationProfiles/EffectiveUserSettings.plist"
     PLIST3="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/UserConfigurationProfiles/PublicInfo/PublicEffectiveUserSettings.plist"
+
+    if [ ! -f "$PLIST1" ] || [ ! -f "$PLIST2" ] || [ ! -f "$PLIST3" ]; then
+        echo "Simulator $SIMULATOR_ID booting ..."
+        xcrun simctl boot "$SIMULATOR_ID"
+    fi
 
     # Loop for a maximum of 30 seconds
     for (( i=0; i<30; i++ )); do
