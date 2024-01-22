@@ -31,6 +31,11 @@ on:
         required: false
         type: string
         default: ''
+      buildConfig:
+        description: 'The build configuration parameter that should be passed to xcodebuild. Either use `Debug` or `Release` to build in the respective modes. If not defined, the `Debug` configuration is used.'
+        required: false
+        type: string
+        default: 'Debug'
       destination:
         description: 'The destination parameter that should be passed to xcodebuild. Defaults to the iOS simulator using an iPhone 15 Pro'
         required: false
@@ -343,6 +348,7 @@ jobs:
           set -o pipefail \
           && xcodebuild $XCODECOMMAND \
             -scheme "${{ inputs.scheme }}" \
+            -configuration "${{ inputs.buildConfig }}" \
             -destination "${{ inputs.destination }}" \
             $CODECOVERAGEFLAG \
             -derivedDataPath ".derivedData" \
