@@ -345,6 +345,12 @@ jobs:
               RESULTBUNDLE=${{ inputs.resultBundle }}
           fi
 
+          if [ "${{ inputs.buildConfig }}" = "Release" ]; then
+              ENABLE_TESTING_FLAG="-enable-testing"
+          else
+              ENABLE_TESTING_FLAG=""
+          fi
+
           set -o pipefail \
           && xcodebuild $XCODECOMMAND \
             -scheme "${{ inputs.scheme }}" \
@@ -354,6 +360,7 @@ jobs:
             -derivedDataPath ".derivedData" \
             -resultBundlePath "$RESULTBUNDLE" \
             CODE_SIGNING_REQUIRED=NO \
+            OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG" \
           | xcpretty
     - name: Fastlane
       if: ${{ inputs.fastlanelane != '' }}
@@ -367,7 +374,7 @@ jobs:
       if: ${{ !env.selfhosted && inputs.codeql }}
       uses: github/codeql-action/analyze@v2
     - name: Upload artifact
-      if: ${{ (success() || failure()) && inputs.artifactname != '' }}
+      if: ${{ (success() || failure()) && inputs.artifactname != '' && inputs.buildConfig != 'Release' }}
       uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifactname }}
