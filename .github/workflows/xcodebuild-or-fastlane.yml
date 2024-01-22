@@ -31,6 +31,11 @@ on:
         required: false
         type: string
         default: ''
+      buildConfig:
+        description: 'The build configuration parameter that should be passed to xcodebuild. Either use `Debug` or `Release` to build in the respective modes. If not defined, the `Debug` configuration is used.'
+        required: false
+        type: string
+        default: 'Debug'
       destination:
         description: 'The destination parameter that should be passed to xcodebuild. Defaults to the iOS simulator using an iPhone 15 Pro'
         required: false
@@ -340,14 +345,22 @@ jobs:
               RESULTBUNDLE=${{ inputs.resultBundle }}
           fi
 
+          if [ "${{ inputs.buildConfig }}" = "Release" ]; then
+              ENABLE_TESTING_FLAG="-enable-testing"
+          else
+              ENABLE_TESTING_FLAG=""
+          fi
+
           set -o pipefail \
           && xcodebuild $XCODECOMMAND \
             -scheme "${{ inputs.scheme }}" \
+            -configuration "${{ inputs.buildConfig }}" \
             -destination "${{ inputs.destination }}" \
             $CODECOVERAGEFLAG \
             -derivedDataPath ".derivedData" \
             -resultBundlePath "$RESULTBUNDLE" \
             CODE_SIGNING_REQUIRED=NO \
+            OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG" \
           | xcpretty
     - name: Fastlane
       if: ${{ inputs.fastlanelane != '' }}
@@ -361,7 +374,7 @@ jobs:
       if: ${{ !env.selfhosted && inputs.codeql }}
       uses: github/codeql-action/analyze@v2
     - name: Upload artifact
-      if: ${{ (success() || failure()) && inputs.artifactname != '' }}
+      if: ${{ (success() || failure()) && inputs.artifactname != '' && inputs.buildConfig != 'Release' }}
       uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifactname }}
