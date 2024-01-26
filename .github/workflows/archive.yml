@@ -37,6 +37,11 @@ on:
         type: string
         required: false
         default: '["macos-13"]'
+      cxxInterop:
+        description: 'Enable the compilation of the XCArchive with active Swift / C++ interoperability.'
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   build-xcarchive:
@@ -68,7 +73,8 @@ jobs:
             BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
             ONLY_ACTIVE_ARCH=NO \
             CI=TRUE \
-            VERSION_NUMBER=${{ inputs.version }}
+            VERSION_NUMBER=${{ inputs.version }} \
+            SWIFT_OBJC_INTEROP_MODE=${{ (inputs.cxxInterop && 'objcxx') || 'objc' }}
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
