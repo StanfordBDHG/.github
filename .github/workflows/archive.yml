@@ -36,7 +36,7 @@ on:
         description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
         type: string
         required: false
-        default: '["macos-13"]'
+        default: '["macos-14"]'
       cxxInterop:
         description: 'Enable the compilation of the XCArchive with active Swift / C++ interoperability.'
         type: boolean

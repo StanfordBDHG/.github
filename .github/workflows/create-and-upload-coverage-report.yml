@@ -23,7 +23,7 @@ on:
 jobs:
   create-and-upload-coverage-report:
     name: Create and upload coverage report
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
     - uses: actions/checkout@v3
     - uses: maxim-lobanov/setup-xcode@v1
