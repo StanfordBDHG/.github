@@ -36,7 +36,7 @@ on:
         description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
         type: string
         required: false
-        default: '["macos-13"]'
+        default: '["macos-14"]'
       user:
         description: 'Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)'
         type: string
