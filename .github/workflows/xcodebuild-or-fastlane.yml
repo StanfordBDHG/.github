@@ -360,6 +360,7 @@ jobs:
             -derivedDataPath ".derivedData" \
             -resultBundlePath "$RESULTBUNDLE" \
             CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
             OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG" \
           | xcpretty
     - name: Fastlane
