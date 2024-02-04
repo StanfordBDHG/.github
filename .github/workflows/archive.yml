@@ -37,6 +37,11 @@ on:
         type: string
         required: false
         default: '["macos-14"]'
+      sdk:
+        description: 'JSON-based collection of SDK for the exported framework. Defaults to all SDKs. You can list SDKs using `xcodebuild -showsdks`.'
+        type: string
+        required: false
+        default: '["iphoneos", "iphonesimulator", "macosx", "appletvos", "appletvsimulator", "xros", "xrsimulator", "watchos", "watchsimulator"]'
       cxxInterop:
         description: 'Enable the compilation of the XCArchive with active Swift / C++ interoperability.'
         type: boolean
@@ -49,7 +54,7 @@ jobs:
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
     strategy:
       matrix:
-        sdk: [iphoneos, iphonesimulator]
+        sdk: ${{ fromJson(inputs.sdk) }}
     steps:
     - uses: actions/checkout@v4
     - uses: maxim-lobanov/setup-xcode@v1

@@ -37,6 +37,11 @@ on:
         type: string
         required: false
         default: '["macos-14"]'
+      sdk:
+        description: 'JSON-based collection of SDK for the exported framework. Defaults to all SDKs. You can list SDKs using `xcodebuild -showsdks`.'
+        type: string
+        required: false
+        default: '["iphoneos", "iphonesimulator", "macosx", "appletvos", "appletvsimulator", "xros", "xrsimulator", "watchos", "watchsimulator"]'
       user:
         description: 'Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)'
         type: string
@@ -59,6 +64,7 @@ jobs:
       version: ${{ inputs.version }}
       configuration: ${{ inputs.configuration }}
       runsonlabels: ${{ inputs.runsonlabels }}
+      sdk: ${{ inputs.sdk }}
   create-xcframework-and-release:
     name: Build XCFramework
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
@@ -81,10 +87,31 @@ jobs:
     - name: Create XCFramework
       run: |
           rm -rf ${{ inputs.xcFrameworkName }}.xcframework
-          xcodebuild -create-xcframework \
-            -framework ./.build/${{ inputs.xcFrameworkName }}-iphoneos.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework \
-            -framework ./.build/${{ inputs.xcFrameworkName }}-iphonesimulator.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework \
-            -output ${{ inputs.xcFrameworkName }}.xcframework
+          
+          # Convert JSON array to space-separated string
+          SDK_LIST="${{ inputs.sdk }}"
+          SDK_LIST="${SDK_LIST//[\[\]\",]/}" # Remove JSON characters
+          echo "Parsed SDK list: $SDK_LIST"
+          
+          IFS=' ' read -r -a SDKS <<< "$SDK_LIST"
+          FRAMEWORKS_ARGS=""
+          for SDK in "${SDKS[@]}"; do
+              ARCHIVE_PATH="./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework"
+              echo "Checking archive path: $ARCHIVE_PATH"
+              if [ -d "$ARCHIVE_PATH" ]; then
+                  FRAMEWORKS_ARGS+="-framework $ARCHIVE_PATH "
+                  echo "Archive path valid: $ARCHIVE_PATH"
+              else
+                  echo "Warning: Archive path for SDK $SDK does not exist: $ARCHIVE_PATH"
+              fi
+          done
+          
+          # Trim trailing space
+          FRAMEWORKS_ARGS=$(echo "$FRAMEWORKS_ARGS" | xargs)
+          
+          echo "Executing xcodebuild with args: $FRAMEWORKS_ARGS"
+          xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ inputs.xcFrameworkName }}.xcframework || { echo "xcodebuild failed"; exit 1; }
+          
           rm -rf .build
     - name: Commit and push XCFramework
       uses: EndBug/add-and-commit@v9
