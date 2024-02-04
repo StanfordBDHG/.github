@@ -56,7 +56,7 @@ on:
 jobs:
   build-xcarchive:
     name: Build XCArchive
-    uses: StanfordBDHG/.github/.github/workflows/archive.yml@sdk
+    uses: StanfordBDHG/.github/.github/workflows/archive.yml@v2
     with:
       workspaceFile: ${{ inputs.workspaceFile }}
       xcArchiveName: ${{ inputs.xcFrameworkName }}
@@ -113,23 +113,23 @@ jobs:
           xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ inputs.xcFrameworkName }}.xcframework || { echo "xcodebuild failed"; exit 1; }
           
           rm -rf .build
-    # - name: Commit and push XCFramework
-    #   uses: EndBug/add-and-commit@v9
-    #   with:
-    #     add: ${{ inputs.xcFrameworkName }}.xcframework
-    #     message: Create XCFramework for release ${{ inputs.version }}
-    #     tag: '${{ inputs.version }} --force'
-    #     tag_push: '--force'
-    #     github_token: ${{ secrets.access-token || github.token }}
-    #     author_name: ${{ inputs.user || github.actor }}
-    #     author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
-    # - name: Create Artifacts
-    #   run: |
-    #       tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
-    # - name: Create Release
-    #   uses: softprops/action-gh-release@v1
-    #   with:
-    #     tag_name: ${{ inputs.version }}
-    #     generate_release_notes: true
-    #     fail_on_unmatched_files: true
-    #     files: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
+    - name: Commit and push XCFramework
+      uses: EndBug/add-and-commit@v9
+      with:
+        add: ${{ inputs.xcFrameworkName }}.xcframework
+        message: Create XCFramework for release ${{ inputs.version }}
+        tag: '${{ inputs.version }} --force'
+        tag_push: '--force'
+        github_token: ${{ secrets.access-token || github.token }}
+        author_name: ${{ inputs.user || github.actor }}
+        author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
+    - name: Create Artifacts
+      run: |
+          tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ inputs.version }}
+        generate_release_notes: true
+        fail_on_unmatched_files: true
+        files: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
