@@ -37,6 +37,11 @@ on:
         type: string
         required: false
         default: '["macos-14"]'
+      sdk:
+        description: 'JSON-based collection of SDK for the exported framework. Defaults to ["iphoneos", "iphonesimulator"]'
+        type: string
+        required: false
+        default: '["iphoneos", "iphonesimulator"]'
       user:
         description: 'Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)'
         type: string
@@ -51,7 +56,7 @@ on:
 jobs:
   build-xcarchive:
     name: Build XCArchive
-    uses: StanfordBDHG/.github/.github/workflows/archive.yml@v2
+    uses: StanfordBDHG/.github/.github/workflows/archive.yml@sdk
     with:
       workspaceFile: ${{ inputs.workspaceFile }}
       xcArchiveName: ${{ inputs.xcFrameworkName }}
@@ -59,6 +64,7 @@ jobs:
       version: ${{ inputs.version }}
       configuration: ${{ inputs.configuration }}
       runsonlabels: ${{ inputs.runsonlabels }}
+      sdk: ${{ inputs.sdk }}
   create-xcframework-and-release:
     name: Build XCFramework
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
@@ -81,28 +87,39 @@ jobs:
     - name: Create XCFramework
       run: |
           rm -rf ${{ inputs.xcFrameworkName }}.xcframework
-          xcodebuild -create-xcframework \
-            -framework ./.build/${{ inputs.xcFrameworkName }}-iphoneos.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework \
-            -framework ./.build/${{ inputs.xcFrameworkName }}-iphonesimulator.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework \
-            -output ${{ inputs.xcFrameworkName }}.xcframework
+          SDKS=(${{ fromJson(inputs.sdk) }})
+          FRAMEWORKS_ARGS=()
+          for SDK in "${SDKS[@]}"; do
+              ARCHIVE_PATH="./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework"
+              if [ -d "$ARCHIVE_PATH" ]; then
+                  FRAMEWORKS_ARGS+=("-framework $ARCHIVE_PATH")
+              else
+                  echo "Warning: Archive path for SDK $SDK does not exist: $ARCHIVE_PATH"
+              fi
+          done
+          if [ ${#FRAMEWORKS_ARGS[@]} -eq 0 ]; then
+              echo "Error: No valid SDK archives found to create XCFramework."
+              exit 1
+          fi
+          xcodebuild -create-xcframework "${FRAMEWORKS_ARGS[@]}" -output ${{ inputs.xcFrameworkName }}.xcframework
           rm -rf .build
-    - name: Commit and push XCFramework
-      uses: EndBug/add-and-commit@v9
-      with:
-        add: ${{ inputs.xcFrameworkName }}.xcframework
-        message: Create XCFramework for release ${{ inputs.version }}
-        tag: '${{ inputs.version }} --force'
-        tag_push: '--force'
-        github_token: ${{ secrets.access-token || github.token }}
-        author_name: ${{ inputs.user || github.actor }}
-        author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
-    - name: Create Artifacts
-      run: |
-          tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: ${{ inputs.version }}
-        generate_release_notes: true
-        fail_on_unmatched_files: true
-        files: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
+    # - name: Commit and push XCFramework
+    #   uses: EndBug/add-and-commit@v9
+    #   with:
+    #     add: ${{ inputs.xcFrameworkName }}.xcframework
+    #     message: Create XCFramework for release ${{ inputs.version }}
+    #     tag: '${{ inputs.version }} --force'
+    #     tag_push: '--force'
+    #     github_token: ${{ secrets.access-token || github.token }}
+    #     author_name: ${{ inputs.user || github.actor }}
+    #     author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
+    # - name: Create Artifacts
+    #   run: |
+    #       tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
+    # - name: Create Release
+    #   uses: softprops/action-gh-release@v1
+    #   with:
+    #     tag_name: ${{ inputs.version }}
+    #     generate_release_notes: true
+    #     fail_on_unmatched_files: true
+    #     files: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
