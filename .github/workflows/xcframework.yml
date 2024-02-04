@@ -87,7 +87,12 @@ jobs:
     - name: Create XCFramework
       run: |
           rm -rf ${{ inputs.xcFrameworkName }}.xcframework
-          SDKS=(${{ fromJson(inputs.sdk) }})
+          
+          # Convert JSON array to space-separated string
+          SDK_LIST="${{ inputs.sdk }}"
+          SDK_LIST="${SDK_LIST//[\[\]\",]/}" # Remove JSON characters [, ], ", and spaces
+          
+          IFS=' ' read -r -a SDKS <<< "$SDK_LIST"
           FRAMEWORKS_ARGS=()
           for SDK in "${SDKS[@]}"; do
               ARCHIVE_PATH="./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework"
@@ -101,7 +106,10 @@ jobs:
               echo "Error: No valid SDK archives found to create XCFramework."
               exit 1
           fi
+          
+          # Create XCFramework using the accumulated framework arguments
           xcodebuild -create-xcframework "${FRAMEWORKS_ARGS[@]}" -output ${{ inputs.xcFrameworkName }}.xcframework
+          
           rm -rf .build
     # - name: Commit and push XCFramework
     #   uses: EndBug/add-and-commit@v9
