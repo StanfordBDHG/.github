@@ -38,10 +38,10 @@ on:
         required: false
         default: '["macos-14"]'
       sdk:
-        description: 'JSON-based collection of SDK for the exported framework. Defaults to ["iphoneos", "iphonesimulator"]'
+        description: 'JSON-based collection of SDK for the exported framework. Defaults to all SDKs. You can list SDKs using `xcodebuild -showsdks`.'
         type: string
         required: false
-        default: '["iphoneos", "iphonesimulator"]'
+        default: '["iphoneos", "iphonesimulator", "macosx", "appletvos", "appletvsimulator", "xros", "xrsimulator", "watchos", "watchsimulator"]'
       user:
         description: 'Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)'
         type: string
