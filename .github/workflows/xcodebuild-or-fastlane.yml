@@ -161,7 +161,7 @@ jobs:
       run: gem install xcpretty
     - name: Cache .derivedData folder
       if: ${{ inputs.cacheDerivedData }}
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: .derivedData
         key: ${{ runner.os }}-${{ runner.arch }}-derivedData-${{ hashFiles('**/Package.swift', '**/*.pbxproj') }}
@@ -169,16 +169,16 @@ jobs:
           ${{ runner.os }}-${{ runner.arch }}-derivedData-
     - name: Cache Firebase Emulators
       if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/firebase/emulators
         key: ${{ runner.os }}-${{ runner.arch }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
     - name: Setup NodeJS
       if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
     - name: Setup Java
       if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         distribution: 'microsoft'
         java-version: '17'
@@ -360,6 +360,7 @@ jobs:
             -derivedDataPath ".derivedData" \
             -resultBundlePath "$RESULTBUNDLE" \
             CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
             OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG" \
           | xcpretty
     - name: Fastlane
@@ -375,7 +376,7 @@ jobs:
       uses: github/codeql-action/analyze@v2
     - name: Upload artifact
       if: ${{ (success() || failure()) && inputs.artifactname != '' && inputs.buildConfig != 'Release' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifactname }}
         path: ${{ inputs.path }}/${{ inputs.artifactname }}

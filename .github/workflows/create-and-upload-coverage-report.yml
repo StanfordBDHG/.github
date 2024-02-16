@@ -25,7 +25,7 @@ jobs:
     name: Create and upload coverage report
     runs-on: macos-14
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: latest-stable
@@ -33,7 +33,7 @@ jobs:
       run: |
           xcodebuild -version
           swift --version
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
     - name: Rename single code coverage report
       if: "!contains(inputs.coveragereports, ' ')"
       run: |
