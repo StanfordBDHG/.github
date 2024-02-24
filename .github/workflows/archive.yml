@@ -81,7 +81,7 @@ jobs:
             VERSION_NUMBER=${{ inputs.version }} \
             SWIFT_OBJC_INTEROP_MODE=${{ (inputs.cxxInterop && 'objcxx') || 'objc' }}
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive
         path: ./.build/${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive
