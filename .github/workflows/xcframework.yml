@@ -112,6 +112,11 @@ jobs:
           echo "Executing xcodebuild with args: $FRAMEWORKS_ARGS"
           xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ inputs.xcFrameworkName }}.xcframework || { echo "xcodebuild failed"; exit 1; }
           
+          cd ${{ inputs.xcFrameworkName }}.xcframework/macos-arm64_x86_64/llama.framework/Versions
+          ls -la
+
+          cd ../../../../
+
           rm -rf .build
     - name: Commit and push XCFramework
       uses: EndBug/add-and-commit@v9
