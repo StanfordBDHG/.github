@@ -32,6 +32,11 @@ on:
         type: string
         required: false
         default: 'Release'
+      dryRun:
+        description: 'If true, the workflow will not commit and release the build XCFramework.'
+        type: boolean
+        required: false
+        default: false
       runsonlabels:
         description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
         type: string
@@ -120,6 +125,7 @@ jobs:
           rm -rf .build
     - name: Commit and push XCFramework
       uses: EndBug/add-and-commit@v9
+      if: ${{ !inputs.dryRun }}
       with:
         add: ${{ inputs.xcFrameworkName }}.xcframework
         message: Create XCFramework for release ${{ inputs.version }}
@@ -133,6 +139,7 @@ jobs:
           tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
     - name: Create Release
       uses: softprops/action-gh-release@v1
+      if: ${{ !inputs.dryRun }}
       with:
         tag_name: ${{ inputs.version }}
         generate_release_notes: true
