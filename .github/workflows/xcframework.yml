@@ -117,9 +117,14 @@ jobs:
           echo "Executing xcodebuild with args: $FRAMEWORKS_ARGS"
           xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ inputs.xcFrameworkName }}.xcframework || { echo "xcodebuild failed"; exit 1; }
           
-          cd ${{ inputs.xcFrameworkName }}.xcframework/macos-arm64_x86_64/llama.framework/Versions
-          ls -la
+          if [[ $SDK_LIST == *"macosx"* ]]; then
+            cd ${{ inputs.xcFrameworkName }}.xcframework/macos-arm64_x86_64/llama.framework/Versions
+            ls -la
+            rm -rf Current
+            ln -s A Current
+          fi
 
+          ls -la
           cd ../../../../
 
           rm -rf .build
