@@ -92,6 +92,10 @@ jobs:
     - name: Unpack XCArchives and create XCFramework
       run: |
           rm -rf ${{ inputs.xcFrameworkName }}.xcframework
+
+          cd ./.build
+          ls -la
+          cd ..
           
           # Convert JSON array to space-separated string
           SDK_LIST="${{ inputs.sdk }}"

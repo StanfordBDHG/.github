@@ -82,7 +82,8 @@ jobs:
             SWIFT_OBJC_INTEROP_MODE=${{ (inputs.cxxInterop && 'objcxx') || 'objc' }}
     - name: Package the XCArchive
       run: |
-          tar -zcvf ./.build/${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive.tar.gz ./.build/${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive
+          cd ./.build
+          tar -zcvf ${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive.tar.gz ${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
