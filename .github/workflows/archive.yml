@@ -66,7 +66,7 @@ jobs:
           swift --version
           echo Release version: ${{ inputs.version }}
           echo SDK: ${{ matrix.sdk }}
-    - name: Archive for iOS 
+    - name: Archive for respective Platform SDK
       run: |
           xcodebuild archive \
             -workspace ${{ inputs.workspaceFile }} \
@@ -80,8 +80,11 @@ jobs:
             CI=TRUE \
             VERSION_NUMBER=${{ inputs.version }} \
             SWIFT_OBJC_INTEROP_MODE=${{ (inputs.cxxInterop && 'objcxx') || 'objc' }}
+    - name: Package the XCArchive
+      run: |
+          tar -zcvf ./.build/${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive.tar.gz ./.build/${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive
-        path: ./.build/${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive
+        name: ${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive.tar.gz
+        path: ./.build/${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive.tar.gz
