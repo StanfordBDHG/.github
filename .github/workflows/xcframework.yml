@@ -109,7 +109,7 @@ jobs:
           FRAMEWORKS_ARGS=""
           for SDK in "${SDKS[@]}"; do
               # Unpack the XCArchive
-              tar -zxvf ./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive.tar.gz -C ./.build/
+              tar -zxvf ./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive.tar.gz/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive.tar.gz -C ./.build/
               # Specify the path to the framework within the XCArchive
               ARCHIVE_PATH="./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework"
               echo "Checking archive path: $ARCHIVE_PATH"
