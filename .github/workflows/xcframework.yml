@@ -89,16 +89,10 @@ jobs:
     - uses: actions/download-artifact@v4
       with:
         path: ./.build
+        merge-multiple: true
     - name: Unpack XCArchives and create XCFramework
       run: |
           rm -rf ${{ inputs.xcFrameworkName }}.xcframework
-
-          cd ./.build
-          ls -la
-          cd llama-macosx.xcarchive.tar.gz
-          ls -la
-          cd ..
-          cd ..
           
           # Convert JSON array to space-separated string
           SDK_LIST="${{ inputs.sdk }}"
@@ -109,7 +103,7 @@ jobs:
           FRAMEWORKS_ARGS=""
           for SDK in "${SDKS[@]}"; do
               # Unpack the XCArchive
-              tar -zxvf ./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive.tar.gz/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive.tar.gz -C ./.build/
+              tar -zxvf ./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive.tar.gz -C ./.build/
               # Specify the path to the framework within the XCArchive
               ARCHIVE_PATH="./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework"
               echo "Checking archive path: $ARCHIVE_PATH"
@@ -127,12 +121,6 @@ jobs:
           echo "Executing xcodebuild with args: $FRAMEWORKS_ARGS"
           xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ inputs.xcFrameworkName }}.xcframework || { echo "xcodebuild failed"; exit 1; }
           
-          if [[ $SDK_LIST == *"macosx"* ]]; then
-            cd ${{ inputs.xcFrameworkName }}.xcframework/macos-arm64_x86_64/llama.framework/Versions
-            ls -la
-            cd ../../../../
-          fi
-
           rm -rf .build
     - name: Commit and push XCFramework
       uses: EndBug/add-and-commit@v9
