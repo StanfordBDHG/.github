@@ -95,6 +95,9 @@ jobs:
 
           cd ./.build
           ls -la
+          cd llama-macosx.xcarchive.tar.gz
+          ls -la
+          cd ..
           cd ..
           
           # Convert JSON array to space-separated string
