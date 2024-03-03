@@ -141,6 +141,11 @@ jobs:
     - name: Create Artifacts
       run: |
           tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
+        path: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
     - name: Create Release
       uses: softprops/action-gh-release@v1
       if: ${{ !inputs.dryRun }}
