@@ -33,7 +33,7 @@ on:
         required: false
         default: 'Release'
       dryRun:
-        description: 'If true, the workflow will not commit and release the build XCFramework.'
+        description: 'If true, the workflow will not commit and release the built XCFramework.'
         type: boolean
         required: false
         default: false

@@ -66,7 +66,7 @@ jobs:
           swift --version
           echo Release version: ${{ inputs.version }}
           echo SDK: ${{ matrix.sdk }}
-    - name: Archive for respective Platform SDK
+    - name: Archive for respective platform SDK
       run: |
           xcodebuild archive \
             -workspace ${{ inputs.workspaceFile }} \
@@ -80,9 +80,9 @@ jobs:
             CI=TRUE \
             VERSION_NUMBER=${{ inputs.version }} \
             SWIFT_OBJC_INTEROP_MODE=${{ (inputs.cxxInterop && 'objcxx') || 'objc' }}
-    - name: Package the XCArchive
+    - name: Package the XCArchive   # To preserve symlinks within the XCArchives that are not preserved by the GitHub Actions artifact upload
       run: |
-          cd ./.build
+          cd .build
           tar -zcvf ${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive.tar.gz ${{ inputs.xcArchiveName }}-${{ matrix.sdk }}.xcarchive
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
