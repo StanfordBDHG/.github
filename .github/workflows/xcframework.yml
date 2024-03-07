@@ -32,6 +32,11 @@ on:
         type: string
         required: false
         default: 'Release'
+      dryRun:
+        description: 'If true, the workflow will not commit and release the built XCFramework.'
+        type: boolean
+        required: false
+        default: false
       runsonlabels:
         description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
         type: string
@@ -84,7 +89,8 @@ jobs:
     - uses: actions/download-artifact@v4
       with:
         path: ./.build
-    - name: Create XCFramework
+        merge-multiple: true
+    - name: Unpack XCArchives and create XCFramework
       run: |
           rm -rf ${{ inputs.xcFrameworkName }}.xcframework
           
@@ -96,6 +102,9 @@ jobs:
           IFS=' ' read -r -a SDKS <<< "$SDK_LIST"
           FRAMEWORKS_ARGS=""
           for SDK in "${SDKS[@]}"; do
+              # Unpack the XCArchive
+              tar -zxvf ./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive.tar.gz -C ./.build/
+              # Specify the path to the framework within the XCArchive
               ARCHIVE_PATH="./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework"
               echo "Checking archive path: $ARCHIVE_PATH"
               if [ -d "$ARCHIVE_PATH" ]; then
@@ -115,6 +124,7 @@ jobs:
           rm -rf .build
     - name: Commit and push XCFramework
       uses: EndBug/add-and-commit@v9
+      if: ${{ !inputs.dryRun }}
       with:
         add: ${{ inputs.xcFrameworkName }}.xcframework
         message: Create XCFramework for release ${{ inputs.version }}
@@ -126,8 +136,14 @@ jobs:
     - name: Create Artifacts
       run: |
           tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
+        path: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
     - name: Create Release
       uses: softprops/action-gh-release@v1
+      if: ${{ !inputs.dryRun }}
       with:
         tag_name: ${{ inputs.version }}
         generate_release_notes: true
