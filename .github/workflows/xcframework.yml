@@ -61,7 +61,7 @@ on:
 jobs:
   build-xcarchive:
     name: Build XCArchive
-    uses: StanfordBDHG/.github/.github/workflows/archive.yml@fix/xcarchive-macos
+    uses: StanfordBDHG/.github/.github/workflows/archive.yml@v2
     with:
       workspaceFile: ${{ inputs.workspaceFile }}
       xcArchiveName: ${{ inputs.xcFrameworkName }}

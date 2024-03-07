@@ -66,7 +66,7 @@ jobs:
           swift --version
           echo Release version: ${{ inputs.version }}
           echo SDK: ${{ matrix.sdk }}
-    - name: Archive for respective platform SDK
+    - name: Archive for ${{ matrix.sdk }} SDK
       run: |
           xcodebuild archive \
             -workspace ${{ inputs.workspaceFile }} \
