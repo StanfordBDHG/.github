@@ -16,6 +16,11 @@ on:
         required: false
         type: string
         default: '.'
+      customcommand:
+        description: 'Custom command to be executed before the deployment. Can be used to, e.g., install dependencies for cloud functions.'
+        required: false
+        type: string
+        default: ''
       arguments:
         description: 'Arguments passed to the firebase deploy command'
         required: false
@@ -44,6 +49,9 @@ jobs:
         java-version: '17'
     - name: Install Firebase CLI Tools
       run: npm install -g firebase-tools
+    - name: Run custom command
+      if: ${{ inputs.customcommand != '' }}
+      run: ${{ inputs.customcommand }}
     - name: Deploy to Firebase
       run: |
         echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
