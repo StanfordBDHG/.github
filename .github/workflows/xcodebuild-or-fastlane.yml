@@ -362,6 +362,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG" \
+            -skipPackagePluginValidation \
           | xcpretty
     - name: Fastlane
       if: ${{ inputs.fastlanelane != '' }}
