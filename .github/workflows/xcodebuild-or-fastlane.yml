@@ -363,6 +363,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG" \
             -skipPackagePluginValidation \
+            -skipMacroValidation \
           | xcpretty
     - name: Fastlane
       if: ${{ inputs.fastlanelane != '' }}
