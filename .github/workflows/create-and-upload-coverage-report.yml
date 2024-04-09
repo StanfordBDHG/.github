@@ -43,10 +43,12 @@ jobs:
       run: |
           xcrun xcresulttool merge ${{ inputs.coveragereports }} --output-path CodeCoverage.xcresult
           rm -rf ${{ inputs.coveragereports }}
+    - name: Convert XCResult
+      if: "contains(inputs.coveragereports, ' ')"
+      run: xcrun xccov view --report --json CodeCoverage.xcresult > cov.json
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
         fail_ci_if_error: true
         token: ${{ secrets.token }}
-        plugin: xcode
-        xcode_archive_path: CodeCoverage.xcresult
+        file: cov.json
