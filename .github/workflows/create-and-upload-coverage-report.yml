@@ -45,10 +45,10 @@ jobs:
           rm -rf ${{ inputs.coveragereports }}
     - name: Convert XCResult
       if: "contains(inputs.coveragereports, ' ')"
-      run: xcrun xccov view --report --json CodeCoverage.xcresult > cov.json
+      run: xcrun xccov view --report CodeCoverage.xcresult > cov.txt
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
         fail_ci_if_error: true
         token: ${{ secrets.token }}
-        file: cov.json
+        file: cov.txt
