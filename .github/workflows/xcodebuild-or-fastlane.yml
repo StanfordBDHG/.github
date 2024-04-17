@@ -82,10 +82,15 @@ on:
         type: boolean
         default: false
       setupfirebaseemulator:
-        description: 'Setup the Firebase Emulator'
+        description: 'Setup the Firebase Emulator & automatically use it for the automated fastlane commands.'
         required: false
         type: boolean
         default: false
+      firebaseemulatorimport:
+        description: 'Firebase import directory that contains Authentication, Cloud Firestore, Realtime Database and Cloud Storage data for Firebase emulators to use as a shareable, common baseline data set.'
+        required: false
+        type: string
+        default: ''
       googleserviceinfoplistpath:
         description: 'Path to the GoogleService-Info.plist file that is replaced using the content found in the secret GOOGLE_SERVICE_INFO_PLIST'
         required: false
@@ -133,6 +138,9 @@ on:
         required: false
       GOOGLE_SERVICE_INFO_PLIST_BASE64:
         description: 'The Base64 version of the GoogleService-Info.plist file that is used to replace the file found at googleserviceinfoplistpath if the arguemnt is set.'
+        required: false
+      FIREBASE_TOKEN:
+        description: 'Firebase token to use when starting the firebase emulator.'
         required: false
 
 jobs:
@@ -367,12 +375,22 @@ jobs:
           | xcpretty
     - name: Fastlane
       if: ${{ inputs.fastlanelane != '' }}
-      run: fastlane ${{ inputs.fastlanelane }}
+      run: |
+          if ${{ inputs.setupfirebaseemulator }}; then
+              if ${{ inputs.firebaseemulatorimport }}; then
+                  firebase emulators:exec --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
+              else
+                  firebase emulators:exec 'fastlane ${{ inputs.fastlanelane }}'
+              fi
+          else
+              fastlane ${{ inputs.fastlanelane }}
+          fi
       env:
         APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
         APPLE_ID: ${{ secrets.APPLE_ID }}
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
     - name: Perform CodeQL Analysis
       if: ${{ !env.selfhosted && inputs.codeql }}
       uses: github/codeql-action/analyze@v2
