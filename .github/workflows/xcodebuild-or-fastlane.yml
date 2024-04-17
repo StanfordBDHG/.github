@@ -384,7 +384,8 @@ jobs:
               export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
               echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
 
-              if [ -z "${{ inputs.firebaseemulatorimport }}" ]; then
+              if [ -n "${{ inputs.firebaseemulatorimport }}" ]; then
+                  echo "Importing firebase emulator data from ${{ inputs.firebaseemulatorimport }}"
                   firebase emulators:exec --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
               else
                   firebase emulators:exec 'fastlane ${{ inputs.fastlanelane }}'
