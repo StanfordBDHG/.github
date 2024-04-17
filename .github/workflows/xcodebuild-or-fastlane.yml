@@ -139,8 +139,8 @@ on:
       GOOGLE_SERVICE_INFO_PLIST_BASE64:
         description: 'The Base64 version of the GoogleService-Info.plist file that is used to replace the file found at googleserviceinfoplistpath if the arguemnt is set.'
         required: false
-      FIREBASE_TOKEN:
-        description: 'Firebase token to use when starting the firebase emulator.'
+      GOOGLE_APPLICATION_CREDENTIALS_BASE64:
+        description: 'The Base64 version of the private key JSON file to boot up the firebase emulator to fully support the execution of cloud functions in the emulator. Only needed if cloud functions are used.'
         required: false
 
 jobs:
@@ -383,7 +383,7 @@ jobs:
               echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
               export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
               echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
-              
+
               if ${{ inputs.firebaseemulatorimport }}; then
                   firebase emulators:exec --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
               else
