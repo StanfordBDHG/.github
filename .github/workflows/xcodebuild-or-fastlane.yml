@@ -82,10 +82,15 @@ on:
         type: boolean
         default: false
       setupfirebaseemulator:
-        description: 'Setup the Firebase Emulator'
+        description: 'Setup the Firebase Emulator & automatically use it for the automated fastlane commands.'
         required: false
         type: boolean
         default: false
+      firebaseemulatorimport:
+        description: 'Firebase import directory that contains Authentication, Cloud Firestore, Realtime Database and Cloud Storage data for Firebase emulators to use as a shareable, common baseline data set.'
+        required: false
+        type: string
+        default: ''
       googleserviceinfoplistpath:
         description: 'Path to the GoogleService-Info.plist file that is replaced using the content found in the secret GOOGLE_SERVICE_INFO_PLIST'
         required: false
@@ -133,6 +138,9 @@ on:
         required: false
       GOOGLE_SERVICE_INFO_PLIST_BASE64:
         description: 'The Base64 version of the GoogleService-Info.plist file that is used to replace the file found at googleserviceinfoplistpath if the arguemnt is set.'
+        required: false
+      GOOGLE_APPLICATION_CREDENTIALS_BASE64:
+        description: 'The Base64 version of the private key JSON file to boot up the firebase emulator to fully support the execution of cloud functions in the emulator. Only needed if cloud functions are used.'
         required: false
 
 jobs:
@@ -367,12 +375,30 @@ jobs:
           | xcpretty
     - name: Fastlane
       if: ${{ inputs.fastlanelane != '' }}
-      run: fastlane ${{ inputs.fastlanelane }}
+      run: |
+          if ${{ inputs.setupfirebaseemulator }}; then
+              # We try to do an npm install in the functions directory.
+              npm --prefix ./functions install || true
+
+              echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
+              export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
+              echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
+
+              if [ -n "${{ inputs.firebaseemulatorimport }}" ]; then
+                  echo "Importing firebase emulator data from ${{ inputs.firebaseemulatorimport }}"
+                  firebase emulators:exec --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
+              else
+                  firebase emulators:exec 'fastlane ${{ inputs.fastlanelane }}'
+              fi
+          else
+              fastlane ${{ inputs.fastlanelane }}
+          fi
       env:
         APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
         APPLE_ID: ${{ secrets.APPLE_ID }}
+        GOOGLE_APPLICATION_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}
     - name: Perform CodeQL Analysis
       if: ${{ !env.selfhosted && inputs.codeql }}
       uses: github/codeql-action/analyze@v2
@@ -387,3 +413,7 @@ jobs:
       run: |
         security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
         rm -rf ~/Library/MobileDevice/Provisioning\ Profiles || true
+    - name: Clean up Google application credentials
+      if: ${{ inputs.fastlanelane != '' || failure() }}
+      run: |
+        rm -rf $RUNNER_TEMP/google-application-credentials.json || true
