@@ -377,6 +377,13 @@ jobs:
       if: ${{ inputs.fastlanelane != '' }}
       run: |
           if ${{ inputs.setupfirebaseemulator }}; then
+              # We try to do an npm install in the functions directory.
+              npm --prefix ./functions install || true
+
+              echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
+              export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
+              echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
+              
               if ${{ inputs.firebaseemulatorimport }}; then
                   firebase emulators:exec --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
               else
@@ -390,7 +397,7 @@ jobs:
         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
         APPLE_ID: ${{ secrets.APPLE_ID }}
-        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        GOOGLE_APPLICATION_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}
     - name: Perform CodeQL Analysis
       if: ${{ !env.selfhosted && inputs.codeql }}
       uses: github/codeql-action/analyze@v2
@@ -405,3 +412,7 @@ jobs:
       run: |
         security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
         rm -rf ~/Library/MobileDevice/Provisioning\ Profiles || true
+    - name: Clean up Google application credentials
+      if: ${{ inputs.fastlanelane != '' || failure() }}
+      run: |
+        rm -rf $RUNNER_TEMP/google-application-credentials.json || true
