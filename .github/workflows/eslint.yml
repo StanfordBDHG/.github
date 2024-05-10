@@ -19,6 +19,7 @@ on:
 
 permissions:
   checks: write
+  contents: read
 
 jobs:
   eslint:
