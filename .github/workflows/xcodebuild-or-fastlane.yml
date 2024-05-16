@@ -170,6 +170,7 @@ jobs:
           xcodebuild -version
           swift --version
           echo "env.selfhosted: ${{ env.selfhosted }}"
+          echo "environment: ${{ inputs.environment }}"
     - name: Install xcpretty
       if: ${{ !env.selfhosted && inputs.scheme != '' }}
       run: gem install xcpretty
