@@ -71,6 +71,11 @@ on:
         required: false
         type: string
         default: ''
+      environment:
+        description: 'GitHub deployment environment to optionally adjust access to variables and secrets with additional protection rules: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment'
+        required: false
+        type: string
+        default: ''
       setupsigning:
         description: 'Setup the keychain to include Apple certificate and provisioning profile'
         required: false
@@ -150,6 +155,7 @@ jobs:
     defaults:
       run:
         working-directory: ${{ inputs.path }}
+    environment: ${{ inputs.environment }}
     steps:
     - uses: actions/checkout@v4
       with:
