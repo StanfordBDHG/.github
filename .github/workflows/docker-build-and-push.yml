@@ -33,6 +33,11 @@ on:
         required: false
         type: string
         default: '.'
+      environment:
+        description: 'GitHub deployment environment to optionally adjust access to variables and secrets with additional protection rules: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment'
+        required: false
+        type: string
+        default: ''
     secrets:
       username:
         description: 'Username for authenticating to the Docker registry. Uses the GitHub actor by default.'
@@ -57,7 +62,12 @@ jobs:
         platform:
           - linux/amd64
           - linux/arm64
+    environment: ${{ inputs.environment }}
     steps:
+      - name: Check environment
+        run: |
+          echo "env.selfhosted: ${{ env.selfhosted }}"
+          echo "environment: ${{ inputs.environment }}"
       - uses: actions/checkout@v4
       - name: Docker meta
         id: meta
