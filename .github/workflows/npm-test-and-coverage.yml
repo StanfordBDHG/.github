@@ -16,6 +16,10 @@ on:
         required: false
         type: string
         default: '18'
+    secrets:
+      token:
+        description: 'The CodeCov token used for private repositories'
+        required: false
 
 jobs:
   testandcoverage:
@@ -35,3 +39,5 @@ jobs:
         run: npm test
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.token }}
