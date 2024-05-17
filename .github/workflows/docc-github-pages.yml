@@ -65,6 +65,9 @@ jobs:
           xcodebuild -version
           swift --version
           echo "env.selfhosted: ${{ env.selfhosted }}"
+      - name: Install xcbeautify
+        if: ${{ !env.selfhosted }}
+        run: brew install xcbeautify
       - name: Build DocC
         run: |
           xcodebuild docbuild \
@@ -76,13 +79,13 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             -skipPackagePluginValidation \
             -skipMacroValidation \
-          | xcpretty
-          
+          | xcbeautify
+
           $(xcrun --find docc) process-archive \
             transform-for-static-hosting .derivedData/Build/Products/Debug-iphoneos/${{ inputs.scheme }}.doccarchive \
             --hosting-base-path ${GITHUB_REPOSITORY##*/} \
             --output-path .docs
-          | xcpretty
+          | xcbeautify
 
           TARGET_NAME=$(echo ${{ inputs.scheme }} | tr '[:upper:]' '[:lower:]')
           echo "<script>window.location.href += \"/documentation/$TARGET_NAME \"</script>" > .docs/index.html
