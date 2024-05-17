@@ -35,10 +35,6 @@ on:
         required: false
         type: string
         default: 'platform=iOS Simulator,name=iPhone 15 Pro'
-      targetname:
-        description: 'The name of the documentation target (lowercased) to generate an index.html file'
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -83,7 +79,8 @@ jobs:
             transform-for-static-hosting .derivedData/Build/Products/Debug-iphoneos/${{ inputs.scheme }}.doccarchive \
             --hosting-base-path ${GITHUB_REPOSITORY##*/} \
             --output-path .docs
-          echo "<script>window.location.href += \"/documentation/${{ inputs.targetname }}\"</script>" > .docs/index.html
+          TARGET_NAME=$(echo ${{ inputs.scheme }} | tr '[:upper:]' '[:lower:]')
+          echo "<script>window.location.href += \"/documentation/$TARGET_NAME \"</script>" > .docs/index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
