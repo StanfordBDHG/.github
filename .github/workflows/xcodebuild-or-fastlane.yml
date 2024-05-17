@@ -245,7 +245,7 @@ jobs:
         echo -n "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}" | base64 --decode -o "${{ inputs.googleserviceinfoplistpath }}"
     - name: Initialize CodeQL
       if: ${{ !env.selfhosted && inputs.codeql }}
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: swift
         db-location: '${{ inputs.path }}/.codeql'
@@ -408,7 +408,7 @@ jobs:
         GOOGLE_APPLICATION_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}
     - name: Perform CodeQL Analysis
       if: ${{ !env.selfhosted && inputs.codeql }}
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
     - name: Upload artifact
       if: ${{ (success() || failure()) && inputs.artifactname != '' && inputs.buildConfig != 'Release' }}
       uses: actions/upload-artifact@v4
