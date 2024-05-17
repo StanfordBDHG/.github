@@ -114,10 +114,13 @@ jobs:
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
+      - name: Set transformed platform name
+        id: set-platform-name
+        run: echo "transformed_platform=${{ matrix.platform//\//- }}" >> $GITHUB_ENV
       - name: Upload digest
         uses: actions/upload-artifact@v4
         with:
-          name: digests-${{ matrix.platform | replace('/', '-') }}-${{ github.run_id }}
+          name: digests-${{ env.transformed_platform }}-${{ github.run_id }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
