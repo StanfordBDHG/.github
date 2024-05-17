@@ -1,0 +1,93 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+#
+# SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Documentation Deployment
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: 'The path where the project is located. Defaults to $GITHUB_WORKSPACE'
+        required: false
+        type: string
+        default: '.'
+      runsonlabels:
+        description: 'JSON-based collection of labels indicating which type of github runner should be chosen'
+        required: false
+        type: string
+        default: '["macos-14"]'
+      xcodeversion:
+        description: 'The Xcode version used for the build'
+        required: false
+        type: string
+        default: 'latest-stable'
+      scheme:
+        description: 'The scheme in the Xcode project. Either use `scheme` to use xcodebuild, `fastlanelane` to use fastlane, or a custom command using `customcommand`'
+        required: true
+        type: string
+      destination:
+        description: 'The destination parameter that should be passed to xcodebuild. Defaults to the iOS simulator using an iPhone 15 Pro'
+        required: false
+        type: string
+        default: 'platform=iOS Simulator,name=iPhone 15 Pro'
+      targetname:
+        description: 'The name of the documentation target (lowercased) to generate an index.html file'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploydocs:
+    name: DocC to GitHub Pages Deployment
+    runs-on: ${{ fromJson(inputs.runsonlabels) }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.path }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ inputs.xcodeversion }}
+      - name: Check environment
+        run: |
+          xcodebuild -version
+          swift --version
+          echo "env.selfhosted: ${{ env.selfhosted }}"
+      - name: Build DocC
+        run: |
+          xcodebuild docbuild \
+            -derivedDataPath .derivedData \
+            -scheme "${{ inputs.scheme }}" \
+            -destination "${{ inputs.destination }}" \
+            -skipPackagePluginValidation \
+            CODE_SIGN_IDENTITY=""  \
+            CODE_SIGNING_REQUIRED=NO
+          $(xcrun --find docc) process-archive \
+            transform-for-static-hosting .derivedData/Build/Products/Debug-iphoneos/${{ inputs.scheme }}.doccarchive \
+            --hosting-base-path ${GITHUB_REPOSITORY##*/} \
+            --output-path .docs
+          echo "<script>window.location.href += \"/documentation/${{ inputs.targetname }}\"</script>" > .docs/index.html
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.docs'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
