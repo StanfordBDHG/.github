@@ -72,12 +72,18 @@ jobs:
             -scheme "${{ inputs.scheme }}" \
             -destination "${{ inputs.destination }}" \
             -skipPackagePluginValidation \
-            CODE_SIGN_IDENTITY=""  \
-            CODE_SIGNING_REQUIRED=NO
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+          | xcpretty
+          
           $(xcrun --find docc) process-archive \
             transform-for-static-hosting .derivedData/Build/Products/Debug-iphoneos/${{ inputs.scheme }}.doccarchive \
             --hosting-base-path ${GITHUB_REPOSITORY##*/} \
             --output-path .docs
+          | xcpretty
+
           TARGET_NAME=$(echo ${{ inputs.scheme }} | tr '[:upper:]' '[:lower:]')
           echo "<script>window.location.href += \"/documentation/$TARGET_NAME \"</script>" > .docs/index.html
       - name: Upload artifact
