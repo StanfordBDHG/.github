@@ -35,15 +35,16 @@ on:
         required: false
         type: string
         default: 'platform=iOS Simulator,name=iPhone 15 Pro'
+      dryrun:
+        description: 'Dry run deployment, only build documentation but do not publish'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
   pages: write
   id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
 
 jobs:
   deploydocs:
@@ -53,7 +54,7 @@ jobs:
       run:
         working-directory: ${{ inputs.path }}
     environment:
-      name: github-pages
+      name: ${{ inputs.dryrun == 'true' && '' || 'github-pages' }}
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
@@ -95,4 +96,5 @@ jobs:
           path: '.docs'
       - name: Deploy to GitHub Pages
         id: deployment
+        if: ${{ !inputs.dryrun }}
         uses: actions/deploy-pages@v4
