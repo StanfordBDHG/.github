@@ -66,6 +66,9 @@ jobs:
           swift --version
           echo Release version: ${{ inputs.version }}
           echo SDK: ${{ matrix.sdk }}
+    - name: Install xcbeautify
+      if: ${{ !env.selfhosted && inputs.scheme != '' }}
+      run: brew install xcbeautify
     - name: Archive for ${{ matrix.sdk }} SDK
       run: |
           xcodebuild archive \
@@ -79,7 +82,8 @@ jobs:
             ONLY_ACTIVE_ARCH=NO \
             CI=TRUE \
             VERSION_NUMBER=${{ inputs.version }} \
-            SWIFT_OBJC_INTEROP_MODE=${{ (inputs.cxxInterop && 'objcxx') || 'objc' }}
+            SWIFT_OBJC_INTEROP_MODE=${{ (inputs.cxxInterop && 'objcxx') || 'objc' }} \
+          | xcbeautify
     - name: Package the XCArchive   # To preserve symlinks within the XCArchives that are not preserved by the GitHub Actions artifact upload
       run: |
           cd .build
