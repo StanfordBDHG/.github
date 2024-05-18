@@ -171,9 +171,9 @@ jobs:
           swift --version
           echo "env.selfhosted: ${{ env.selfhosted }}"
           echo "environment: ${{ inputs.environment }}"
-    - name: Install xcpretty
+    - name: Install xcbeautify
       if: ${{ !env.selfhosted && inputs.scheme != '' }}
-      run: gem install xcpretty
+      run: brew install xcbeautify
     - name: Cache .derivedData folder
       if: ${{ inputs.cacheDerivedData }}
       uses: actions/cache@v4
@@ -343,7 +343,8 @@ jobs:
             -scheme ${{ inputs.scheme }} \
             -resolvePackageDependencies \
             -derivedDataPath ".derivedData" \
-            || true
+          | xcbeautify \
+          || true
     - name: Build and test (xcodebuild)
       if: ${{ inputs.scheme != '' }}
       run: |
@@ -379,7 +380,7 @@ jobs:
             OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG" \
             -skipPackagePluginValidation \
             -skipMacroValidation \
-          | xcpretty
+          | xcbeautify
     - name: Fastlane
       if: ${{ inputs.fastlanelane != '' }}
       run: |
