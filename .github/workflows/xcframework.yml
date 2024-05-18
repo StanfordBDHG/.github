@@ -15,8 +15,8 @@ on:
         description: 'The path of the Xcode Workspace file (including the file extension).'
         type: string
         required: true
-      xcFrameworkNames:
-        description: 'A JSON-based collection of framework names to be built and included in the XCFramework.'
+      xcFrameworkName:
+        description: 'The name of the to be created XCFramework. It must not include the default XCFramework extension ".xcframework" as the file naming is automatically done be the workflow.'
         type: string
         required: true
       scheme:
@@ -61,30 +61,24 @@ on:
       access-token:
         description: 'GitHub Personal Access Token (PAT) if the to-be-commited-to branch is protected and needs a specific access token to push commits to the branch'
         required: false
-  
- 
+
+
 jobs:
-  build-xcarchives: 
-    name: Build XCArchives
-    strategy:
-      matrix:
-        framework: ${{ fromJson(inputs.frameworkNames) }}
+  build-xcarchive:
+    name: Build XCArchive
     uses: StanfordBDHG/.github/.github/workflows/archive.yml@v2
     with:
       workspaceFile: ${{ inputs.workspaceFile }}
-      xcArchiveName: ${{ matrix.framework }}
+      xcArchiveName: ${{ inputs.xcFrameworkName }}
       scheme: ${{ inputs.scheme }}
       version: ${{ inputs.version }}
       configuration: ${{ inputs.configuration }}
       runsonlabels: ${{ inputs.runsonlabels }}
       sdk: ${{ inputs.sdk }}
-  build-xcframeworks:
-    name: Build XCFrameworks
+  create-xcframework-and-release:
+    name: Build XCFramework
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
-    needs: build-xcarchives
-    strategy:
-      matrix:
-        framework: ${{ fromJson(inputs.frameworkNames) }}
+    needs: build-xcarchive
     steps:
     - uses: actions/checkout@v4
       with:
@@ -103,7 +97,7 @@ jobs:
         merge-multiple: true
     - name: Unpack XCArchives and create XCFramework
       run: |
-          rm -rf ${{ matrix.framework }}.xcframework
+          rm -rf ${{ inputs.xcFrameworkName }}.xcframework
           
           # Convert JSON array to space-separated string
           SDK_LIST="${{ inputs.sdk }}"
@@ -114,9 +108,9 @@ jobs:
           FRAMEWORKS_ARGS=""
           for SDK in "${SDKS[@]}"; do
               # Unpack the XCArchive
-              tar -zxvf ./.build/${{ matrix.framework }}-${SDK}.xcarchive.tar.gz -C ./.build/
+              tar -zxvf ./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive.tar.gz -C ./.build/
               # Specify the path to the framework within the XCArchive
-              ARCHIVE_PATH="./.build/${{ matrix.framework }}-${SDK}.xcarchive/Products/Library/Frameworks/${{ matrix.framework }}.framework"
+              ARCHIVE_PATH="./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework"
               echo "Checking archive path: $ARCHIVE_PATH"
               if [ -d "$ARCHIVE_PATH" ]; then
                   FRAMEWORKS_ARGS+="-framework $ARCHIVE_PATH "
@@ -130,44 +124,14 @@ jobs:
           FRAMEWORKS_ARGS=$(echo "$FRAMEWORKS_ARGS" | xargs)
           
           echo "Executing xcodebuild with args: $FRAMEWORKS_ARGS"
-          xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ matrix.framework }}.xcframework | xcbeautify || { echo "xcodebuild failed"; exit 1; }
+          xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ inputs.xcFrameworkName }}.xcframework | xcbeautify || { echo "xcodebuild failed"; exit 1; }
           
           rm -rf .build
+    - name: Create Artifacts
+      run: |
+          tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.framework }}.xcframework
-        path: ${{ matrix.framework }}.xcframework
-
-  commit-and-release:
-    name: Commit and Release XCFrameworks
-    runs-on: ${{ fromJson(inputs.runsonlabels) }}
-    needs: build-xcframeworks
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.access-token || github.token }}
-    - name: Download Artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: ./
-        merge-multiple: true
-    - name: Commit and push XCFrameworks
-      uses: EndBug/add-and-commit@v9
-      with:
-        add: "*.xcframework"
-        message: Create XCFrameworks for release ${{ inputs.version }}
-        tag: '${{ inputs.version }} --force'
-        tag_push: '--force'
-        github_token: ${{ secrets.access-token || github.token }}
-        author_name: ${{ inputs.user || github.actor }}
-        author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      if: ${{ !inputs.dryRun }}
-      with:
-        tag_name: ${{ inputs.version }}
-        generate_release_notes: true
-        fail_on_unmatched_files: true
-        files: |
-          *.xcframework
+        name: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
+        path: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
