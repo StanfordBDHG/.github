@@ -11,16 +11,11 @@ name: Commit and Release XCFrameworks
 on:
   workflow_call:
     inputs:
-      dryRun:
+      dryrun:
         description: 'If true, the workflow will not commit and release the built XCFramework.'
         type: boolean
         required: false
         default: false
-      sdk:
-        description: 'JSON-based collection of SDK for the exported framework. Defaults to all SDKs. You can list SDKs using `xcodebuild -showsdks`.'
-        type: string
-        required: false
-        default: '["iphoneos", "iphonesimulator", "macosx", "appletvos", "appletvsimulator", "xros", "xrsimulator", "watchos", "watchsimulator"]'
       outputpath:
         description: 'Optional Prefix for the output path'
         type: string

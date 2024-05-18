@@ -32,11 +32,6 @@ on:
         type: string
         required: false
         default: 'Release'
-      dryRun:
-        description: 'If true, the workflow will not commit and release the built XCFramework.'
-        type: boolean
-        required: false
-        default: false
       runsonlabels:
         description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
         type: string
