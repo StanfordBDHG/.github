@@ -39,23 +39,26 @@ jobs:
     - uses: actions/checkout@v4
       with:
         token: ${{ secrets.access-token || github.token }}
-    - name: Download Artifacts
+    - name: Download Artifacts to Temp Directory
       uses: actions/download-artifact@v4
       with:
-        path: ${{ inputs.outputpath }}
+        path: ./.build
         merge-multiple: true
     - name: Untar XCFrameworks
       run: |
-        find ${{ inputs.outputpath }} -name "*.tar.gz" -exec tar -zxvf {} -C ${{ inputs.outputpath }} \;
+        mkdir -p ${{ inputs.outputpath }}
+        find ./.build -name "*.tar.gz" -exec tar -zxvf {} -C ./.build \;
+        find ./.build -name "*.xcframework" -exec mv {} ${{ inputs.outputpath }} \;
     - name: Dry Run
-      if: ${{ inputs.dryRun }}
+      if: ${{ inputs.dryrun }}
       run: |
+        git add ${{ inputs.outputpath }}/*.xcframework
         git status
     - name: Commit and push XCFrameworks
-      if: ${{ !inputs.dryRun }}
+      if: ${{ !inputs.dryrun }}
       uses: EndBug/add-and-commit@v9
       with:
-        add: "*.xcframework"
+        add: '${{ inputs.outputpath }}/*.xcframework'
         message: Create XCFrameworks for release ${{ inputs.version }}
         tag: '${{ inputs.version }} --force'
         tag_push: '--force'
@@ -64,7 +67,7 @@ jobs:
         author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
     - name: Create Release
       uses: softprops/action-gh-release@v1
-      if: ${{ !inputs.dryRun }}
+      if: ${{ !inputs.dryrun }}
       with:
         tag_name: ${{ inputs.version }}
         generate_release_notes: true
