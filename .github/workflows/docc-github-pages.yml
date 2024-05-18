@@ -53,6 +53,9 @@ jobs:
     defaults:
       run:
         working-directory: ${{ inputs.path }}
+    # environment:
+    #   name: ${{ inputs.dryrun && '' || 'github-pages' }}
+    #   url: ${{ inputs.dryrun && '' || steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: maxim-lobanov/setup-xcode@v1
@@ -63,7 +66,7 @@ jobs:
           xcodebuild -version
           swift --version
           echo "env.selfhosted: ${{ env.selfhosted }}"
-          echo "environment: ${{ inputs.dryrun == 'true' && '' || 'github-pages' }}"
+          echo "environment: ${{ inputs.dryrun && '' || 'github-pages' }}"
       - name: Install xcbeautify
         if: ${{ !env.selfhosted }}
         run: brew install xcbeautify
