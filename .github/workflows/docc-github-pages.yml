@@ -82,9 +82,9 @@ jobs:
           | xcbeautify
 
           $(xcrun --find docc) process-archive \
-            transform-for-static-hosting .derivedData/Build/Products/Debug-iphoneos/${{ inputs.scheme }}.doccarchive \
+            transform-for-static-hosting .derivedData/Build/Products/Debug-iphonesimulator/${{ inputs.scheme }}.doccarchive \
             --hosting-base-path ${GITHUB_REPOSITORY##*/} \
-            --output-path .docs
+            --output-path .docs \
           | xcbeautify
 
           TARGET_NAME=$(echo ${{ inputs.scheme }} | tr '[:upper:]' '[:lower:]')
