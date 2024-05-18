@@ -53,9 +53,9 @@ jobs:
     defaults:
       run:
         working-directory: ${{ inputs.path }}
-    # environment:
-    #   name: ${{ !inputs.dryrun && 'github-pages' || '' }}
-    #   url: ${{ !inputs.dryrun && steps.deployment.outputs.page_url || '' }}
+    environment:
+      name: ${{ !inputs.dryrun && 'github-pages' || '' }}
+      url: ${{ !inputs.dryrun && steps.deployment.outputs.page_url || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: maxim-lobanov/setup-xcode@v1
