@@ -54,7 +54,7 @@ jobs:
       run:
         working-directory: ${{ inputs.path }}
     environment:
-      name: ${{ inputs.dryrun == 'true' && '' || 'github-pages' }}
+      name: ${{ inputs.dryrun && '' || 'github-pages' }}
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
