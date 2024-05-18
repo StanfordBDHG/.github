@@ -26,7 +26,8 @@ on:
       version:
         description: 'The version number of the XCFramework embedded in the XCArchives.'
         type: string
-        required: true
+        required: false
+        default: 'ci'
       configuration:
         description: 'The build configuration to use when archiving the scheme, either Debug or Release.'
         type: string

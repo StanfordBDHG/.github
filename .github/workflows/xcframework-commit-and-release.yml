@@ -48,7 +48,7 @@ jobs:
       run: |
         mkdir -p ${{ inputs.outputpath }}
         find ./.build -name "*.tar.gz" -exec tar -zxvf {} -C ./.build \;
-        find ./.build -name "*.xcframework" -exec mv {} ${{ inputs.outputpath }} \;
+        find ./temp -name "*.xcframework" -exec sh -c 'rm -rf ${{ inputs.outputpath }}/${0##*/} && mv "$0" ${{ inputs.outputpath }}' {} \;
     - name: Dry Run
       if: ${{ inputs.dryrun }}
       run: |
