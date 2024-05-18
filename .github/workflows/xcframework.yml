@@ -47,6 +47,11 @@ on:
         type: string
         required: false
         default: '["iphoneos", "iphonesimulator", "macosx", "appletvos", "appletvsimulator", "xros", "xrsimulator", "watchos", "watchsimulator"]'
+      outputpath:
+        description: 'Optional Prefix for the output path'
+        type: string
+        required: false
+        default: ''
       user:
         description: 'Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)'
         type: string
@@ -119,7 +124,7 @@ jobs:
           FRAMEWORKS_ARGS=$(echo "$FRAMEWORKS_ARGS" | xargs)
           
           echo "Executing xcodebuild with args: $FRAMEWORKS_ARGS"
-          xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ inputs.xcFrameworkName }}.xcframework || { echo "xcodebuild failed"; exit 1; }
+          xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ inputs.outputpath }}${{ inputs.xcFrameworkName }}.xcframework | xcbeautify || { echo "xcodebuild failed"; exit 1; }
           
           rm -rf .build
     - name: Commit and push XCFramework
