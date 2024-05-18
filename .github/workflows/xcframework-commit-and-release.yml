@@ -36,7 +36,6 @@ on:
         description: 'GitHub Personal Access Token (PAT) if the to-be-commited-to branch is protected and needs a specific access token to push commits to the branch'
         required: false
   
- 
 jobs:
   xcframework-commit-and-release:
     name: Commit and Release XCFrameworks
@@ -50,6 +49,9 @@ jobs:
       with:
         path: ${{ inputs.outputpath }}
         merge-multiple: true
+    - name: Untar XCFrameworks
+      run: |
+        find ${{ inputs.outputpath }} -name "*.tar.gz" -exec tar -zxvf {} -C ${{ inputs.outputpath }} \;
     - name: Dry Run
       if: ${{ inputs.dryRun }}
       run: |

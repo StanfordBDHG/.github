@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT
 #
 
-name: Create XCFramework and Release
+name: Create XCFramework
 
 on:
   workflow_call:
@@ -62,7 +62,6 @@ on:
         description: 'GitHub Personal Access Token (PAT) if the to-be-commited-to branch is protected and needs a specific access token to push commits to the branch'
         required: false
 
-
 jobs:
   build-xcarchive:
     name: Build XCArchive
@@ -75,7 +74,7 @@ jobs:
       configuration: ${{ inputs.configuration }}
       runsonlabels: ${{ inputs.runsonlabels }}
       sdk: ${{ inputs.sdk }}
-  create-xcframework-and-release:
+  create-xcframework:
     name: Build XCFramework
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
     needs: build-xcarchive
