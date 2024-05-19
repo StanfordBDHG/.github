@@ -1,0 +1,79 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+#
+# SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Commit and Release XCFrameworks
+
+on:
+  workflow_call:
+    inputs:
+      dryrun:
+        description: 'If true, the workflow will not commit and release the built XCFramework.'
+        type: boolean
+        required: false
+        default: false
+      outputpath:
+        description: 'Optional Prefix for the output path'
+        type: string
+        required: false
+        default: '.'
+      user:
+        description: 'Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)'
+        type: string
+        required: false
+        default: ''
+    secrets:
+      access-token:
+        description: 'GitHub Personal Access Token (PAT) if the to-be-committed-to branch is protected and needs a specific access token to push commits to the branch'
+        required: false
+  
+jobs:
+  xcframework-commit-and-release:
+    name: Commit and Release XCFrameworks
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.access-token || github.token }}
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./.build
+        merge-multiple: true
+    - name: Untar XCFrameworks
+      run: |
+        mkdir -p ${{ inputs.outputpath }}
+        find ./.build -name "*.tar.gz" -exec tar -zxvf {} -C ./.build \;
+        for xcframework in $(find ./.build -name "*.xcframework"); do
+          rm -rf ${{ inputs.outputpath }}/$(basename "$xcframework")
+          mv "$xcframework" ${{ inputs.outputpath }}
+        done
+    - name: Dry Run
+      if: ${{ inputs.dryrun }}
+      run: |
+        git add ${{ inputs.outputpath }}/*.xcframework
+        git status
+    - name: Commit and push XCFrameworks
+      if: ${{ !inputs.dryrun }}
+      uses: EndBug/add-and-commit@v9
+      with:
+        add: '${{ inputs.outputpath }}/*.xcframework'
+        message: Create XCFrameworks for release ${{ inputs.version }}
+        tag: '${{ inputs.version }} --force'
+        tag_push: '--force'
+        github_token: ${{ secrets.access-token || github.token }}
+        author_name: ${{ inputs.user || github.actor }}
+        author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      if: ${{ !inputs.dryrun }}
+      with:
+        tag_name: ${{ inputs.version }}
+        generate_release_notes: true
+        fail_on_unmatched_files: true
+        files: |
+          ${{ inputs.outputpath }}/*.xcframework

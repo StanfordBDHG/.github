@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT
 #
 
-name: Create XCFramework and Release
+name: Create XCFramework
 
 on:
   workflow_call:
@@ -26,17 +26,13 @@ on:
       version:
         description: 'The version number of the XCFramework embedded in the XCArchives. This version number is also used for the release tag.'
         type: string
-        required: true
+        required: false
+        default: 'ci'
       configuration:
         description: 'The build configuration to use when archiving the scheme, either Debug or Release.'
         type: string
         required: false
         default: 'Release'
-      dryRun:
-        description: 'If true, the workflow will not commit and release the built XCFramework.'
-        type: boolean
-        required: false
-        default: false
       runsonlabels:
         description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
         type: string
@@ -61,7 +57,6 @@ on:
       access-token:
         description: 'GitHub Personal Access Token (PAT) if the to-be-commited-to branch is protected and needs a specific access token to push commits to the branch'
         required: false
-  
 
 jobs:
   build-xcarchive:
@@ -75,7 +70,7 @@ jobs:
       configuration: ${{ inputs.configuration }}
       runsonlabels: ${{ inputs.runsonlabels }}
       sdk: ${{ inputs.sdk }}
-  create-xcframework-and-release:
+  create-xcframework:
     name: Build XCFramework
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
     needs: build-xcarchive
@@ -124,20 +119,9 @@ jobs:
           FRAMEWORKS_ARGS=$(echo "$FRAMEWORKS_ARGS" | xargs)
           
           echo "Executing xcodebuild with args: $FRAMEWORKS_ARGS"
-          xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ inputs.outputpath }}/${{ inputs.xcFrameworkName }}.xcframework | xcbeautify || { echo "xcodebuild failed"; exit 1; }
+          xcodebuild -create-xcframework $FRAMEWORKS_ARGS -output ${{ inputs.xcFrameworkName }}.xcframework | xcbeautify || { echo "xcodebuild failed"; exit 1; }
           
           rm -rf .build
-    - name: Commit and push XCFramework
-      uses: EndBug/add-and-commit@v9
-      if: ${{ !inputs.dryRun }}
-      with:
-        add: ${{ inputs.xcFrameworkName }}.xcframework
-        message: Create XCFramework for release ${{ inputs.version }}
-        tag: '${{ inputs.version }} --force'
-        tag_push: '--force'
-        github_token: ${{ secrets.access-token || github.token }}
-        author_name: ${{ inputs.user || github.actor }}
-        author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
     - name: Create Artifacts
       run: |
           tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
@@ -146,11 +130,3 @@ jobs:
       with:
         name: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
         path: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      if: ${{ !inputs.dryRun }}
-      with:
-        tag_name: ${{ inputs.version }}
-        generate_release_notes: true
-        fail_on_unmatched_files: true
-        files: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
