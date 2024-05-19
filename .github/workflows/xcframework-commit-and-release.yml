@@ -28,7 +28,7 @@ on:
         default: ''
     secrets:
       access-token:
-        description: 'GitHub Personal Access Token (PAT) if the to-be-commited-to branch is protected and needs a specific access token to push commits to the branch'
+        description: 'GitHub Personal Access Token (PAT) if the to-be-committed-to branch is protected and needs a specific access token to push commits to the branch'
         required: false
   
 jobs:
@@ -39,7 +39,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         token: ${{ secrets.access-token || github.token }}
-    - name: Download Artifacts to Temp Directory
+    - name: Download Artifacts
       uses: actions/download-artifact@v4
       with:
         path: ./.build
@@ -48,7 +48,10 @@ jobs:
       run: |
         mkdir -p ${{ inputs.outputpath }}
         find ./.build -name "*.tar.gz" -exec tar -zxvf {} -C ./.build \;
-        find ./.build -name "*.xcframework" -exec sh -c 'rm -rf ${{ inputs.outputpath }}/${0##*/} && mv "$0" ${{ inputs.outputpath }}' {} \;
+        for xcframework in $(find ./.build -name "*.xcframework"); do
+          rm -rf ${{ inputs.outputpath }}/$(basename "$xcframework")
+          mv "$xcframework" ${{ inputs.outputpath }}
+        done
     - name: Dry Run
       if: ${{ inputs.dryrun }}
       run: |
