@@ -41,16 +41,15 @@ jobs:
       - name: Check if PR is from a fork
         id: fork-check
         run: |
-          if [[ ${{ github.event_name }} == 'pull_request' && ${{ github.event.pull_request.head.repo.fork }} == 'true' ]]; then
+          if [[ "${{ github.event_name }}" == 'pull_request' && "${{ github.event.pull_request.head.repo.fork }}" == 'true' ]]; then
             echo "is_fork=true" >> $GITHUB_ENV
           else
             echo "is_fork=false" >> $GITHUB_ENV
-          fi
       - name: Run ESLint if PR is from a fork
-        if: ${{ env.is_fork == 'true' }}
+        if: env.is_fork == 'true'
         run: npm run lint:ci
       - name: Annotate Code Linting Results
-        if: ${{ env.is_fork == 'false' }}
+        if: env.is_fork == 'false'
         uses: ataylorme/eslint-annotate-action@v3
         with:
           only-pr-files: false
