@@ -46,7 +46,12 @@ jobs:
         merge-multiple: true
     - name: Untar XCFrameworks
       run: |
+        if ! grep -qxF '.build' .gitignore; then
+          echo '.build' >> .gitignore
+        fi
+        
         mkdir -p ${{ inputs.outputpath }}
+        
         find ./.build -name "*.tar.gz" -exec tar -zxvf {} -C ./.build \;
         for xcframework in $(find ./.build -name "*.xcframework"); do
           rm -rf ${{ inputs.outputpath }}/$(basename "$xcframework")
@@ -61,7 +66,6 @@ jobs:
       if: ${{ !inputs.dryrun }}
       uses: EndBug/add-and-commit@v9
       with:
-        add: ${{ inputs.outputpath }}/*.xcframework
         message: Create XCFrameworks for release ${{ inputs.version }}
         tag: ${{ inputs.version }} --force
         tag_push: --force
