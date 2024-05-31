@@ -61,10 +61,10 @@ jobs:
       if: ${{ !inputs.dryrun }}
       uses: EndBug/add-and-commit@v9
       with:
-        add: '${{ inputs.outputpath }}/*.xcframework'
+        add: ${{ inputs.outputpath }}/*.xcframework
         message: Create XCFrameworks for release ${{ inputs.version }}
-        tag: '${{ inputs.version }} --force'
-        tag_push: '--force'
+        tag: ${{ inputs.version }} --force
+        tag_push: --force
         github_token: ${{ secrets.access-token || github.token }}
         author_name: ${{ inputs.user || github.actor }}
         author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
