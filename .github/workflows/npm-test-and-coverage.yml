@@ -12,15 +12,23 @@ on:
   workflow_call:
     inputs:
       nodeVersion:
-        description: 'Node version spec of the version to use in SemVer notation.'
+        description: |
+          Node version spec of the version to use in SemVer notation.
         required: false
         type: string
         default: '18'
       working-directory:
-        description: 'The working directory where the project is located. Defaults to $GITHUB_WORKSPACE'
+        description: |
+          The working directory where the project is located. Defaults to $GITHUB_WORKSPACE.
         required: false
         type: string
         default: '.'
+      setup-firebase-emulator:
+        description: |
+          Setup the Firebase Emulator.
+        required: false
+        type: boolean
+        default: false
     secrets:
       token:
         description: 'The CodeCov token used for private repositories'
@@ -34,12 +42,30 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check environment
+        run: |
+            echo "env.selfhosted: ${{ env.selfhosted }}"
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.nodeVersion }}
           cache: 'npm'
           cache-dependency-path: '${{ inputs.working-directory }}/package-lock.json'
+      - name: Cache Firebase Emulators
+        if: ${{ !env.selfhosted && inputs.setup-firebase-emulator }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: ${{ runner.os }}-${{ runner.arch }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
+      - name: Setup Java
+        if: ${{ !env.selfhosted && inputs.setup-firebase-emulator }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'microsoft'
+          java-version: '17'
+      - name: Install Firebase CLI Tools
+        if: ${{ !env.selfhosted && inputs.setup-firebase-emulator }}
+        run: npm install -g firebase-tools
       - name: Install Node Dependencies
         run: npm ci
       - name: Run the tests
