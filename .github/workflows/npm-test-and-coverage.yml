@@ -16,6 +16,11 @@ on:
         required: false
         type: string
         default: '18'
+      working-directory:
+        description: 'The working directory where the project is located. Defaults to $GITHUB_WORKSPACE'
+        required: false
+        type: string
+        default: '.'
     secrets:
       token:
         description: 'The CodeCov token used for private repositories'
@@ -24,6 +29,9 @@ on:
 jobs:
   testandcoverage:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
