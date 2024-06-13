@@ -6,4 +6,13 @@
 # SPDX-License-Identifier: MIT
 #
 
-custom: [Stanford Biodesign Digital Health Group.stanford.edu]
+extends: default
+
+rules:
+  line-length:
+    max: 150
+    level: warning
+  truthy:
+    level: error
+    allowed-values: ["false", "true", "on"]  # On to enable the on: setup for GitHub actions.
+  document-start: disable

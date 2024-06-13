@@ -22,3 +22,15 @@ jobs:
   markdown_link_check:
     name: Markdown Link Check
     uses: ./.github/workflows/markdown-link-check.yml
+  yamllint:
+    name: YAML Lint Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+      - name: Install yamllint
+        run: pip install yamllint
+      - name: Run yamllint with custom config
+        run: yamllint -c .yamllint.yml .

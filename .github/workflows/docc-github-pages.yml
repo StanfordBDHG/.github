@@ -12,31 +12,39 @@ on:
   workflow_call:
     inputs:
       path:
-        description: 'The path where the project is located. Defaults to $GITHUB_WORKSPACE'
+        description: |
+          The path where the project is located. Defaults to $GITHUB_WORKSPACE
         required: false
         type: string
         default: '.'
       runsonlabels:
-        description: 'JSON-based collection of labels indicating which type of github runner should be chosen'
+        description: |
+          JSON-based collection of labels indicating which type of github runner should be chosen
         required: false
         type: string
         default: '["macos-14"]'
       xcodeversion:
-        description: 'The Xcode version used for the build'
+        description: |
+          The Xcode version used for the build
         required: false
         type: string
         default: 'latest-stable'
       scheme:
-        description: 'The scheme in the Xcode project. Either use `scheme` to use xcodebuild, `fastlanelane` to use fastlane, or a custom command using `customcommand`'
+        description: |
+          The scheme in the Xcode project.
+          Either use `scheme` to use xcodebuild, `fastlanelane` to use fastlane, or a custom command using `customcommand`'
         required: true
         type: string
       destination:
-        description: 'The destination parameter that should be passed to xcodebuild. Defaults to the iOS simulator using an iPhone 15 Pro'
+        description: |
+          The destination parameter that should be passed to xcodebuild.
+          Defaults to the iOS simulator using an iPhone 15 Pro.
         required: false
         type: string
         default: 'platform=iOS Simulator,name=iPhone 15 Pro'
       dryrun:
-        description: 'Dry run deployment, only build documentation but do not publish'
+        description: |
+          Dry run deployment, only build documentation but do not publish
         required: false
         type: boolean
         default: false
