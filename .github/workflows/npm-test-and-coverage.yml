@@ -80,7 +80,7 @@ jobs:
               export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
               echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
           fi
-          
+
           npm test
         env:
           GOOGLE_APPLICATION_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}
