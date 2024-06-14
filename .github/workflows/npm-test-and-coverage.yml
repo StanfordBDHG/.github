@@ -86,6 +86,7 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
+        if: ${{ always() }}
         with:
           token: ${{ secrets.token }}
           working-directory: ${{ inputs.working-directory }}
