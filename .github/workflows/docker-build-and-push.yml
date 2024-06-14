@@ -15,35 +15,45 @@ on:
   workflow_call:
     inputs:
       dockerFile:
-        description: 'Path or name of the Docker file. The default values is `Dockerfile`. The docker file can use the `baseimage` to get an architecture specific Swift base image'
+        description: |
+          Path or name of the Docker file. The default values is `Dockerfile`.
+          The docker file can use the `baseimage` to get an architecture specific Swift base image.
         required: false
         type: string
         default: 'Dockerfile'
       imageName:
-        description: 'The name used to tag the docker image on the defined registry containing the organzation/account name and the name of the image, e.g.: stanfordbdhg/example'
+        description: |
+          The name used to tag the docker image on the defined registry containing the organzation/account name and the name of the image.
+          An example would be: stanfordbdhg/example.
         required: true
         type: string
       registry:
-        description: 'Server address of Docker registry. If not set then will default to ghcr.io'
+        description: |
+          Server address of Docker registry. If not set then will default to ghcr.io.
         required: false
         type: string
         default: 'ghcr.io'
       workingDirectory:
-        description: 'The working-directory of the GitHub Action. Defaults to $GITHUB_WORKSPACE'
+        description: |
+          The working-directory of the GitHub Action. Defaults to $GITHUB_WORKSPACE'.
         required: false
         type: string
         default: '.'
       environment:
-        description: 'GitHub deployment environment to optionally adjust access to variables and secrets with additional protection rules: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment'
+        description: |
+          GitHub deployment environment to optionally adjust access to variables and secrets with additional protection rules.
+          https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment
         required: false
         type: string
         default: ''
     secrets:
       username:
-        description: 'Username for authenticating to the Docker registry. Uses the GitHub actor by default.'
+        description: |
+          Username for authenticating to the Docker registry. Uses the GitHub actor by default.
         required: false
       password:
-        description: 'Password or personal access token for authenticating the Docker registry. Uses the GitHub token by default.'
+        description: |
+          Password or personal access token for authenticating the Docker registry. Uses the GitHub token by default.
         required: false
 
 permissions:

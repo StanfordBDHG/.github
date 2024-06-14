@@ -61,12 +61,12 @@ body:
     attributes:
       label: Alternatives considered
       description: |
-        Please provide a clear and concise description of any alternative solutions or features you've considered. 
-        
+        Please provide a clear and concise description of any alternative solutions or features you've considered.
+
         Is there already software that has the behavior you're interested in? What is it, and how does it work?
       placeholder: |
-        A clear and concise description of any alternative solutions or features you've considered. 
-        
+        A clear and concise description of any alternative solutions or features you've considered.
+
         Is there already software that has the behavior you're interested in? What is it, and how does it work?
     validations:
       required: true
@@ -74,13 +74,13 @@ body:
     id: additionalcontext
     attributes:
       label: Additional context
-      description: Please provide any additional context that might be relevant for your feature report
-      placeholder: Any additional context that might be relevant for your feature report
+      description: Please provide any additional context that might be relevant for your feature report.
+      placeholder: Any additional context that might be relevant for your feature report.
   - type: checkboxes
     id: terms
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/StanfordBDHG/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/StanfordBDHG/.github/blob/main/CONTRIBUTING.md)
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/StanfordBDHG/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/StanfordBDHG/.github/blob/main/CONTRIBUTING.md)  # yamllint disable-line rule:line-length
       options:
         - label: I agree to follow this projects's Code of Conduct and Contributing Guidelines
           required: true

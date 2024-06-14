@@ -24,8 +24,6 @@ permissions:
 jobs:
   eslint:
     runs-on: ubuntu-latest
-    env:
-      CI: TRUE
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node
