@@ -123,6 +123,12 @@ on:
         required: false
         type: string
         default: ''
+      firebaserepository:
+        description: |
+          Firebase repository to check out before starting emulator.
+        required: false
+        type: string
+        default: ''
       googleserviceinfoplistpath:
         description: |
           Path to the GoogleService-Info.plist file that is replaced using the content found in the secret GOOGLE_SERVICE_INFO_PLIST.
@@ -428,6 +434,12 @@ jobs:
               -skipPackagePluginValidation \
               -skipMacroValidation \
             | xcbeautify
+      - name: Firebase checkout
+        if: ${{ inputs.firebaserepository != '' }}
+        uses: actions/checkout@main
+        with:
+            repository: ${{ inputs.firebaserepository }}
+            path: ${{ inputs.firebaseemulatorimport }}
       - name: Fastlane
         if: ${{ inputs.fastlanelane != '' }}
         run: |
