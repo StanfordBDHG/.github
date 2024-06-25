@@ -11,6 +11,12 @@ name: Test using xcodebuild or run fastlane
 on:
   workflow_call:
     inputs:
+      nodeVersion:
+        description: |
+          Node version spec of the version to use in SemVer notation.
+        required: false
+        type: string
+        default: '20'
       path:
         description: |
           The path where the project is located. Defaults to $GITHUB_WORKSPACE.
@@ -58,10 +64,12 @@ jobs:
             echo "env.selfhosted: ${{ env.selfhosted }}"
             echo "environment: ${{ inputs.environment }}"
       - uses: actions/checkout@v4
-      - name: Setup NodeJS
-        uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.nodeVersion }}
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'microsoft'
           java-version: '17'
