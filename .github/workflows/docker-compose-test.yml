@@ -13,7 +13,7 @@ on:
   workflow_call:
     inputs:
       dockerComposeFile:
-        description: 'Path or name of the Docker compose file. The default values is `docker compose.yml`'
+        description: 'Path or name of the Docker compose file. The default values is `docker-compose.yml`'
         required: false
         type: string
         default: 'docker-compose.yml'
