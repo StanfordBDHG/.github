@@ -1,6 +1,6 @@
 #
 # This source file is part of the Stanford Biodesign Digital Health Group open-source organization
-# Based on the Apodini workflow found at: https://github.com/Apodini/.github/workflows/docker compose-test.yml
+# Based on the Apodini workflow found at: https://github.com/Apodini/.github/workflows/docker-compose-test.yml
 #
 # SPDX-FileCopyrightText: 2023 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
@@ -16,7 +16,7 @@ on:
         description: 'Path or name of the Docker compose file. The default values is `docker compose.yml`'
         required: false
         type: string
-        default: 'docker compose.yml'
+        default: 'docker-compose.yml'
       workingDirectory:
         description: 'The workingDirectory of the GitHub Action. Defaults to $GITHUB_WORKSPACE'
         required: false
