@@ -237,6 +237,7 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
       - name: Setup NodeJS
         if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
+        uses: actions/setup-node@v4
         with:
           node-version: 22.6.x
       - name: Setup Java
