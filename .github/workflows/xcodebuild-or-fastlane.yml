@@ -54,20 +54,26 @@ on:
       setupSimulators:
         description: |
           Flag indicating if all iOS simulators matching the `destination` input shoud be setup.
-          Includes, e.g., password autofill functionality should be disabled.
+          Includes, e.g., password autofill functionality should be disabled [Deprecated].
         required: false
         type: boolean
         default: false
       resultBundle:
         description: |
           The name of the Xcode result bundle that is passed to xcodebuild.
-          If not defined, the name of the scheme + .xcresult is used.'
+          If not defined, the name of the scheme + .xcresult is used.
+        required: false
+        type: string
+        default: ''
+      swiftVersion:
+        description: |
+          Specify the Swift language version when using xcodebuild.
         required: false
         type: string
         default: ''
       test:
         description: |
-          A flag indicating if the tests of the Xcode project scheme should run.
+          A flag indicating if the tests of the Xcode project scheme should run when using xcodebuild.
         required: false
         type: boolean
         default: true
@@ -106,7 +112,7 @@ on:
         default: false
       cacheDerivedData:
         description: |
-          Cache the derived data folder for a build using xcodebuild.
+          Cache the derived data folder for a build using xcodebuild [Deprecated].
         required: false
         type: boolean
         default: false
@@ -219,14 +225,10 @@ jobs:
       - name: Install xcbeautify
         if: ${{ !env.selfhosted && inputs.scheme != '' }}
         run: brew install xcbeautify
-      - name: Cache .derivedData folder
+      - name: Cache .derivedData folder (Deprecated)
         if: ${{ inputs.cacheDerivedData }}
-        uses: actions/cache@v4
-        with:
-          path: .derivedData
-          key: ${{ runner.os }}-${{ runner.arch }}-derivedData-${{ hashFiles('**/Package.swift', '**/*.pbxproj') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-derivedData-
+        run: |
+          echo "::warning::Caching of the .derivedData folder was removed and is deprecated. Plase stop using this option."
       - name: Cache Firebase Emulators
         if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
         uses: actions/cache@v4
@@ -294,87 +296,10 @@ jobs:
         with:
           languages: swift
           db-location: '${{ inputs.path }}/.codeql'
-      - name: Disable Password Autofill in the iOS Simulator
+      - name: Disable Password Autofill in the iOS Simulator (Deprecated)
         if: ${{ inputs.setupSimulators && inputs.destination != '' }}
         run: |
-          # Function to parse the device name from input string
-          parse_device_name() {
-              local input_str=$1
-              local IFS=',' # Set Internal Field Separator to comma for splitting
-
-              for kv in $input_str; do
-                  key="${kv%%=*}"     # Extract key (everything before '=')
-                  value="${kv#*=}"    # Extract value (everything after '=')
-
-                  if [ "$key" = "name" ]; then
-                      echo "$value"
-                      return
-                  fi
-              done
-          }
-
-          # Extract device name from the input
-          DEVICE_NAME=$(parse_device_name "${{ inputs.destination }}")
-
-          echo "Device name: $DEVICE_NAME"
-
-          # Retrieve the iOS simulator IDs for the specified device
-          REGEX_PATTERN="$DEVICE_NAME( Simulator)? \(.*\)"
-          SIMULATOR_IDS=$(xctrace list devices | grep -E "$REGEX_PATTERN" | awk '{print $NF}' | tr -d '()')
-
-          # Check if SIMULATOR_IDS is empty
-          if [ -z "$SIMULATOR_IDS" ]; then
-              echo "No simulators found for the specified device."
-              exit 1
-          fi
-
-          # Loop through each Simulator ID
-          for SIMULATOR_ID in $SIMULATOR_IDS; do
-              echo "Processing Simulator ID: $SIMULATOR_ID"
-
-              PLIST1="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Containers/Shared/SystemGroup/systemgroup.com.apple.configurationprofiles/Library/ConfigurationProfiles/UserSettings.plist"
-              PLIST2="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/UserConfigurationProfiles/EffectiveUserSettings.plist"
-              PLIST3="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/UserConfigurationProfiles/PublicInfo/PublicEffectiveUserSettings.plist"
-
-              if [ ! -f "$PLIST1" ] || [ ! -f "$PLIST2" ] || [ ! -f "$PLIST3" ]; then
-                  echo "Simulator $SIMULATOR_ID booting ..."
-                  xcrun simctl boot "$SIMULATOR_ID"
-              fi
-
-              # Loop for a maximum of 30 seconds
-              for (( i=0; i<30; i++ )); do
-                  if [ -f "$PLIST1" ] && [ -f "$PLIST2" ] && [ -f "$PLIST3" ]; then
-                      echo "All files found."
-                      break
-                  fi
-                  sleep 1
-              done
-
-              # Check if the loop exited because all files were found or because of timeout
-              if [ ! -f "$PLIST1" ] || [ ! -f "$PLIST2" ] || [ ! -f "$PLIST3" ]; then
-                  echo "Error: Not all files were found within the 30-second timeout."
-                  exit 1
-              fi
-
-              sleep 5
-
-              # Disable AutoFillPasswords
-              plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST1
-              plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST2
-              plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST3
-              /usr/libexec/PlistBuddy \
-                -c "Add :KeyboardContinuousPathEnabled bool false" \
-                /Users/githubaction/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/Preferences/com.apple.keyboard.ContinuousPath.plist
-
-              sleep 1
-
-              # Restart (shutdown if needed and boot) the iOS simulator for the changes to take effect
-              if xcrun simctl shutdown "$SIMULATOR_ID"; then
-                  echo "Simulator $SIMULATOR_ID shutdown successfully."
-              else
-                  echo "Unable to shutdown simulator $SIMULATOR_ID as it is already shutdown."
-              fi
-          done
+          echo "::warning::Script-based simulator setup to disable Password Autofill was removed and is deprecated. Please stop using this option."
       - name: Run custom command
         if: ${{ inputs.customcommand != '' }}
         run: ${{ inputs.customcommand }}
@@ -414,6 +339,12 @@ jobs:
                 ENABLE_TESTING_FLAG=""
             fi
 
+            if [ -n "${{ inputs.swiftVersion }}" ]; then
+                SWIFT_VERSION_FLAG="-swift-version ${{ inputs.swiftVersion }}"
+            else
+                SWIFT_VERSION_FLAG=""
+            fi
+
             set -o pipefail \
             && xcodebuild $XCODECOMMAND \
               -scheme "${{ inputs.scheme }}" \
@@ -424,7 +355,7 @@ jobs:
               -resultBundlePath "$RESULTBUNDLE" \
               CODE_SIGNING_REQUIRED=NO \
               CODE_SIGN_IDENTITY="" \
-              OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG" \
+              OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG $SWIFT_VERSION_FLAG" \
               -skipPackagePluginValidation \
               -skipMacroValidation \
             | xcbeautify
