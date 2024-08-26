@@ -54,20 +54,26 @@ on:
       setupSimulators:
         description: |
           Flag indicating if all iOS simulators matching the `destination` input shoud be setup.
-          Includes, e.g., password autofill functionality should be disabled.
+          Includes, e.g., password autofill functionality should be disabled [Deprecated].
         required: false
         type: boolean
         default: false
       resultBundle:
         description: |
           The name of the Xcode result bundle that is passed to xcodebuild.
-          If not defined, the name of the scheme + .xcresult is used.'
+          If not defined, the name of the scheme + .xcresult is used.
+        required: false
+        type: string
+        default: ''
+      swiftVersion:
+        description: |
+          Specify the Swift language version when using xcodebuild.
         required: false
         type: string
         default: ''
       test:
         description: |
-          A flag indicating if the tests of the Xcode project scheme should run.
+          A flag indicating if the tests of the Xcode project scheme should run when using xcodebuild.
         required: false
         type: boolean
         default: true
@@ -106,7 +112,7 @@ on:
         default: false
       cacheDerivedData:
         description: |
-          Cache the derived data folder for a build using xcodebuild.
+          Cache the derived data folder for a build using xcodebuild [Deprecated].
         required: false
         type: boolean
         default: false
@@ -202,273 +208,198 @@ jobs:
         working-directory: ${{ inputs.path }}
     environment: ${{ inputs.environment }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          # This is GitHubs way of implementing ternary expressions (see https://docs.github.com/en/actions/learn-github-actions/expressions)
-          token: ${{ secrets.CHECKOUT_TOKEN != '' && secrets.CHECKOUT_TOKEN || github.token }}
-          submodules: ${{ inputs.checkout_submodules }}
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: ${{ inputs.xcodeversion }}
-      - name: Check environment
-        run: |
-            xcodebuild -version
-            swift --version
-            echo "env.selfhosted: ${{ env.selfhosted }}"
-            echo "environment: ${{ inputs.environment }}"
-      - name: Install xcbeautify
-        if: ${{ !env.selfhosted && inputs.scheme != '' }}
-        run: brew install xcbeautify
-      - name: Cache .derivedData folder
-        if: ${{ inputs.cacheDerivedData }}
-        uses: actions/cache@v4
-        with:
-          path: .derivedData
-          key: ${{ runner.os }}-${{ runner.arch }}-derivedData-${{ hashFiles('**/Package.swift', '**/*.pbxproj') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-derivedData-
-      - name: Cache Firebase Emulators
-        if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/firebase/emulators
-          key: ${{ runner.os }}-${{ runner.arch }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
-      - name: Setup NodeJS
-        if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
-        uses: actions/setup-node@v4
-      - name: Setup Java
-        if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'microsoft'
-          java-version: '17'
-      - name: Install Firebase CLI Tools
-        if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
-        run: npm install -g firebase-tools
-      - name: Install the Apple certificate and provisioning profile
-        if: ${{ inputs.setupsigning }}
-        env:
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-          BUILD_SECONDARY_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_SECONDARY_PROVISION_PROFILE_BASE64 }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-        run: |
-          # Create Variables
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+    - uses: actions/checkout@v4
+      with:
+        # This is GitHubs way of implementing ternary expressions (see https://docs.github.com/en/actions/learn-github-actions/expressions)
+        token: ${{ secrets.CHECKOUT_TOKEN != '' && secrets.CHECKOUT_TOKEN || github.token }}
+        submodules: ${{ inputs.checkout_submodules }}
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: ${{ inputs.xcodeversion }}
+    - name: Check environment
+      run: |
+          xcodebuild -version
+          swift --version
+          echo "env.selfhosted: ${{ env.selfhosted }}"
+          echo "environment: ${{ inputs.environment }}"
+    - name: Install xcbeautify
+      if: ${{ !env.selfhosted && inputs.scheme != '' }}
+      run: brew install xcbeautify
+    - name: Cache .derivedData folder (Deprecated)
+      if: ${{ inputs.cacheDerivedData }}
+      run: |
+        echo "::warning::Caching of the .derivedData folder was removed and is deprecated. Plase stop using this option."
+    - name: Cache Firebase Emulators
+      if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/firebase/emulators
+        key: ${{ runner.os }}-${{ runner.arch }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
+    - name: Setup NodeJS
+      if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
+      uses: actions/setup-node@v4
+    - name: Setup Java
+      if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'microsoft'
+        java-version: '17'
+    - name: Install Firebase CLI Tools
+      if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
+      run: npm install -g firebase-tools
+    - name: Install the Apple certificate and provisioning profile
+      if: ${{ inputs.setupsigning }}
+      env:
+        BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+        P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        BUILD_SECONDARY_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_SECONDARY_PROVISION_PROFILE_BASE64 }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      run: |
+        # Create Variables
+        CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+        PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
-          # Import Certificate and Provisioning Profile from Secrets
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+        # Import Certificate and Provisioning Profile from Secrets
+        echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+        echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
 
-          # Create a Temporary Keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        # Create a Temporary Keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-          # Import Certificate to the Keychain
-          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
+        # Import Certificate to the Keychain
+        security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
 
-          # Apply Provisioning Profile
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          UUID=`grep UUID -A1 -a $PP_PATH | grep -io "[-A-F0-9]\{36\}"`
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+        # Apply Provisioning Profile
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        UUID=`grep UUID -A1 -a $PP_PATH | grep -io "[-A-F0-9]\{36\}"`
+        cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
 
-          # Secondary Provisioning Profile
-          if [ -n "$BUILD_SECONDARY_PROVISION_PROFILE_BASE64" ]; then
-            PP_SECONDARY_PATH=$RUNNER_TEMP/build_pp_secondary.mobileprovision
-            echo -n "$BUILD_SECONDARY_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_SECONDARY_PATH
-            SECONDARY_UUID=`grep UUID -A1 -a $PP_SECONDARY_PATH | grep -io "[-A-F0-9]\{36\}"`
-            cp $PP_SECONDARY_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$SECONDARY_UUID.mobileprovision
-          fi
-      - name: Setup Google Services File
-        if: ${{ inputs.googleserviceinfoplistpath != '' }}
-        run: |
-          echo -n "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}" | base64 --decode -o "${{ inputs.googleserviceinfoplistpath }}"
-      - name: Initialize CodeQL
-        if: ${{ !env.selfhosted && inputs.codeql }}
-        uses: github/codeql-action/init@v3
-        with:
-          languages: swift
-          db-location: '${{ inputs.path }}/.codeql'
-      - name: Disable Password Autofill in the iOS Simulator
-        if: ${{ inputs.setupSimulators && inputs.destination != '' }}
-        run: |
-          # Function to parse the device name from input string
-          parse_device_name() {
-              local input_str=$1
-              local IFS=',' # Set Internal Field Separator to comma for splitting
-
-              for kv in $input_str; do
-                  key="${kv%%=*}"     # Extract key (everything before '=')
-                  value="${kv#*=}"    # Extract value (everything after '=')
-
-                  if [ "$key" = "name" ]; then
-                      echo "$value"
-                      return
-                  fi
-              done
-          }
-
-          # Extract device name from the input
-          DEVICE_NAME=$(parse_device_name "${{ inputs.destination }}")
-
-          echo "Device name: $DEVICE_NAME"
-
-          # Retrieve the iOS simulator IDs for the specified device
-          REGEX_PATTERN="$DEVICE_NAME( Simulator)? \(.*\)"
-          SIMULATOR_IDS=$(xctrace list devices | grep -E "$REGEX_PATTERN" | awk '{print $NF}' | tr -d '()')
-
-          # Check if SIMULATOR_IDS is empty
-          if [ -z "$SIMULATOR_IDS" ]; then
-              echo "No simulators found for the specified device."
-              exit 1
+        # Secondary Provisioning Profile
+        if [ -n "$BUILD_SECONDARY_PROVISION_PROFILE_BASE64" ]; then
+          PP_SECONDARY_PATH=$RUNNER_TEMP/build_pp_secondary.mobileprovision
+          echo -n "$BUILD_SECONDARY_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_SECONDARY_PATH
+          SECONDARY_UUID=`grep UUID -A1 -a $PP_SECONDARY_PATH | grep -io "[-A-F0-9]\{36\}"`
+          cp $PP_SECONDARY_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$SECONDARY_UUID.mobileprovision
+        fi
+    - name: Setup Google Services File
+      if: ${{ inputs.googleserviceinfoplistpath != '' }}
+      run: |
+        echo -n "${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}" | base64 --decode -o "${{ inputs.googleserviceinfoplistpath }}"
+    - name: Initialize CodeQL
+      if: ${{ !env.selfhosted && inputs.codeql }}
+      uses: github/codeql-action/init@v3
+      with:
+        languages: swift
+        db-location: '${{ inputs.path }}/.codeql'
+    - name: Disable Password Autofill in the iOS Simulator (Deprecated)
+      if: ${{ inputs.setupSimulators && inputs.destination != '' }}
+      run: |
+        echo "::warning::Script-based simulator setup to disable Password Autofill was removed and is deprecated. Please stop using this option."
+    - name: Run custom command
+      if: ${{ inputs.customcommand != '' }}
+      run: ${{ inputs.customcommand }}
+      env:
+        APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+    - name: Resolve dependencies (xcodebuild)
+      if: ${{ inputs.scheme != '' }}
+      run: |
+          xcodebuild \
+            -scheme ${{ inputs.scheme }} \
+            -resolvePackageDependencies \
+            -derivedDataPath ".derivedData" \
+          | xcbeautify \
+          || true
+    - name: Build and test (xcodebuild)
+      if: ${{ inputs.scheme != '' }}
+      run: |
+          if ${{ inputs.test }}; then
+              XCODECOMMAND="test"
+              CODECOVERAGEFLAG="-enableCodeCoverage YES"
+          else
+              XCODECOMMAND="build"
           fi
 
-          # Loop through each Simulator ID
-          for SIMULATOR_ID in $SIMULATOR_IDS; do
-              echo "Processing Simulator ID: $SIMULATOR_ID"
+          if [ -z "${{ inputs.resultBundle }}" ]; then
+              RESULTBUNDLE=${{ inputs.scheme }}.xcresult
+          else
+              RESULTBUNDLE=${{ inputs.resultBundle }}
+          fi
 
-              PLIST1="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Containers/Shared/SystemGroup/systemgroup.com.apple.configurationprofiles/Library/ConfigurationProfiles/UserSettings.plist"
-              PLIST2="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/UserConfigurationProfiles/EffectiveUserSettings.plist"
-              PLIST3="$HOME/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/UserConfigurationProfiles/PublicInfo/PublicEffectiveUserSettings.plist"
+          if [ "${{ inputs.buildConfig }}" = "Release" ]; then
+              ENABLE_TESTING_FLAG="-enable-testing"
+          else
+              ENABLE_TESTING_FLAG=""
+          fi
+        
+          if [ -n "${{ inputs.swiftVersion }}" ]; then
+              SWIFT_VERSION_FLAG="-swift-version ${{ inputs.swiftVersion }}"
+          else
+              SWIFT_VERSION_FLAG=""
+          fi
 
-              if [ ! -f "$PLIST1" ] || [ ! -f "$PLIST2" ] || [ ! -f "$PLIST3" ]; then
-                  echo "Simulator $SIMULATOR_ID booting ..."
-                  xcrun simctl boot "$SIMULATOR_ID"
-              fi
+          set -o pipefail \
+          && xcodebuild $XCODECOMMAND \
+            -scheme "${{ inputs.scheme }}" \
+            -configuration "${{ inputs.buildConfig }}" \
+            -destination "${{ inputs.destination }}" \
+            $CODECOVERAGEFLAG \
+            -derivedDataPath ".derivedData" \
+            -resultBundlePath "$RESULTBUNDLE" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG $SWIFT_VERSION_FLAG" \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+          | xcbeautify
+    - name: Fastlane
+      if: ${{ inputs.fastlanelane != '' }}
+      run: |
+          if ${{ inputs.setupfirebaseemulator }}; then
+              # We try to do an npm install in the functions directory.
+              npm --prefix ./functions install || true
 
-              # Loop for a maximum of 30 seconds
-              for (( i=0; i<30; i++ )); do
-                  if [ -f "$PLIST1" ] && [ -f "$PLIST2" ] && [ -f "$PLIST3" ]; then
-                      echo "All files found."
-                      break
-                  fi
-                  sleep 1
-              done
+              echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
+              export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
+              echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
 
-              # Check if the loop exited because all files were found or because of timeout
-              if [ ! -f "$PLIST1" ] || [ ! -f "$PLIST2" ] || [ ! -f "$PLIST3" ]; then
-                  echo "Error: Not all files were found within the 30-second timeout."
-                  exit 1
-              fi
-
-              sleep 5
-
-              # Disable AutoFillPasswords
-              plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST1
-              plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST2
-              plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO $PLIST3
-              /usr/libexec/PlistBuddy \
-                -c "Add :KeyboardContinuousPathEnabled bool false" \
-                /Users/githubaction/Library/Developer/CoreSimulator/Devices/$SIMULATOR_ID/data/Library/Preferences/com.apple.keyboard.ContinuousPath.plist
-
-              sleep 1
-
-              # Restart (shutdown if needed and boot) the iOS simulator for the changes to take effect
-              if xcrun simctl shutdown "$SIMULATOR_ID"; then
-                  echo "Simulator $SIMULATOR_ID shutdown successfully."
+              if [ -n "${{ inputs.firebaseemulatorimport }}" ]; then
+                  echo "Importing firebase emulator data from ${{ inputs.firebaseemulatorimport }}"
+                  firebase emulators:exec --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
               else
-                  echo "Unable to shutdown simulator $SIMULATOR_ID as it is already shutdown."
+                  firebase emulators:exec 'fastlane ${{ inputs.fastlanelane }}'
               fi
-          done
-      - name: Run custom command
-        if: ${{ inputs.customcommand != '' }}
-        run: ${{ inputs.customcommand }}
-        env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-      - name: Resolve dependencies (xcodebuild)
-        if: ${{ inputs.scheme != '' }}
-        run: |
-            xcodebuild \
-              -scheme ${{ inputs.scheme }} \
-              -resolvePackageDependencies \
-              -derivedDataPath ".derivedData" \
-            | xcbeautify \
-            || true
-      - name: Build and test (xcodebuild)
-        if: ${{ inputs.scheme != '' }}
-        run: |
-            if ${{ inputs.test }}; then
-                XCODECOMMAND="test"
-                CODECOVERAGEFLAG="-enableCodeCoverage YES"
-            else
-                XCODECOMMAND="build"
-            fi
-
-            if [ -z "${{ inputs.resultBundle }}" ]; then
-                RESULTBUNDLE=${{ inputs.scheme }}.xcresult
-            else
-                RESULTBUNDLE=${{ inputs.resultBundle }}
-            fi
-
-            if [ "${{ inputs.buildConfig }}" = "Release" ]; then
-                ENABLE_TESTING_FLAG="-enable-testing"
-            else
-                ENABLE_TESTING_FLAG=""
-            fi
-
-            set -o pipefail \
-            && xcodebuild $XCODECOMMAND \
-              -scheme "${{ inputs.scheme }}" \
-              -configuration "${{ inputs.buildConfig }}" \
-              -destination "${{ inputs.destination }}" \
-              $CODECOVERAGEFLAG \
-              -derivedDataPath ".derivedData" \
-              -resultBundlePath "$RESULTBUNDLE" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGN_IDENTITY="" \
-              OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG" \
-              -skipPackagePluginValidation \
-              -skipMacroValidation \
-            | xcbeautify
-      - name: Fastlane
-        if: ${{ inputs.fastlanelane != '' }}
-        run: |
-            if ${{ inputs.setupfirebaseemulator }}; then
-                # We try to do an npm install in the functions directory.
-                npm --prefix ./functions install || true
-
-                echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
-                export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
-                echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
-
-                if [ -n "${{ inputs.firebaseemulatorimport }}" ]; then
-                    echo "Importing firebase emulator data from ${{ inputs.firebaseemulatorimport }}"
-                    firebase emulators:exec --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
-                else
-                    firebase emulators:exec 'fastlane ${{ inputs.fastlanelane }}'
-                fi
-            else
-                fastlane ${{ inputs.fastlanelane }}
-            fi
-        env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          GOOGLE_APPLICATION_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}
-      - name: Perform CodeQL Analysis
-        if: ${{ !env.selfhosted && inputs.codeql }}
-        uses: github/codeql-action/analyze@v3
-      - name: Upload artifact
-        if: ${{ (success() || failure()) && inputs.artifactname != '' && inputs.buildConfig != 'Release' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.artifactname }}
-          path: ${{ inputs.path }}/${{ inputs.artifactname }}
-      - name: Clean up keychain and provisioning profile
-        if: ${{ (inputs.setupsigning && env.selfhosted) || failure() }}
-        run: |
-          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
-          rm -rf ~/Library/MobileDevice/Provisioning\ Profiles || true
-      - name: Clean up Google application credentials
-        if: ${{ inputs.fastlanelane != '' || failure() }}
-        run: |
-          rm -rf $RUNNER_TEMP/google-application-credentials.json || true
+          else
+              fastlane ${{ inputs.fastlanelane }}
+          fi
+      env:
+        APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+        APPLE_ID: ${{ secrets.APPLE_ID }}
+        GOOGLE_APPLICATION_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}
+    - name: Perform CodeQL Analysis
+      if: ${{ !env.selfhosted && inputs.codeql }}
+      uses: github/codeql-action/analyze@v3
+    - name: Upload artifact
+      if: ${{ (success() || failure()) && inputs.artifactname != '' && inputs.buildConfig != 'Release' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifactname }}
+        path: ${{ inputs.path }}/${{ inputs.artifactname }}
+    - name: Clean up keychain and provisioning profile
+      if: ${{ (inputs.setupsigning && env.selfhosted) || failure() }}
+      run: |
+        security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
+        rm -rf ~/Library/MobileDevice/Provisioning\ Profiles || true
+    - name: Clean up Google application credentials
+      if: ${{ inputs.fastlanelane != '' || failure() }}
+      run: |
+        rm -rf $RUNNER_TEMP/google-application-credentials.json || true
