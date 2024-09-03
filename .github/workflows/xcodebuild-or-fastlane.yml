@@ -122,6 +122,13 @@ on:
         required: false
         type: boolean
         default: false
+      customfirebaseemulatorcommand:
+        description: |
+          A custom command that should be run right before executing the fastlane command.
+          Only used if `setupfirebaseemulator` is set to true, 'fastlanelane' is set, and no `firebaseemulatorimport` is set.
+        required: false
+        type: string
+        default: ''
       firebaseemulatorimport:
         description: |
           Firebase import directory that contains Authentication, Cloud Firestore, Realtime Database and Cloud Storage data for Firebase emulators.
@@ -376,7 +383,10 @@ jobs:
                     echo "Importing firebase emulator data from ${{ inputs.firebaseemulatorimport }}"
                     firebase emulators:exec --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
                 else
-                    firebase emulators:exec 'fastlane ${{ inputs.fastlanelane }}'
+                    if [ -n "${{ inputs.customfirebaseemulatorcommand }}" ]; then
+                        firebase emulators:exec '${{ inputs.customfirebaseemulatorcommand }} && fastlane ${{ inputs.fastlanelane }}'
+                    else
+                      firebase emulators:exec 'fastlane ${{ inputs.fastlanelane }}'
                 fi
             else
                 fastlane ${{ inputs.fastlanelane }}
