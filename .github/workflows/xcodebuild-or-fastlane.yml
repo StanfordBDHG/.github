@@ -387,6 +387,7 @@ jobs:
                         firebase emulators:exec '${{ inputs.customfirebaseemulatorcommand }} && fastlane ${{ inputs.fastlanelane }}'
                     else
                       firebase emulators:exec 'fastlane ${{ inputs.fastlanelane }}'
+                    fi
                 fi
             else
                 fastlane ${{ inputs.fastlanelane }}
