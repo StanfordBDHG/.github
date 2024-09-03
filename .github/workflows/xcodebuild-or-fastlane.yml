@@ -395,19 +395,18 @@ jobs:
 
                 if [ -n "${{ inputs.firebaseemulatorimport }}" ]; then
                     echo "Importing firebase emulator data from ${{ inputs.firebaseemulatorimport }}"
-                    firebase emulators:exec -c FIREBASE_JSON_PATH --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
+                    firebase emulators:exec -c $FIREBASE_JSON_PATH --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
                 else
                     if [ -n "${{ inputs.customfirebaseemulatorcommand }}" ]; then
-                        firebase emulators:exec -c FIREBASE_JSON_PATH '${{ inputs.customfirebaseemulatorcommand }} && fastlane ${{ inputs.fastlanelane }}'
+                        firebase emulators:exec -c $FIREBASE_JSON_PATH '${{ inputs.customfirebaseemulatorcommand }} && fastlane ${{ inputs.fastlanelane }}'
                     else
-                      firebase emulators:exec -c FIREBASE_JSON_PATH 'fastlane ${{ inputs.fastlanelane }}'
+                      firebase emulators:exec -c $FIREBASE_JSON_PATH 'fastlane ${{ inputs.fastlanelane }}'
                     fi
                 fi
             else
                 fastlane ${{ inputs.fastlanelane }}
             fi
         env:
-          FIREBASE_JSON_PATH: "./firebase.json"
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
