@@ -388,19 +388,19 @@ jobs:
 
                 # Use the custom path to the firebase.json file if provided.
                 if [ -n "${{ inputs.firebasejsonpath }}" ]; then
-                    firebaseJSONPath = ${{ inputs.firebasejsonpath }}
+                    export FIREBASE_JSON_PATH="${{ inputs.firebasejsonpath }}"
                 else
-                    firebaseJSONPath = "./firebase.json"
+                    export FIREBASE_JSON_PATH="./firebase.json"
                 fi
 
                 if [ -n "${{ inputs.firebaseemulatorimport }}" ]; then
                     echo "Importing firebase emulator data from ${{ inputs.firebaseemulatorimport }}"
-                    firebase emulators:exec -c firebaseJSONPath --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
+                    firebase emulators:exec -c FIREBASE_JSON_PATH --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
                 else
                     if [ -n "${{ inputs.customfirebaseemulatorcommand }}" ]; then
-                        firebase emulators:exec -c firebaseJSONPath '${{ inputs.customfirebaseemulatorcommand }} && fastlane ${{ inputs.fastlanelane }}'
+                        firebase emulators:exec -c FIREBASE_JSON_PATH '${{ inputs.customfirebaseemulatorcommand }} && fastlane ${{ inputs.fastlanelane }}'
                     else
-                      firebase emulators:exec -c firebaseJSONPath 'fastlane ${{ inputs.fastlanelane }}'
+                      firebase emulators:exec -c FIREBASE_JSON_PATH 'fastlane ${{ inputs.fastlanelane }}'
                     fi
                 fi
             else
