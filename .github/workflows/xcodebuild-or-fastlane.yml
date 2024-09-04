@@ -122,20 +122,6 @@ on:
         required: false
         type: boolean
         default: false
-      firebasejsonpath:
-        description: |
-          Path to the firebase.json file that is used to configure the Firebase Emulator.
-          Defaults to './firebase.json' in the root directory.
-        required: false
-        type: string
-        default: ''
-      customfirebaseemulatorcommand:
-        description: |
-          A custom command that should be run right before executing the fastlane command.
-          Only used if `setupfirebaseemulator` is set to true, 'fastlanelane' is set, and no `firebaseemulatorimport` is set.
-        required: false
-        type: string
-        default: ''
       firebaseemulatorimport:
         description: |
           Firebase import directory that contains Authentication, Cloud Firestore, Realtime Database and Cloud Storage data for Firebase emulators.
@@ -386,22 +372,11 @@ jobs:
                 export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
                 echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
 
-                # Use the custom path to the firebase.json file if provided.
-                if [ -n "${{ inputs.firebasejsonpath }}" ]; then
-                    export FIREBASE_JSON_PATH="${{ inputs.firebasejsonpath }}"
-                else
-                    export FIREBASE_JSON_PATH="./firebase.json"
-                fi
-
                 if [ -n "${{ inputs.firebaseemulatorimport }}" ]; then
                     echo "Importing firebase emulator data from ${{ inputs.firebaseemulatorimport }}"
-                    firebase emulators:exec -c $FIREBASE_JSON_PATH --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
+                    firebase emulators:exec --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
                 else
-                    if [ -n "${{ inputs.customfirebaseemulatorcommand }}" ]; then
-                        firebase emulators:exec -c $FIREBASE_JSON_PATH '${{ inputs.customfirebaseemulatorcommand }} && fastlane ${{ inputs.fastlanelane }}'
-                    else
-                      firebase emulators:exec -c $FIREBASE_JSON_PATH 'fastlane ${{ inputs.fastlanelane }}'
-                    fi
+                    firebase emulators:exec 'fastlane ${{ inputs.fastlanelane }}'
                 fi
             else
                 fastlane ${{ inputs.fastlanelane }}
