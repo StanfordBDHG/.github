@@ -49,6 +49,11 @@ on:
           You can lean more about how to generate the JSON at https://cloud.google.com/iam/docs/service-accounts-create.
           The service account must have the minimally required permissions documented at https://firebase.google.com/docs/projects/iam/permissions.
         required: true
+          secrets:
+      ENV_FILE:
+        description: |
+          .env file that is injected in the build context before doing the firebase deployment.
+        required: false
 
 jobs:
   deployfirebase:
@@ -75,6 +80,10 @@ jobs:
           java-version: '17'
       - name: Install Firebase CLI Tools
         run: npm install -g firebase-tools
+      - name: Load All Environment Variables
+        if: ${{ inputs.customcommand != '' }}
+        run: |
+          export $(${{ secrets.ENV_FILE }} | xargs)
       - name: Run custom command
         if: ${{ inputs.customcommand != '' }}
         run: ${{ inputs.customcommand }}
