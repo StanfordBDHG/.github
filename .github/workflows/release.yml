@@ -17,7 +17,7 @@ jobs:
   releasetag:
     name: Tag Release
     uses: ./.github/workflows/action-release-tag.yml
-    secrets:
-      access-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    permissions:
+      contents: write
     with:
       user: PaulsAutomationBot

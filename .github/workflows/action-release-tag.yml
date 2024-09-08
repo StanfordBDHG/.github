@@ -12,13 +12,15 @@ on:
   workflow_call:
     inputs:
       user:
-        description: 'Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)'
+        description: |
+          Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)
         type: string
         required: false
         default: ''
     secrets:
       access-token:
-        description: 'GitHub Personal Access Token (PAT) if the default branch is protected and needs a specific access token to push tags to the branch'
+        description: |
+          GitHub Personal Access Token (PAT) if the default branch is protected and needs a specific access token to push tags to the branch
         required: false
 
 jobs:
@@ -26,7 +28,7 @@ jobs:
     name: Action Tag Release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.access-token || github.token }}
@@ -44,12 +46,12 @@ jobs:
           MINOR=${VERSION%.*}
 
           echo "Push Tags $MAJOR and $MINOR for $VERSION"
-          
+
           git config user.name "${{ inputs.user || github.actor }}"
           git config user.email "${{ inputs.user || github.actor }}@users.noreply.github.com"
-          
+
           git switch --detach ${VERSION}
-          
+
           git push origin :refs/tags/${MAJOR}
           git tag -fa "${MAJOR}" -m "${MAJOR}"
           git push origin --tags

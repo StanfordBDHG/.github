@@ -15,30 +15,45 @@ on:
   workflow_call:
     inputs:
       dockerFile:
-        description: 'Path or name of the Docker file. The default values is `Dockerfile`. The docker file can use the `baseimage` to get an architecture specific Swift base image'
+        description: |
+          Path or name of the Docker file. The default values is `Dockerfile`.
+          The docker file can use the `baseimage` to get an architecture specific Swift base image.
         required: false
         type: string
         default: 'Dockerfile'
       imageName:
-        description: 'The name used to tag the docker image on the defined registry containing the organzation/account name and the name of the image, e.g.: stanfordbdhg/example'
+        description: |
+          The name used to tag the docker image on the defined registry containing the organzation/account name and the name of the image.
+          An example would be: stanfordbdhg/example.
         required: true
         type: string
       registry:
-        description: 'Server address of Docker registry. If not set then will default to ghcr.io'
+        description: |
+          Server address of Docker registry. If not set then will default to ghcr.io.
         required: false
         type: string
         default: 'ghcr.io'
       workingDirectory:
-        description: 'The working-directory of the GitHub Action. Defaults to $GITHUB_WORKSPACE'
+        description: |
+          The working-directory of the GitHub Action. Defaults to $GITHUB_WORKSPACE'.
         required: false
         type: string
         default: '.'
+      environment:
+        description: |
+          GitHub deployment environment to optionally adjust access to variables and secrets with additional protection rules.
+          https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment
+        required: false
+        type: string
+        default: ''
     secrets:
       username:
-        description: 'Username for authenticating to the Docker registry. Uses the GitHub actor by default.'
+        description: |
+          Username for authenticating to the Docker registry. Uses the GitHub actor by default.
         required: false
       password:
-        description: 'Password or personal access token for authenticating the Docker registry. Uses the GitHub token by default.'
+        description: |
+          Password or personal access token for authenticating the Docker registry. Uses the GitHub token by default.
         required: false
 
 permissions:
@@ -57,7 +72,12 @@ jobs:
         platform:
           - linux/amd64
           - linux/arm64
+    environment: ${{ inputs.environment }}
     steps:
+      - name: Check environment
+        run: |
+          echo "env.selfhosted: ${{ env.selfhosted }}"
+          echo "environment: ${{ inputs.environment }}"
       - uses: actions/checkout@v4
       - name: Docker meta
         id: meta
@@ -104,10 +124,16 @@ jobs:
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
+      - name: Set transformed platform name
+        id: set-platform-name
+        run: |
+          transformed_platform=${{ matrix.platform }}
+          transformed_platform=${transformed_platform//\//-}
+          echo "transformed_platform=$transformed_platform" >> $GITHUB_ENV
       - name: Upload digest
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: digests
+          name: digests-${{ env.transformed_platform }}-${{ github.run_id }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -117,10 +143,15 @@ jobs:
       - build
     steps:
       - name: Download digests
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: digests
-          path: /tmp/digests
+          name: digests-linux-amd64-${{ github.run_id }}
+          path: /tmp/digests/
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          name: digests-linux-arm64-${{ github.run_id }}
+          path: /tmp/digests/
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Docker meta
