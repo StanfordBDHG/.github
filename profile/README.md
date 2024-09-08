@@ -21,7 +21,10 @@ Other featured projects include:
 - [ResearchKitOnFHIR](https://github.com/StanfordBDHG/ResearchKitOnFHIR) - FHIR questionnaires on iOS with ResearchKit
 - [HealthKitOnFHIR](https://github.com/StanfordBDHG/HealthKitOnFHIR) - converting HealthKit data to FHIR resources
 
-For more information, check out our website at [biodesigndigitalhealth.stanford.edu](https://biodesigndigitalhealth.stanford.edu).
+For more information, check out our website at [bdh.stanford.edu](https://biodesigndigitalhealth.stanford.edu). 
+
+> [!IMPORTANT]  
+> Are you interested in joining our team? Check out our open positions at [bdh.stanford.edu/open-positions](https://bdh.stanford.edu/open-positions).
 
 
 ![Stanford Mussallem Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-light.png#gh-light-mode-only)

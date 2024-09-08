@@ -20,7 +20,7 @@ body:
       description: |
         Please provide a description of your project and the software you have developed!
         Share your background, motivation for your project, and additional scientific background.
-        
+
         Feel free to share screenshots, videos, and examples demonstrating your project.
       placeholder: A descriptive overview of your project, including images, videos, and examples.
     validations:
@@ -29,9 +29,9 @@ body:
     id: contact
     attributes:
       label: Contact Information and Additional Context
-      description: | 
+      description: |
         Feel free to share some contact information and additional links to your project!
-      placeholder: | 
+      placeholder: |
         Your contact information and additional context.
     validations:
       required: true
@@ -39,7 +39,7 @@ body:
     id: terms
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/StanfordBDHG/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/StanfordBDHG/.github/blob/main/CONTRIBUTING.md)
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/StanfordBDHG/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/StanfordBDHG/.github/blob/main/CONTRIBUTING.md)  # yamllint disable-line rule:line-length
       options:
         - label: I agree to follow this projects's Code of Conduct and Contributing Guidelines
           required: true

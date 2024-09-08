@@ -6,47 +6,69 @@
 # SPDX-License-Identifier: MIT
 #
 
-name: Create XCFramework and Release
+name: Create XCFramework
 
 on:
   workflow_call:
     inputs:
       workspaceFile:
-        description: 'The path of the Xcode Workspace file (including the file extension).'
+        description: |
+          The path of the Xcode Workspace file (including the file extension).
         type: string
         required: true
       xcFrameworkName:
-        description: 'The name of the to be created XCFramework. It must not include the default XCFramework extension ".xcframework" as the file naming is automatically done be the workflow.'
+        description: |
+          The name of the to be created XCFramework.
+          It must not include the default XCFramework extension ".xcframework" as the file naming is automatically done be the workflow.
         type: string
         required: true
       scheme:
-        description: 'The project scheme that should be used for the archiving process.'
+        description: |
+          The project scheme that should be used for the archiving process.
         type: string
         required: true
       version:
-        description: 'The version number of the XCFramework embedded in the XCArchives. This version number is also used for the release tag.'
+        description: |
+          The version number of the XCFramework embedded in the XCArchives.
+          This version number is also used for the release tag.
         type: string
-        required: true
+        required: false
+        default: 'ci'
       configuration:
-        description: 'The build configuration to use when archiving the scheme, either Debug or Release.'
+        description: |
+          The build configuration to use when archiving the scheme, either Debug or Release.
         type: string
         required: false
         default: 'Release'
       runsonlabels:
-        description: 'JSON-based collection of labels indicating which type of github runner should be chosen.'
+        description: |
+          JSON-based collection of labels indicating which type of github runner should be chosen.
         type: string
         required: false
-        default: '["macos-13"]'
+        default: '["macos-14"]'
+      sdk:
+        description: |
+          JSON-based collection of SDK for the exported framework.
+          Defaults to all SDKs. You can list SDKs using `xcodebuild -showsdks`.
+        type: string
+        required: false
+        default: '["iphoneos", "iphonesimulator", "macosx", "appletvos", "appletvsimulator", "xros", "xrsimulator", "watchos", "watchsimulator"]'
+      outputpath:
+        description: 'Optional Prefix for the output path'
+        type: string
+        required: false
+        default: '.'
       user:
-        description: 'Optional GitHub username that is associated with the GitHub Personal Access Token (PAT)'
+        description: |
+          Optional GitHub username that is associated with the GitHub Personal Access Token (PAT).
         type: string
         required: false
         default: ''
     secrets:
       access-token:
-        description: 'GitHub Personal Access Token (PAT) if the to-be-commited-to branch is protected and needs a specific access token to push commits to the branch'
+        description: |
+          GitHub Personal Access Token (PAT) if the to-be-commited-to branch is protected and needs a specific access token to push to the branch.
         required: false
-  
 
 jobs:
   build-xcarchive:
@@ -59,50 +81,68 @@ jobs:
       version: ${{ inputs.version }}
       configuration: ${{ inputs.configuration }}
       runsonlabels: ${{ inputs.runsonlabels }}
-  create-xcframework-and-release:
+      sdk: ${{ inputs.sdk }}
+  create-xcframework:
     name: Build XCFramework
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
     needs: build-xcarchive
     steps:
-    - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.access-token || github.token }}
-    - uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: latest-stable
-    - name: Check environment
-      run: |
-          xcodebuild -version
-          swift --version
-          echo Release version: ${{ inputs.version }}
-    - uses: actions/download-artifact@v3
-      with:
-        path: ./.build
-    - name: Create XCFramework
-      run: |
-          rm -rf ${{ inputs.xcFrameworkName }}.xcframework
-          xcodebuild -create-xcframework \
-            -framework ./.build/${{ inputs.xcFrameworkName }}-iphoneos.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework \
-            -framework ./.build/${{ inputs.xcFrameworkName }}-iphonesimulator.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework \
-            -output ${{ inputs.xcFrameworkName }}.xcframework
-          rm -rf .build
-    - name: Commit and push XCFramework
-      uses: EndBug/add-and-commit@v9
-      with:
-        add: ${{ inputs.xcFrameworkName }}.xcframework
-        message: Create XCFramework for release ${{ inputs.version }}
-        tag: '${{ inputs.version }} --force'
-        tag_push: '--force'
-        github_token: ${{ secrets.access-token || github.token }}
-        author_name: ${{ inputs.user || github.actor }}
-        author_email: ${{ inputs.user || github.actor }}@users.noreply.github.com
-    - name: Create Artifacts
-      run: |
-          tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: ${{ inputs.version }}
-        generate_release_notes: true
-        fail_on_unmatched_files: true
-        files: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.access-token || github.token }}
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Check environment
+        run: |
+            xcodebuild -version
+            swift --version
+            echo Release version: ${{ inputs.version }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: ./.build
+          merge-multiple: true
+      - name: Unpack XCArchives and create XCFramework
+        run: |
+            rm -rf ${{ inputs.xcFrameworkName }}.xcframework
+
+            # Convert JSON array to space-separated string
+            SDK_LIST="${{ inputs.sdk }}"
+            SDK_LIST="${SDK_LIST//[\[\]\",]/}" # Remove JSON characters
+            echo "Parsed SDK list: $SDK_LIST"
+
+            IFS=' ' read -r -a SDKS <<< "$SDK_LIST"
+            FRAMEWORKS_ARGS=""
+            for SDK in "${SDKS[@]}"; do
+                # Unpack the XCArchive
+                tar -zxvf ./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive.tar.gz -C ./.build/
+                # Specify the path to the framework within the XCArchive
+                ARCHIVE="./.build/${{ inputs.xcFrameworkName }}-${SDK}.xcarchive/Products/Library/Frameworks/${{ inputs.xcFrameworkName }}.framework"
+                echo "Checking archive path: $ARCHIVE"
+                if [ -d "$ARCHIVE" ]; then
+                    FRAMEWORKS_ARGS+="-framework $ARCHIVE "
+                    echo "Archive path valid: $ARCHIVE"
+                else
+                    echo "Warning: Archive path for SDK $SDK does not exist: $ARCHIVE"
+                fi
+            done
+
+            # Trim trailing space
+            FRAMEWORKS_ARGS=$(echo "$FRAMEWORKS_ARGS" | xargs)
+
+            echo "Executing xcodebuild with args: $FRAMEWORKS_ARGS"
+            xcodebuild \
+              -create-xcframework $FRAMEWORKS_ARGS \
+              -output ${{ inputs.xcFrameworkName }}.xcframework \
+              | xcbeautify \
+              || { echo "xcodebuild failed"; exit 1; }
+
+            rm -rf .build
+      - name: Create Artifacts
+        run: |
+            tar -zcvf ${{ inputs.xcFrameworkName }}.xcframework.tar.gz ${{ inputs.xcFrameworkName }}.xcframework
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz
+          path: ${{ inputs.xcFrameworkName }}.xcframework.tar.gz

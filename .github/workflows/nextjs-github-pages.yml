@@ -39,8 +39,6 @@ jobs:
           cache: 'npm'
       - name: Install Node Dependencies
         run: npm ci
-        env:
-          CI: TRUE
       - name: Build & Export with Next.js
         run: npm run build
         env:

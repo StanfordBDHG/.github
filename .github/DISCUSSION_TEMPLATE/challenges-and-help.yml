@@ -36,12 +36,12 @@ body:
     id: reproduction
     attributes:
       label: Reproduction
-      description: | 
+      description: |
         Please provide a description of how to reproduce the problem you are facing.
-        
+
         If you are facing a problem in your application, please provide a link to a failing UI test or unit test to reproduce the issue.
-        If you face a build error or a problem with releasing your application, please link a GitHub Action run reproducing the error outside of your development.
-      placeholder: | 
+        If you face a build error or a problem with releasing your application, please link a GitHub Action run reproducing the error.
+      placeholder: |
         What steps did you follow to get the problem?
         Provide links and steps on how to reproduce the problem.
     validations:
@@ -58,14 +58,14 @@ body:
     id: additionalcontext
     attributes:
       label: Additional context
-      description:  |
+      description: |
         Please provide any additional context that might be relevant to your setup problem.
       placeholder: Any additional context that might be relevant to your problem.
   - type: checkboxes
     id: terms
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/StanfordBDHG/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/StanfordBDHG/.github/blob/main/CONTRIBUTING.md)
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/StanfordBDHG/.github/blob/main/CODE_OF_CONDUCT.md) and [Contributing Guidelines](https://github.com/StanfordBDHG/.github/blob/main/CONTRIBUTING.md)  # yamllint disable-line rule:line-length
       options:
         - label: I agree to follow this projects's Code of Conduct and Contributing Guidelines
           required: true
