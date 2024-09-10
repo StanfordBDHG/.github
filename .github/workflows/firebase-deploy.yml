@@ -80,7 +80,7 @@ jobs:
       - name: Install Firebase CLI Tools
         run: npm install -g firebase-tools
       - name: Load All Environment Variables
-        if: ${{ inputs.customcommand != '' }}
+        if: ${{ secrets.ENV_FILE != '' }}
         run: |
           export $(${{ secrets.ENV_FILE }} | xargs)
       - name: Run custom command
