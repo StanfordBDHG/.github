@@ -80,7 +80,7 @@ jobs:
       - name: Install Firebase CLI Tools
         run: npm install -g firebase-tools
       - name: Load All Environment Variables
-        env: 
+        env:
           env-file: ${{ secrets.ENV_FILE }}
         if: ${{ env.env-file != '' }}
         run: |
