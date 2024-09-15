@@ -42,6 +42,11 @@ on:
         required: false
         type: string
         default: ''
+      workingDirectory:
+        description: 'The workingDirectory of the GitHub Action. Defaults to $GITHUB_WORKSPACE'
+        required: false
+        type: string
+        default: '.'
     secrets:
       GOOGLE_APPLICATION_CREDENTIALS_BASE64:
         description: |
