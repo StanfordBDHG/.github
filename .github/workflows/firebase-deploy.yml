@@ -42,6 +42,11 @@ on:
         required: false
         type: string
         default: ''
+      workingDirectory:
+        description: 'The workingDirectory of the GitHub Action. Defaults to $GITHUB_WORKSPACE'
+        required: false
+        type: string
+        default: '.'
     secrets:
       GOOGLE_APPLICATION_CREDENTIALS_BASE64:
         description: |
@@ -49,6 +54,10 @@ on:
           You can lean more about how to generate the JSON at https://cloud.google.com/iam/docs/service-accounts-create.
           The service account must have the minimally required permissions documented at https://firebase.google.com/docs/projects/iam/permissions.
         required: true
+      ENV_FILE:
+        description: |
+          .env file that is injected in the build context before doing the firebase deployment.
+        required: false
 
 jobs:
   deployfirebase:
@@ -75,6 +84,12 @@ jobs:
           java-version: '17'
       - name: Install Firebase CLI Tools
         run: npm install -g firebase-tools
+      - name: Create .env file
+        env:
+          env-file: ${{ secrets.ENV_FILE }}
+        if: ${{ env.env-file != '' }}
+        run: |
+         echo "${{ env.env-file }}" > ${{ inputs.workingDirectory }}/.env
       - name: Run custom command
         if: ${{ inputs.customcommand != '' }}
         run: ${{ inputs.customcommand }}
