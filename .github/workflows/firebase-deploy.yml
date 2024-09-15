@@ -84,7 +84,7 @@ jobs:
           env-file: ${{ secrets.ENV_FILE }}
         if: ${{ env.env-file != '' }}
         run: |
-          export $(${{ secrets.ENV_FILE }} | xargs)
+          export $("${{ secrets.ENV_FILE }}" | xargs)
       - name: Run custom command
         if: ${{ inputs.customcommand != '' }}
         run: ${{ inputs.customcommand }}
