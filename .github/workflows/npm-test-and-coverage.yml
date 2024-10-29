@@ -90,6 +90,7 @@ jobs:
         with:
           token: ${{ secrets.token }}
           working-directory: ${{ inputs.working-directory }}
+          fail_ci_if_error: true
       - name: Clean up Google application credentials
         if: ${{ always() }}
         run: |
