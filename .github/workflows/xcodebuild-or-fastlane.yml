@@ -47,10 +47,10 @@ on:
       destination:
         description: |
           The destination parameter that should be passed to xcodebuild.
-          Defaults to the iOS simulator using an iPhone 15 Pro.
+          Defaults to the iOS simulator using an iPhone 16 Pro.
         required: false
         type: string
-        default: 'platform=iOS Simulator,name=iPhone 15 Pro'
+        default: 'platform=iOS Simulator,name=iPhone 16 Pro'
       setupSimulators:
         description: |
           Flag indicating if all iOS simulators matching the `destination` input shoud be setup.
@@ -153,6 +153,12 @@ on:
           Flag indicating if submodules should be automatically checked out.
         required: false
         type: boolean
+      checkout_lfs:
+        description: |
+          Flag indicating if git lfs should be used when running the check out step.
+        required: false
+        type: boolean
+        default: false
     secrets:
       BUILD_CERTIFICATE_BASE64:
         description: |
@@ -220,6 +226,7 @@ jobs:
           # This is GitHubs way of implementing ternary expressions (see https://docs.github.com/en/actions/learn-github-actions/expressions)
           token: ${{ secrets.CHECKOUT_TOKEN != '' && secrets.CHECKOUT_TOKEN || github.token }}
           submodules: ${{ inputs.checkout_submodules }}
+          lfs: ${{ inputs.checkout_lfs }}
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ inputs.xcodeversion }}
@@ -245,8 +252,6 @@ jobs:
       - name: Setup NodeJS
         if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
         uses: actions/setup-node@v4
-        with:
-          node-version: 22.6.x
       - name: Setup Java
         if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
         uses: actions/setup-java@v4
