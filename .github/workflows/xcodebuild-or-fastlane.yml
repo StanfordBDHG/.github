@@ -47,10 +47,10 @@ on:
       destination:
         description: |
           The destination parameter that should be passed to xcodebuild.
-          Defaults to the iOS simulator using an iPhone 15 Pro.
+          Defaults to the iOS simulator using an iPhone 16 Pro.
         required: false
         type: string
-        default: 'platform=iOS Simulator,name=iPhone 15 Pro'
+        default: 'platform=iOS Simulator,name=iPhone 16 Pro'
       setupSimulators:
         description: |
           Flag indicating if all iOS simulators matching the `destination` input shoud be setup.
@@ -153,6 +153,12 @@ on:
           Flag indicating if submodules should be automatically checked out.
         required: false
         type: boolean
+      checkout_lfs:
+        description: |
+          Flag indicating if git lfs should be used when running the check out step.
+        required: false
+        type: boolean
+        default: false
     secrets:
       BUILD_CERTIFICATE_BASE64:
         description: |
@@ -220,6 +226,7 @@ jobs:
           # This is GitHubs way of implementing ternary expressions (see https://docs.github.com/en/actions/learn-github-actions/expressions)
           token: ${{ secrets.CHECKOUT_TOKEN != '' && secrets.CHECKOUT_TOKEN || github.token }}
           submodules: ${{ inputs.checkout_submodules }}
+          lfs: ${{ inputs.checkout_lfs }}
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ inputs.xcodeversion }}
@@ -245,8 +252,6 @@ jobs:
       - name: Setup NodeJS
         if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
         uses: actions/setup-node@v4
-        with:
-          node-version: 22.6.x
       - name: Setup Java
         if: ${{ !env.selfhosted && inputs.setupfirebaseemulator }}
         uses: actions/setup-java@v4
@@ -269,25 +274,25 @@ jobs:
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-
+  
           # Import Certificate and Provisioning Profile from Secrets
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
-
+  
           # Create a Temporary Keychain
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
+  
           # Import Certificate to the Keychain
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
-
+  
           # Apply Provisioning Profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           UUID=`grep UUID -A1 -a $PP_PATH | grep -io "[-A-F0-9]\{36\}"`
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
-
+  
           # Secondary Provisioning Profile
           if [ -n "$BUILD_SECONDARY_PROVISION_PROFILE_BASE64" ]; then
             PP_SECONDARY_PATH=$RUNNER_TEMP/build_pp_secondary.mobileprovision
@@ -335,25 +340,25 @@ jobs:
             else
                 XCODECOMMAND="build"
             fi
-
+  
             if [ -z "${{ inputs.resultBundle }}" ]; then
                 RESULTBUNDLE=${{ inputs.scheme }}.xcresult
             else
                 RESULTBUNDLE=${{ inputs.resultBundle }}
             fi
-
+  
             if [ "${{ inputs.buildConfig }}" = "Release" ]; then
                 ENABLE_TESTING_FLAG="-enable-testing"
             else
                 ENABLE_TESTING_FLAG=""
             fi
-
+  
             if [ -n "${{ inputs.swiftVersion }}" ]; then
                 SWIFT_VERSION_FLAG="-swift-version ${{ inputs.swiftVersion }}"
             else
                 SWIFT_VERSION_FLAG=""
             fi
-
+  
             set -o pipefail \
             && xcodebuild $XCODECOMMAND \
               -scheme "${{ inputs.scheme }}" \
@@ -374,11 +379,11 @@ jobs:
             if ${{ inputs.setupfirebaseemulator }}; then
                 # We try to do an npm install in the functions directory.
                 npm --prefix ./functions install || true
-
+  
                 echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
                 export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
                 echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
-
+  
                 if [ -n "${{ inputs.firebaseemulatorimport }}" ]; then
                     echo "Importing firebase emulator data from ${{ inputs.firebaseemulatorimport }}"
                     firebase emulators:exec -c ${{ inputs.firebasejsonpath }} --import=${{ inputs.firebaseemulatorimport }} 'fastlane ${{ inputs.fastlanelane }}'
