@@ -38,10 +38,10 @@ on:
       destination:
         description: |
           The destination parameter that should be passed to xcodebuild.
-          Defaults to the iOS simulator using an iPhone 15 Pro.
+          Defaults to the iOS simulator using an iPhone 16 Pro.
         required: false
         type: string
-        default: 'platform=iOS Simulator,name=iPhone 15 Pro'
+        default: 'platform=iOS Simulator,name=iPhone 16 Pro'
       dryrun:
         description: |
           Dry run deployment, only build documentation but do not publish
