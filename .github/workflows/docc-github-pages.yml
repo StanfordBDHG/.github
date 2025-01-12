@@ -22,7 +22,7 @@ on:
           JSON-based collection of labels indicating which type of github runner should be chosen
         required: false
         type: string
-        default: '["macos-14"]'
+        default: '["macos-15"]'
       xcodeversion:
         description: |
           The Xcode version used for the build
