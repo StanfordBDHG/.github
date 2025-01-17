@@ -310,6 +310,14 @@ jobs:
         with:
           languages: swift
           db-location: '${{ inputs.path }}/.codeql'
+      - name: Mechanism to resolve CodeQL issue https://github.com/github/codeql-action/issues/2506#issuecomment-2594033147
+        if: ${{ !env.selfhosted && inputs.codeql }}
+        run: |
+          XCODE_PATH=$(xcode-select -p)
+          mkdir -p $XCODE_PATH/Toolchains/XcodeDefault.xctoolchain/usr/lib
+          cp $XCODE_PATH/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/*.dylib $XCODE_PATH/Toolchains/XcodeDefault.xctoolchain/usr/lib
+          sudo mkdir -p /usr/local/lib
+          sudo cp $XCODE_PATH/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/*.dylib /usr/local/lib
       - name: Disable Password Autofill in the iOS Simulator (Deprecated)
         if: ${{ inputs.setupSimulators && inputs.destination != '' }}
         run: |
