@@ -22,7 +22,7 @@ jobs:
           echo "Linkspector Ubuntu Workaround for: https://github.com/UmbrellaDocs/action-linkspector/issues/32"
           echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
       - name: Check and Create Linkspector Configuration
-          run: |
+        run: |
           CONFIG_FILE=".linkspector.yml"
           if [ ! -f "$CONFIG_FILE" ]; then
             echo "Configuration file not found. Creating a new one."
