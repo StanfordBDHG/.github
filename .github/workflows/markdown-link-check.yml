@@ -32,10 +32,10 @@ jobs:
             echo "ignorePatterns:" >> $CONFIG_FILE
             echo "  - pattern: '^doc:.*$'" >> $CONFIG_FILE
             echo "replacementPatterns:" >> $CONFIG_FILE
-            echo "  - pattern: \"#gh-dark-mode-only\"" >> $CONFIG_FILE
-            echo "    replacement: \"\"" >> $CONFIG_FILE
-            echo "  - pattern: \"#gh-light-mode-only\"" >> $CONFIG_FILE
-            echo "    replacement: \"\"" >> $CONFIG_FILE
+            echo "  - pattern: '(.*)#gh-dark-mode-only'" >> $CONFIG_FILE
+            echo "    replacement: '$1'" >> $CONFIG_FILE
+            echo "  - pattern: '(.*)#gh-light-mode-only'" >> $CONFIG_FILE
+            echo "    replacement: '$1'" >> $CONFIG_FILE
           else
             echo "Configuration file exists. Skipping creation."
           fi
