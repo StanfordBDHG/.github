@@ -16,6 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Linkspector Ubuntu Workaround
+        run: |
+          echo "Linkspector Ubuntu Workaround for: https://github.com/UmbrellaDocs/action-linkspector/issues/32"
+          echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
       - name: Linkspector
         uses: umbrelladocs/action-linkspector@v1
         with:
