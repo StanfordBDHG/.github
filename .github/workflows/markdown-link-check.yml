@@ -6,13 +6,14 @@
 # SPDX-License-Identifier: MIT
 #
 
-name: Check README Links
+name: Check Links
 
 on:
   workflow_call:
 
 jobs:
   markdown_link_check:
+    name: Check Links
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +26,7 @@ jobs:
           CONFIG_FILE=".linkspector.yml"
           if [ ! -f "$CONFIG_FILE" ]; then
             echo "Configuration file not found. Creating a new one."
-            cat <<EOL > $CONFIG_FILE
+            cat > $CONFIG_FILE <<-EOL
             dirs:
               - .
             useGitIgnore: true
