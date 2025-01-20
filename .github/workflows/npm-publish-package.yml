@@ -1,0 +1,50 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+#
+# SPDX-FileCopyrightText: 2023 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: NPM Publish package
+
+on:
+  workflow_call:
+    inputs:
+      nodeVersion:
+        description: |
+          Node version spec
+        required: false
+        type: string
+        default: '22.x'
+      packageVersion:
+        description: |
+          Released packaged version
+        required: true
+        type: string
+    secrets:
+      NPM_TOKEN:
+        description: |
+          NPM toke
+        required: true
+
+jobs:
+  publish-package:
+    name: Publish Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.nodeVersion }}
+          registry-url: 'https://registry.npmjs.org'
+      - name: Clean Install
+        run: npm ci
+      - name: Set version
+        run: npm version --no-git-tag-version ${{ inputs.packageVersion }}
+      - name: Build
+        run: npm run build
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
