@@ -22,22 +22,20 @@ jobs:
           echo "Linkspector Ubuntu Workaround for: https://github.com/UmbrellaDocs/action-linkspector/issues/32"
           echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
       - name: Check and Create Linkspector Configuration
-        run: |
+          run: |
           CONFIG_FILE=".linkspector.yml"
           if [ ! -f "$CONFIG_FILE" ]; then
             echo "Configuration file not found. Creating a new one."
-            cat > $CONFIG_FILE <<-EOL
-            dirs:
-              - .
-            useGitIgnore: true
-            ignorePatterns:
-              - pattern: '^doc:.*$'
-            replacementPatterns:
-              - pattern: "#gh-dark-mode-only"
-                replacement: ""
-              - pattern: "#gh-light-mode-only"
-                replacement: ""
-            EOL
+            echo "dirs:" >> $CONFIG_FILE
+            echo "  - ." >> $CONFIG_FILE
+            echo "useGitIgnore: true" >> $CONFIG_FILE
+            echo "ignorePatterns:" >> $CONFIG_FILE
+            echo "  - pattern: '^doc:.*$'" >> $CONFIG_FILE
+            echo "replacementPatterns:" >> $CONFIG_FILE
+            echo "  - pattern: \"#gh-dark-mode-only\"" >> $CONFIG_FILE
+            echo "    replacement: \"\"" >> $CONFIG_FILE
+            echo "  - pattern: \"#gh-light-mode-only\"" >> $CONFIG_FILE
+            echo "    replacement: \"\"" >> $CONFIG_FILE
           else
             echo "Configuration file exists. Skipping creation."
           fi
