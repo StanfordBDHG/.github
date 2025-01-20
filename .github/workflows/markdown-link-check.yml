@@ -39,6 +39,8 @@ jobs:
           else
             echo "Configuration file exists. Skipping creation."
           fi
+          echo "Contents of $CONFIG_FILE:"
+          cat $CONFIG_FILE
       - name: Linkspector
         uses: umbrelladocs/action-linkspector@v1
         with:
