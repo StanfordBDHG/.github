@@ -31,7 +31,7 @@ on:
     secrets:
       NPM_TOKEN:
         description: |
-          NPM toke
+          Used to perform authenticated operation against NPM registry
         required: true
 
 jobs:
