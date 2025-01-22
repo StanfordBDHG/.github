@@ -17,6 +17,12 @@ on:
         required: false
         type: string
         default: '22.x'
+      cacheDependencyPath:
+        description: |
+          Node cache dependency path. It's required only if package-lock.json is not in the root.
+        required: false
+        type: string
+        default: ''
       packageVersion:
         description: |
           Released packaged version
@@ -36,6 +42,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
+          cache-dependency-path: ${{ inputs.cacheDependencyPath }}
           node-version: ${{ inputs.nodeVersion }}
           registry-url: 'https://registry.npmjs.org'
       - name: Clean Install
