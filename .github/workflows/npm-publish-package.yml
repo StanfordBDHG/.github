@@ -23,6 +23,12 @@ on:
         required: false
         type: string
         default: ''
+      workingDirectory:
+        description: |
+          Set working directory if your package is not in the root.
+        required: false
+        type: string
+        default: '.'
       packageVersion:
         description: |
           Released packaged version
@@ -38,6 +44,9 @@ jobs:
   publish-package:
     name: Publish Package
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.workingDirectory }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
