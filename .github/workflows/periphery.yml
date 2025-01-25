@@ -55,3 +55,6 @@ jobs:
       - name: Run periphery
         run: |
           periphery scan --relative-results --format github-actions --strict -- -skipPackagePluginValidation -skipMacroValidation
+      - name: Cleanup periphery
+        if: always()
+        run: rm -rf ~/Library/Caches/com.github.peripheryapp
