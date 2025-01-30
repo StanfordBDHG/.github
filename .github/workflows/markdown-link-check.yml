@@ -31,6 +31,7 @@ jobs:
             echo "useGitIgnore: true" >> $CONFIG_FILE
             echo "ignorePatterns:" >> $CONFIG_FILE
             echo "  - pattern: '^doc:.*$'" >> $CONFIG_FILE
+            echo "  - pattern: '^http://localhost.*$'" >> $CONFIG_FILE
             echo "replacementPatterns:" >> $CONFIG_FILE
             echo "  - pattern: '(.*)#gh-dark-mode-only'" >> $CONFIG_FILE
             echo "    replacement: '\$1'" >> $CONFIG_FILE
