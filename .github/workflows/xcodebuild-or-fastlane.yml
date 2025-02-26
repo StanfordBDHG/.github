@@ -211,6 +211,11 @@ on:
           The Base64 version of the private key JSON file to boot up the firebase emulator.
           Only needed if cloud functions are used to fully support the execution of cloud functions in the emulator.
         required: false
+      OPENAI_API_KEY:
+        description: |
+          The OpenAI API key used for accessing OpenAI services within a workflow.
+          Required when using OpenAI-powered features in your application.
+        required: false  
 
 jobs:
   build_and_test:
@@ -407,6 +412,7 @@ jobs:
           APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       - name: Perform CodeQL Analysis
         if: ${{ !env.selfhosted && inputs.codeql }}
         uses: github/codeql-action/analyze@v3
