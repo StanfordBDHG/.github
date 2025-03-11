@@ -26,6 +26,11 @@ on:
         required: false
         type: string
         default: 'latest-stable'
+      strict:
+        description: 'Whether perhipery should run in --strict mode'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -54,7 +59,7 @@ jobs:
         run: brew install periphery
       - name: Run periphery
         run: |
-          periphery scan --relative-results --format github-actions --strict -- -skipPackagePluginValidation -skipMacroValidation
+          periphery scan --relative-results --format github-actions ${{ inputs.strict && '--strict' || '' }} -- -skipPackagePluginValidation -skipMacroValidation
       - name: Cleanup periphery
         if: always()
         run: rm -rf ~/Library/Caches/com.github.peripheryapp
