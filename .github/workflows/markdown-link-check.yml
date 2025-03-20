@@ -43,6 +43,6 @@ jobs:
           echo "Contents of $CONFIG_FILE:"
           cat $CONFIG_FILE
       - name: Linkspector
-        uses: umbrelladocs/action-linkspector@v1
+        uses: umbrelladocs/action-linkspector@v1.2.5
         with:
           filter_mode: nofilter
