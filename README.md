@@ -8,15 +8,15 @@ SPDX-License-Identifier: MIT
 
 -->
 
+http://localhost
+
 # Stanford Biodesign Digital Health Group
 
 This repository serves as a collection of default community health files, GitHub Action workflows, templates, and information for the Stanford Biodesign Digital Health Group organization.
 
-
 ## GitHub Actions
 
 This repository contains several GitHub Actions that automate and simplify the process of contributing to Stanford Biodesign Digital Health Group-related projects.
-
 
 ### Test Using Xcodebuild or Run Fastlane
 
@@ -66,9 +66,9 @@ Ensure that all Swift files conform to the defined style guide.
 You can learn more about the arguments in the [`swiftlint.yml` GitHub Action file](https://github.com/StanfordBDHG/.github/blob/main/.github/workflows/swiftlint.yml).
 
 ```yml
-  swiftlint:
-    name: SwiftLint
-    uses: StanfordBDHG/.github/.github/workflows/swiftlint.yml@v2
+swiftlint:
+  name: SwiftLint
+  uses: StanfordBDHG/.github/.github/workflows/swiftlint.yml@v2
 ```
 
 ### Action Tag Release
@@ -127,11 +127,9 @@ jobs:
 
 The [ContinousIntegration](https://github.com/StanfordBDHG/ContinousIntegration) repository contains the setup and information about our self-hosted GitHub Action runners that is fitting the GitHub Actions found in this repository.
 
-
 ## Our Research
 
 For more information, check out our website at [biodesigndigitalhealth.stanford.edu](https://biodesigndigitalhealth.stanford.edu).
 
 ![Stanford Mussallem Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-light.png#gh-light-mode-only)
 ![Stanford Mussallem Center for Biodesign Logo](https://raw.githubusercontent.com/StanfordBDHG/.github/main/assets/biodesign-footer-dark.png#gh-dark-mode-only)
-
