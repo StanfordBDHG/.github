@@ -10,6 +10,12 @@ name: Check Links
 
 on:
   workflow_call:
+    inputs:
+      linkspector-action-version:
+        description: "Version of umbrelladocs/action-linkspector workflow used"
+        required: false
+        default: "1"
+        type: string
 
 jobs:
   markdown_link_check:
@@ -43,6 +49,6 @@ jobs:
           echo "Contents of $CONFIG_FILE:"
           cat $CONFIG_FILE
       - name: Linkspector
-        uses: umbrelladocs/action-linkspector@v1.2.5
+        uses: umbrelladocs/action-linkspector@v${{ inputs.linkspector-action-version }}
         with:
           filter_mode: nofilter
