@@ -45,7 +45,7 @@ jobs:
         run: |
             xcrun xcresulttool merge ${{ inputs.coveragereports }} --output-path CodeCoverage.xcresult
             rm -rf ${{ inputs.coveragereports }}
-      - uses: lukaskollmer/xccov2lcov@test-gh-action
+      - uses: lukaskollmer/xccov2lcov@develop
         with:
           xcresult: CodeCoverage.xcresult
       - name: Upload coverage to Codecov
