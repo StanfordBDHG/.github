@@ -53,5 +53,3 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.token }}
-          xcode: true
-          xcode_archive_path: CodeCoverage.xcresult
