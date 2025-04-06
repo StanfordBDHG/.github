@@ -45,10 +45,11 @@ jobs:
         run: |
             xcrun xcresulttool merge ${{ inputs.coveragereports }} --output-path CodeCoverage.xcresult
             rm -rf ${{ inputs.coveragereports }}
+      - uses: stanfordbdhg/xccov2lcov@v1
+        with:
+          xcresult: CodeCoverage.xcresult
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
           token: ${{ secrets.token }}
-          xcode: true
-          xcode_archive_path: CodeCoverage.xcresult
