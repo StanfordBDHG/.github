@@ -31,13 +31,19 @@ on:
         default: '.'
       packageVersion:
         description: |
-          Released packaged version
+          Released package version.
         required: true
         type: string
+      packageTag:
+        description: |
+          Released package tag.
+        required: false
+        type: string
+        default: "latest"
     secrets:
       NPM_TOKEN:
         description: |
-          Used to perform authenticated operation against NPM registry
+          Used to perform authenticated operation against NPM registry.
         required: true
 
 jobs:
@@ -57,7 +63,7 @@ jobs:
       - name: Clean Install
         run: npm ci
       - name: Set version
-        run: npm version --no-git-tag-version ${{ inputs.packageVersion }}
+        run: npm version --no-git-tag-version --tag ${{ inputs.packageTag }} ${{ inputs.packageVersion }}
       - name: Build
         run: npm run build
       - name: Publish
