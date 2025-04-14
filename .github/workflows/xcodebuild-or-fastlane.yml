@@ -324,6 +324,7 @@ jobs:
         run: |
           echo "::warning::Script-based simulator setup to disable Password Autofill was removed and is deprecated. Please stop using this option."
       - name: Check available Simulators
+        if: ${{ inputs.scheme != '' }}
         run: |
           xcrun xcodebuild -scheme ${{ inputs.scheme }} -showdestinations
       - name: Run custom command
