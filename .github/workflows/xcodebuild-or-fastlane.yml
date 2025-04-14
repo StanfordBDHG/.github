@@ -236,6 +236,7 @@ jobs:
             swift --version
             echo "env.selfhosted: ${{ env.selfhosted }}"
             echo "environment: ${{ inputs.environment }}"
+            xcrun simctl list
       - name: Install xcbeautify
         if: ${{ !env.selfhosted && inputs.scheme != '' }}
         run: brew install xcbeautify
@@ -322,6 +323,10 @@ jobs:
         if: ${{ inputs.setupSimulators && inputs.destination != '' }}
         run: |
           echo "::warning::Script-based simulator setup to disable Password Autofill was removed and is deprecated. Please stop using this option."
+      - name: Check available Simulators
+        if: ${{ inputs.scheme != '' }}
+        run: |
+          xcrun xcodebuild -scheme ${{ inputs.scheme }} -showdestinations
       - name: Run custom command
         if: ${{ inputs.customcommand != '' }}
         run: ${{ inputs.customcommand }}
