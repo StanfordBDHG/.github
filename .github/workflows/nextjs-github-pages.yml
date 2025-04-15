@@ -13,10 +13,11 @@ on:
   workflow_call:
     inputs:
       nodeVersion:
-        description: 'Node version spec of the version to use in SemVer notation.'
+        description: |
+          Node version spec of the version to use in SemVer notation.
         required: false
         type: string
-        default: '18'
+        default: '22'
 
 permissions:
   contents: read

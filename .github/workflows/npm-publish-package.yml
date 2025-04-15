@@ -13,10 +13,10 @@ on:
     inputs:
       nodeVersion:
         description: |
-          Node version spec
+          Node version spec of the version to use in SemVer notation.
         required: false
         type: string
-        default: '22.x'
+        default: '22'
       cacheDependencyPath:
         description: |
           Node cache dependency path. It's required only if package-lock.json is not in the root.
