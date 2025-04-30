@@ -386,15 +386,15 @@ jobs:
                 TESTPLAN=()
             fi
 
-            echo "TESTPLAN: <<$TESTPLAN>>"
-            echo "TESTPLAN: <<$TESTPLAN[@]>>"
+            echo "TESTPLAN: <<${TESTPLAN}>>"
+            echo "TESTPLAN: <<${TESTPLAN[@]}>>"
 
             set -o pipefail \
             && xcodebuild -verbose $XCODECOMMAND \
               -scheme "${{ inputs.scheme }}" \
               -configuration "${{ inputs.buildConfig }}" \
               -destination "${{ inputs.destination }}" \
-              "$TESTPLAN[@]" \
+              "${TESTPLAN[@]}" \
               $CODECOVERAGEFLAG \
               -derivedDataPath ".derivedData" \
               -resultBundlePath "$RESULTBUNDLE" \
