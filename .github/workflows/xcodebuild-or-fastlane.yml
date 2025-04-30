@@ -379,7 +379,7 @@ jobs:
             fi
 
             if [ -n "${{ inputs.testplan }}" ]; then
-                TESTPLAN="-testPlan '${{ inputs.testplan }}'"
+                TESTPLAN="-testPlan \"${{ inputs.testplan }}\""
             else
                 TESTPLAN=""
             fi
