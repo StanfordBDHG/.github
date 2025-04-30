@@ -353,6 +353,8 @@ jobs:
       - name: Build and test (xcodebuild)
         if: ${{ inputs.scheme != '' }}
         run: |
+            set -x
+
             if ${{ inputs.test }}; then
                 XCODECOMMAND="test"
                 CODECOVERAGEFLAG="-enableCodeCoverage YES"
@@ -385,7 +387,7 @@ jobs:
             fi
 
             set -o pipefail \
-            && xcodebuild $XCODECOMMAND \
+            && xcodebuild -verbose $XCODECOMMAND \
               -scheme "${{ inputs.scheme }}" \
               -configuration "${{ inputs.buildConfig }}" \
               -destination "${{ inputs.destination }}" \
@@ -397,8 +399,7 @@ jobs:
               CODE_SIGN_IDENTITY="" \
               OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG $SWIFT_VERSION_FLAG" \
               -skipPackagePluginValidation \
-              -skipMacroValidation \
-            | xcbeautify
+              -skipMacroValidation
       - name: Fastlane
         if: ${{ inputs.fastlanelane != '' }}
         run: |
