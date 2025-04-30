@@ -385,7 +385,7 @@ jobs:
             fi
 
             set -o pipefail \
-            && xcodebuild -verbose $XCODECOMMAND \
+            && xcodebuild $XCODECOMMAND \
               -scheme "${{ inputs.scheme }}" \
               -configuration "${{ inputs.buildConfig }}" \
               -destination "${{ inputs.destination }}" \
