@@ -386,6 +386,8 @@ jobs:
                 TESTPLAN=""
             fi
 
+            echo "TESTPLAN: <<$TESTPLAN>>"
+
             set -o pipefail \
             && xcodebuild -verbose $XCODECOMMAND \
               -scheme "${{ inputs.scheme }}" \
