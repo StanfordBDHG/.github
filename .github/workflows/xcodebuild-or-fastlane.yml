@@ -77,6 +77,12 @@ on:
         required: false
         type: boolean
         default: true
+      testplan:
+        description: |
+          The Test Plan that should be run.
+        required: false
+        type: string
+        default: ''
       fastlanelane:
         description: |
           The lane of the fastlane command.
@@ -372,11 +378,18 @@ jobs:
                 SWIFT_VERSION_FLAG=""
             fi
 
+            if [ -n "${{ inputs.testplan }}" ]; then
+                TESTPLAN=(-testPlan "${{ inputs.testplan }}")
+            else
+                TESTPLAN=()
+            fi
+
             set -o pipefail \
             && xcodebuild $XCODECOMMAND \
               -scheme "${{ inputs.scheme }}" \
               -configuration "${{ inputs.buildConfig }}" \
               -destination "${{ inputs.destination }}" \
+              "${TESTPLAN[@]}" \
               $CODECOVERAGEFLAG \
               -derivedDataPath ".derivedData" \
               -resultBundlePath "$RESULTBUNDLE" \
