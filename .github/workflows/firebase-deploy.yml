@@ -68,11 +68,11 @@ jobs:
         working-directory: ${{ inputs.path }}
     environment: ${{ inputs.environment }}
     steps:
+      - uses: actions/checkout@v4
       - name: Check environment
         run: |
             echo "env.selfhosted: ${{ env.selfhosted }}"
             echo "environment: ${{ inputs.environment }}"
-      - uses: actions/checkout@v4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
