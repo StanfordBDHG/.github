@@ -69,7 +69,6 @@ jobs:
       - name: Clean Install
         run: npm ci
       - name: Set version
-        if: ${{ !inputs.workspace }}
         run: npm version --no-git-tag-version --tag ${{ inputs.packageTag }} ${{ inputs.packageVersion }}
       - name: Build
         run: npm run build
