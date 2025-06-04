@@ -40,9 +40,9 @@ on:
         required: false
         type: string
         default: "latest"
-      workspace:
+      workspaces:
         description: |
-          Set to true to enable npm workspace publishing.
+          Set to true to enable npm workspaces publishing.
         required: false
         type: boolean
         default: false
@@ -74,7 +74,7 @@ jobs:
         run: npm run build
       - name: Publish
         run: |
-          if [ "${{ inputs.workspace }}" = "true" ]; then
+          if [ "${{ inputs.workspaces }}" = "true" ]; then
             npm publish --workspaces --provenance --access public
           else
             npm publish --provenance --access public
