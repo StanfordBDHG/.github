@@ -69,15 +69,22 @@ jobs:
       - name: Clean Install
         run: npm ci
       - name: Set version
-        run: npm version --no-git-tag-version --tag ${{ inputs.packageTag }} ${{ inputs.packageVersion }}
+        run: |
+          if [ "${{ inputs.workspaces }}" = "true" ]; then
+            # Update version in all workspace packages
+            npm version --no-git-tag-version --workspaces ${{ inputs.packageVersion }}
+          else
+            # Update version in root package only
+            npm version --no-git-tag-version --tag ${{ inputs.packageTag }} ${{ inputs.packageVersion }}
+          fi
       - name: Build
         run: npm run build
       - name: Publish
         run: |
           if [ "${{ inputs.workspaces }}" = "true" ]; then
-            npm publish --workspaces --provenance --access public
+            npm publish --workspaces --provenance --access public --tag ${{ inputs.packageTag }}
           else
-            npm publish --provenance --access public
+            npm publish --provenance --access public --tag ${{ inputs.packageTag }}
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
