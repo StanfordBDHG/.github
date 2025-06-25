@@ -14,4 +14,4 @@ SPDX-License-Identifier: MIT
 * [Vishnu Ravi](https://github.com/vishnuravi)
 * [Oliver Aalami](https://github.com/aalami5)
 * [Philipp Zagar](https://github.com/philippzagar)
-* [Andreas Bauer](https://github.com/Supereg)
+* [Andreas Bauer](https://github.com/bauer-andreas)
