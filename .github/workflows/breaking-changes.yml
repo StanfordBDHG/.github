@@ -1,0 +1,33 @@
+#
+# This source file is part of the Stanford Spezi open-source project
+#
+# SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Diagnose Breaking Changes
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: 'The name of the branch to compare against'
+        required: false
+        type: string
+        default: 'main'
+      runsonlabels:
+        description: JSON-based collection of labels indicating which type of github runner should be chosen.
+        required: false
+        type: string
+        default: '["macos-latest"]'
+
+jobs:
+  diagnose:
+    runs-on: ${{ fromJson(inputs.runsonlabels) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch base branch
+        run: git fetch origin ${{ inputs['branch'] }}:${{ inputs['branch'] }}
+      - name: Run diagnose-api-breaking-changes
+        run: swift package diagnose-api-breaking-changes ${{ inputs['branch'] }}
