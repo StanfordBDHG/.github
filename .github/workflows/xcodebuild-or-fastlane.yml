@@ -346,14 +346,13 @@ jobs:
       - name: "Adjust Entitlements"
         if: ${{ inputs.remove_entitlements != '' }}
         run: |
-          if [ -z ${{ inputs.entitlements_file }} ]; then
+          if [ -z "${{ inputs.entitlements_file }}" ]; then
               echo 'Missing entitlements_file' workflow input
               exit 1
           fi
           ENTITLEMENTS_FILE="${{ inputs.entitlements_file }}"
-          echo "Entitlements file before potential adjustments: (${ENTITLEMENTS_FILE})"
-          cat "${ENTITLEMENTS_FILE}"
           remove_entitlement() {
+            echo "Removing '$1'" from ${ENTITLEMENTS_FILE}"
             plutil -remove "$1" "${ENTITLEMENTS_FILE}"
           }
           IFS=';' read -ra NAMES <<< "${{ inputs.remove_entitlements }}"
