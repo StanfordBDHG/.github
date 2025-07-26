@@ -354,7 +354,7 @@ jobs:
           fi
           ENTITLEMENTS_FILE="${{ inputs.entitlements_file }}"
           remove_entitlement() {
-            echo "Removing '$1'" from ${ENTITLEMENTS_FILE}"
+            echo "Removing '$1' from ${ENTITLEMENTS_FILE}"
             plutil -remove "$1" "${ENTITLEMENTS_FILE}"
           }
           IFS=';' read -ra NAMES <<< "${{ inputs.remove_entitlements }}"
