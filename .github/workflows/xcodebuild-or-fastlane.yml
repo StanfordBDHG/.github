@@ -350,7 +350,7 @@ jobs:
               echo 'Missing entitlements_file' workflow input
               exit 1
           fi
-          ENTITLEMENTS_FILE="${TARGET_TEMP_DIR}/${FULL_PRODUCT_NAME}.xcent"
+          ENTITLEMENTS_FILE="${{ inputs.entitlements_file }}"
           echo "Entitlements file before potential adjustments: (${ENTITLEMENTS_FILE})"
           cat "${ENTITLEMENTS_FILE}"
           remove_entitlement() {
