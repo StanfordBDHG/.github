@@ -165,6 +165,16 @@ on:
         required: false
         type: boolean
         default: false
+      entitlements_file:
+        description: |
+          Path of the project's Entitlements file, relative to the repository root.
+        required: false
+        type: string
+      remove_entitlements:
+        description: |
+          Semicolon-separated list of entitlements that should be removed.
+        required: false
+        type: string
     secrets:
       BUILD_CERTIFICATE_BASE64:
         description: |
@@ -333,6 +343,23 @@ jobs:
         if: ${{ inputs.scheme != '' }}
         run: |
           xcrun xcodebuild -scheme ${{ inputs.scheme }} -showdestinations
+      - name: "Adjust Entitlements"
+        if: ${{ inputs.remove_entitlements != '' }}
+        run: |
+          if [ -z ${{ inputs.entitlements_file }} ]; then
+              echo 'Missing entitlements_file' workflow input
+              exit 1
+          fi
+          ENTITLEMENTS_FILE="${TARGET_TEMP_DIR}/${FULL_PRODUCT_NAME}.xcent"
+          echo "Entitlements file before potential adjustments: (${ENTITLEMENTS_FILE})"
+          cat "${ENTITLEMENTS_FILE}"
+          remove_entitlement() {
+            plutil -remove "$1" "${ENTITLEMENTS_FILE}"
+          }
+          IFS=';' read -ra NAMES <<< "${{ inputs.remove_entitlements }}"
+          for name in "${NAMES[@]}"; do
+            remove_entitlement "$name"
+          done
       - name: Run custom command
         if: ${{ inputs.customcommand != '' }}
         run: ${{ inputs.customcommand }}
