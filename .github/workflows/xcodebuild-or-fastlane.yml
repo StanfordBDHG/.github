@@ -168,11 +168,13 @@ on:
       entitlements_file:
         description: |
           Path of the project's Entitlements file, relative to the repository root.
+          Required if `remove_entitlements` is specified.
         required: false
         type: string
       remove_entitlements:
         description: |
           Semicolon-separated list of entitlements that should be removed.
+          Note: periods in an entitlement name are interpreted as path separators; you probably need to escape them if they are part of the entitlement's name.
         required: false
         type: string
     secrets:
