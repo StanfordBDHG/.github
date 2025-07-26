@@ -349,8 +349,8 @@ jobs:
         if: ${{ inputs.remove_entitlements != '' }}
         run: |
           if [ -z "${{ inputs.entitlements_file }}" ]; then
-              echo Missing 'entitlements_file' workflow input
-              exit 1
+            echo Missing 'entitlements_file' workflow input
+            exit 1
           fi
           ENTITLEMENTS_FILE="${{ inputs.entitlements_file }}"
           remove_entitlement() {
