@@ -344,9 +344,9 @@ jobs:
             fi
 
             if [ -z "${{ inputs.artifactname }}" ]; then
-                RESULTBUNDLE=${{ inputs.scheme }}.xcresult
+                RESULTBUNDLE="${{ inputs.scheme }}.xcresult"
             else
-                RESULTBUNDLE=${{ inputs.artifactname }}
+                RESULTBUNDLE="${{ inputs.artifactname }}"
             fi
 
             if [ "${{ inputs.build-config }}" = "Release" ]; then
