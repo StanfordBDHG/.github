@@ -208,6 +208,7 @@ jobs:
     environment: ${{ inputs.environment }}
     steps:
       - name: Validate Inputs
+        working-directory: .
         run: |
           args=("${{ inputs.scheme }}" "${{ inputs.fastlane-lane }}" "${{ inputs.custom-command }}")
           count=$(printf "%s\n" "${args[@]}" | grep -c .) # number of non-empty inputs
