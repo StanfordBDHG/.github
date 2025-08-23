@@ -208,7 +208,6 @@ jobs:
     environment: ${{ inputs.environment }}
     steps:
       - name: Validate Inputs
-        working-directory: .
         run: |
           args=("${{ inputs.scheme }}" "${{ inputs.fastlane-lane }}" "${{ inputs.custom-command }}")
           count=$(printf "%s\n" "${args[@]}" | grep -c .) # number of non-empty inputs
@@ -216,6 +215,7 @@ jobs:
             echo error: The 'scheme', 'fastlane-lane', and 'custom-command' options are mutually exclusive.
             exit 1
           fi
+        working-directory: .
       - uses: actions/checkout@v4
         with:
           # This is GitHubs way of implementing ternary expressions (see https://docs.github.com/en/actions/learn-github-actions/expressions)
