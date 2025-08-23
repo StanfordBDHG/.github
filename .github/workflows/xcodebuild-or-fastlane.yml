@@ -58,13 +58,6 @@ on:
         required: false
         type: boolean
         default: false
-      resultBundle:
-        description: |
-          The name of the Xcode result bundle that is passed to xcodebuild.
-          If not defined, the name of the scheme + .xcresult is used.
-        required: false
-        type: string
-        default: ''
       swiftVersion:
         description: |
           Specify the Swift language version when using xcodebuild.
@@ -360,10 +353,10 @@ jobs:
                 XCODECOMMAND="build"
             fi
 
-            if [ -z "${{ inputs.resultBundle }}" ]; then
+            if [ -z "${{ inputs.artifactname }}" ]; then
                 RESULTBUNDLE=${{ inputs.scheme }}.xcresult
             else
-                RESULTBUNDLE=${{ inputs.resultBundle }}
+                RESULTBUNDLE=${{ inputs.artifactname }}
             fi
 
             if [ "${{ inputs.buildConfig }}" = "Release" ]; then
