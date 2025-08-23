@@ -209,7 +209,7 @@ jobs:
     steps:
       - name: Validate Inputs
         run: |
-          args=args=("${{ inputs.scheme }}" "${{ inputs.fastlane-lane }}" "${{ inputs.custom-command }}")
+          args=("${{ inputs.scheme }}" "${{ inputs.fastlane-lane }}" "${{ inputs.custom-command }}")
           count=$(printf "%s\n" "${args[@]}" | grep -c .) # number of non-empty inputs
           if [ $count -ne 1 ]; then
             echo error: The 'scheme', 'fastlane-lane', and 'custom-command' options are mutually exclusive.
