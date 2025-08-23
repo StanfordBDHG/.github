@@ -207,6 +207,15 @@ jobs:
         working-directory: ${{ inputs.path }}
     environment: ${{ inputs.environment }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          # This is GitHubs way of implementing ternary expressions (see https://docs.github.com/en/actions/learn-github-actions/expressions)
+          token: ${{ secrets.CHECKOUT_TOKEN != '' && secrets.CHECKOUT_TOKEN || github.token }}
+          submodules: ${{ inputs.checkout-submodules }}
+          lfs: ${{ inputs.checkout-lfs }}
+      # sadly can't have this as the first step, since inputs.path won't yet exist at that point,
+      # and while we can override the working-directory on a per-step basis, the default still seems
+      # to get applied first, meaning that the step will fail anyway.
       - name: Validate Inputs
         run: |
           args=("${{ inputs.scheme }}" "${{ inputs.fastlane-lane }}" "${{ inputs.custom-command }}")
@@ -215,13 +224,6 @@ jobs:
             echo error: The 'scheme', 'fastlane-lane', and 'custom-command' options are mutually exclusive.
             exit 1
           fi
-        working-directory: .
-      - uses: actions/checkout@v4
-        with:
-          # This is GitHubs way of implementing ternary expressions (see https://docs.github.com/en/actions/learn-github-actions/expressions)
-          token: ${{ secrets.CHECKOUT_TOKEN != '' && secrets.CHECKOUT_TOKEN || github.token }}
-          submodules: ${{ inputs.checkout-submodules }}
-          lfs: ${{ inputs.checkout-lfs }}
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ inputs.xcode-version }}
