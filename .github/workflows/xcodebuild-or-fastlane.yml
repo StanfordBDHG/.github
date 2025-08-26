@@ -363,7 +363,7 @@ jobs:
             if [ -z "${{ inputs.resultBundle }}" ]; then
                 RESULTBUNDLE=${{ inputs.scheme }}.xcresult
             else
-                RESULTBUNDLE=${{ inputs.resultBundle }}
+                RESULTBUNDLE="${{ inputs.resultBundle }}"
             fi
 
             if [ "${{ inputs.buildConfig }}" = "Release" ]; then
