@@ -39,6 +39,8 @@ jobs:
       - name: Merge coverage reports
         run: |
             NUM_INPUTS=`ls -la ${{ inputs.coveragereports }} | wc -l`
+            echo NI $NUM_INPUTS
+            ls -la ${{ inputs.coveragereports }}
             if [ $NUM_INPUTS -gt 1 ]; then
               xcrun xcresulttool merge ${{ inputs.coveragereports }} --output-path CodeCoverage.xcresult
               rm -rf ${{ inputs.coveragereports }}
