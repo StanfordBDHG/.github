@@ -10,6 +10,12 @@ name: SwiftLint
 
 on:
   workflow_call:
+    inputs:
+      version:
+        description: Swiftlint version
+        type: string
+        default: latest
+        required: false
 
 jobs:
   swiftlint:
@@ -23,4 +29,5 @@ jobs:
         uses: stanfordbdhg/action-swiftlint@lukas/fix
         with:
           args: --strict
-          version: latest
+          version: ${{ inputs.version }}
+
