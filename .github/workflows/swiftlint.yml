@@ -26,7 +26,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: SwiftLint
-        uses: stanfordbdhg/action-swiftlint@lukas/fix
+        uses: stanfordbdhg/action-swiftlint@v4
         with:
           args: --strict
           version: ${{ inputs.version }}
