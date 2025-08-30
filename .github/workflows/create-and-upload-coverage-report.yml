@@ -38,8 +38,13 @@ jobs:
       - uses: actions/download-artifact@v4
       - name: Merge coverage reports
         run: |
-            xcrun xcresulttool merge ${{ inputs.coveragereports }} --output-path CodeCoverage.xcresult
-            rm -rf ${{ inputs.coveragereports }}
+            NUM_INPUTS=`ls -la ${{ inputs.coveragereports }} | wc -l`
+            if [ $NUM_INPUTS -gt 1 ]; then
+              xcrun xcresulttool merge ${{ inputs.coveragereports }} --output-path CodeCoverage.xcresult
+              rm -rf ${{ inputs.coveragereports }}
+            else
+              mv ${{ inputs.coveragereports }} CodeCoverage.xcresult
+            fi
       - uses: stanfordbdhg/xccov2lcov@v1
         with:
           xcresult: CodeCoverage.xcresult
