@@ -36,12 +36,7 @@ jobs:
             xcodebuild -version
             swift --version
       - uses: actions/download-artifact@v4
-      - name: Rename single code coverage report
-        if: "!contains(inputs.coveragereports, ' ')"
-        run: |
-            mv ${{ inputs.coveragereports }} CodeCoverage.xcresult
       - name: Merge coverage reports
-        if: "contains(inputs.coveragereports, ' ')"
         run: |
             xcrun xcresulttool merge ${{ inputs.coveragereports }} --output-path CodeCoverage.xcresult
             rm -rf ${{ inputs.coveragereports }}
