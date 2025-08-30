@@ -20,6 +20,6 @@ jobs:
         with:
           fetch-depth: 0
       - name: SwiftLint
-        uses: stanfordbdhg/action-swiftlint@v4
+        uses: stanfordbdhg/action-swiftlint@lukas/fix
         with:
           args: --strict
