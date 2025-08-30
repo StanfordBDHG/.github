@@ -429,7 +429,7 @@ jobs:
         if: ${{ !env.selfhosted && inputs.codeql }}
         uses: github/codeql-action/analyze@v3
       - name: Upload artifact
-        if: ${{ (success() || failure()) && inputs.artifactname != '' && inputs.buildConfig != 'Release' }}
+        if: ${{ (success() || failure()) && inputs.artifactname != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifactname }}
