@@ -47,10 +47,10 @@ on:
       destination:
         description: |
           The destination parameter that should be passed to xcodebuild.
-          Defaults to the iOS simulator using an iPhone 16 Pro.
+          Defaults to the iOS simulator using an iPhone 17 Pro.
         required: false
         type: string
-        default: 'platform=iOS Simulator,name=iPhone 16 Pro'
+        default: 'platform=iOS Simulator,name=iPhone 17 Pro'
       setupSimulators:
         description: |
           Flag indicating if all iOS simulators matching the `destination` input shoud be setup.
