@@ -12,15 +12,25 @@ on:
   workflow_call:
     inputs:
       version:
-        description: Swiftlint version
+        description: |
+          Swiftlint version.
         type: string
         default: latest
         required: false
+      path:
+        description: |
+          The path where the project is located. Defaults to $GITHUB_WORKSPACE.
+        required: false
+        type: string
+        default: '.'
 
 jobs:
   swiftlint:
     name: SwiftLint
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.path }}
     steps:
       - uses: actions/checkout@v4
         with:
