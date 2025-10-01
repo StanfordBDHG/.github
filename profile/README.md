@@ -15,6 +15,7 @@ We empower the digital health community to rapidly prototype and build digital h
 Our flagship project is [Spezi](https://github.com/StanfordSpezi), an open-source framework and ecosystem of modules for building modern, interoperable digital health applications. Check out the [Spezi Template Application](https://github.com/StanfordSpezi/SpeziTemplateApplication) as a great way to get started.
 
 Other featured projects include:
+- [OpenTSLM](https://github.com/StanfordBDHG/OpenTSLM) - time-series language models for reasoning over multivariate medical text- and time-series data
 - [LLMonFHIR](https://github.com/StanfordBDHG/LLMonFHIR) - using large language models to explain health data
 - [HealthGPT](https://github.com/StanfordBDHG/HealthGPT) - querying Apple Health Data using natural language
 - [Phoenix](https://github.com/StanfordBDHG/Phoenix) - web-based builder for FHIR surveys
