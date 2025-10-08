@@ -103,6 +103,12 @@ on:
         required: false
         type: string
         default: ''
+      use_xcbeautify:
+        description: |
+          Whether the `xcodebuild` output should be piped into `xcbeautify`
+        required: false
+        type: boolean
+        default: true
       environment:
         description: |
           GitHub deployment environment to optionally adjust access to variables and secrets with additional protection rules.
@@ -244,7 +250,7 @@ jobs:
             echo "environment: ${{ inputs.environment }}"
             xcrun simctl list
       - name: Install xcbeautify
-        if: ${{ !env.selfhosted && inputs.scheme != '' }}
+        if: ${{ !env.selfhosted && inputs.scheme != '' && inputs.use_xcbeautify }}
         run: brew install xcbeautify
       - name: Cache .derivedData folder (Deprecated)
         if: ${{ inputs.cacheDerivedData }}
@@ -348,7 +354,7 @@ jobs:
               -scheme ${{ inputs.scheme }} \
               -resolvePackageDependencies \
               -derivedDataPath ".derivedData" \
-            | xcbeautify \
+            | ${{ inputs.use_xcbeautify && 'xcbeautify' || 'cat' }} \
             || true
       - name: Build and test (xcodebuild)
         if: ${{ inputs.scheme != '' }}
@@ -398,7 +404,7 @@ jobs:
               OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG $SWIFT_VERSION_FLAG" \
               -skipPackagePluginValidation \
               -skipMacroValidation \
-            | xcbeautify
+            | ${{ inputs.use_xcbeautify && 'xcbeautify' || 'cat' }}
       - name: Fastlane
         if: ${{ inputs.fastlanelane != '' }}
         run: |
