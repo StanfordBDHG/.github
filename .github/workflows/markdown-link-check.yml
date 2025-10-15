@@ -42,7 +42,7 @@ jobs:
           fi
           echo "Contents of $CONFIG_FILE:"
           cat $CONFIG_FILE
-      - name: Linkspector
+      - name: Markdown Link Check
         uses: umbrelladocs/action-linkspector@v1
         with:
           filter_mode: nofilter
