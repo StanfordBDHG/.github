@@ -42,8 +42,9 @@ jobs:
           fi
           echo "Contents of $CONFIG_FILE:"
           cat $CONFIG_FILE
-      - name: Markdown Link Check
+      - name: Linkspector
         uses: umbrelladocs/action-linkspector@v1
         with:
           filter_mode: nofilter
-          tool_name: Static Analysis / Markdown Link Check
+          # tool_name: Static Analysis / Markdown Link Check
+          reporter: ${{ github.event_name == 'pull_request' && 'github-pr-check' || 'github-annotations' }}
