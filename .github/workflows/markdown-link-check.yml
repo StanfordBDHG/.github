@@ -46,4 +46,4 @@ jobs:
         uses: umbrelladocs/action-linkspector@v1
         with:
           filter_mode: nofilter
-          tool_name: Markdown Link Check
+          tool_name: ${{ github.run-name }}
