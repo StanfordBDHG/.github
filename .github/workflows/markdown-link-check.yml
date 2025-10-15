@@ -46,7 +46,5 @@ jobs:
         uses: umbrelladocs/action-linkspector@v1
         with:
           filter_mode: nofilter
-          # tool_name: Static Analysis / Markdown Link Check
-          # reporter: ${{ github.event_name == 'pull_request' && 'github-pr-check' || 'github-annotations' }}
           reporter: github-pr-annotations
           fail_level: error
