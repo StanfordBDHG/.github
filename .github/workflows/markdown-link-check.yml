@@ -47,4 +47,5 @@ jobs:
         with:
           filter_mode: nofilter
           # tool_name: Static Analysis / Markdown Link Check
-          reporter: ${{ github.event_name == 'pull_request' && 'github-pr-check' || 'github-annotations' }}
+          # reporter: ${{ github.event_name == 'pull_request' && 'github-pr-check' || 'github-annotations' }}
+          reporter: github-annotations
