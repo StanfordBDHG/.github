@@ -21,7 +21,7 @@ jobs:
   markdown_link_check:
     name: Check Links
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
-    container: ghcr.io/puppeteer/puppeteer:latest
+    container: node:latest
     steps:
       - uses: actions/checkout@v4
       - name: Check and Create Linkspector Configuration
