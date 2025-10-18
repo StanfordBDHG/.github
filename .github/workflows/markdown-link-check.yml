@@ -10,11 +10,17 @@ name: Check Links
 
 on:
   workflow_call:
+    inputs:
+      runsonlabels:
+        description: 'JSON-based collection of labels indicating which type of github runner should be chosen'
+        required: false
+        type: string
+        default: '["ubuntu-latest"]'
 
 jobs:
   markdown_link_check:
     name: Check Links
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJson(inputs.runsonlabels) }}
     steps:
       - uses: actions/checkout@v4
       - name: Linkspector Ubuntu Workaround
