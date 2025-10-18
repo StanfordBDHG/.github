@@ -21,6 +21,7 @@ jobs:
   markdown_link_check:
     name: Check Links
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
+    container: ghcr.io/puppeteer/puppeteer:latest
     steps:
       - uses: actions/checkout@v4
       - name: Check and Create Linkspector Configuration
@@ -50,3 +51,5 @@ jobs:
           filter_mode: nofilter
           reporter: github-pr-annotations
           fail_level: error
+    env:
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
