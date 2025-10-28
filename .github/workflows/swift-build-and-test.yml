@@ -52,6 +52,14 @@ on:
           The name of the artifact that should be uploaded at the end of the build.
         required: false
         type: string
+      build_configuration:
+        description: |
+            The build configuration parameter that should be passed to xcodebuild.
+            Either use `Debug` or `Release` to build in the respective modes.
+            If not defined, the `Debug` configuration is used.
+        required: false
+        type: string
+        default: 'debug'
     secrets:
       CHECKOUT_TOKEN:
         description: |
