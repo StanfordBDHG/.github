@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT
 #
 
-name: Build and Test Swift Package on Linux
+name: Swift Test
 
 on:
   workflow_call:
@@ -66,8 +66,8 @@ on:
           The Personal access token (PAT) to use with the checkout action.
         required: false
 jobs:
-  swift_build_and_test:
-    name: Build and Test Swift on Linux
+  swift_test:
+    name: Swift Test
     runs-on: ${{ fromJson(inputs.runs_on_labels) }}
     defaults:
       run:

@@ -21,6 +21,7 @@ on:
         description: |
           A string containing all names of the .lcov files that are downloaded from the artifacts of previous jobs.
           Multiple values are separated by a space character.
+          For proper coverage merging with .xcresult files, lcov files must contain only function coverage data.
         required: false
         type: string
     secrets:
