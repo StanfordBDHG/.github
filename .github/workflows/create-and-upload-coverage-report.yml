@@ -1,7 +1,7 @@
 #
 # This source file is part of the Stanford Biodesign Digital Health Group open-source organization
 #
-# SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
+# SPDX-FileCopyrightText: 2025 Stanford University and the project authors (see CONTRIBUTORS.md)
 #
 # SPDX-License-Identifier: MIT
 #
@@ -15,7 +15,14 @@ on:
         description: |
           A string containing all names of the .xcresult files that are downloaded from the artifacts of previous jobs.
           Multiple values are separated by a space character.
-        required: true
+        required: false
+        type: string
+      coveragereports_lcov:
+        description: |
+          A string containing all names of the .lcov files that are downloaded from the artifacts of previous jobs.
+          Multiple values are separated by a space character.
+          For proper coverage merging with .xcresult files, lcov files must contain only function coverage data.
+        required: false
         type: string
     secrets:
       token:
@@ -36,7 +43,19 @@ jobs:
             xcodebuild -version
             swift --version
       - uses: actions/download-artifact@v4
-      - name: Merge coverage reports
+      - name: Install lcov
+        if: ${{ inputs.coveragereports_lcov != '' }}
+        run: |
+          if ! command -v lcov &> /dev/null; then
+            echo "Installing lcov..."
+            brew install lcov
+          fi
+      - name: Merge lcov coverage reports
+        if: ${{ inputs.coveragereports_lcov != '' && inputs.coveragereports == '' }}
+        run: |
+          lcov $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }}/${{ inputs.coveragereports_lcov }}) -o info.lcov
+      - name: Merge xcresult coverage reports
+        if: ${{ inputs.coveragereports != '' }}
         run: |
             FILES=( ${{ inputs.coveragereports }} )
             NUM_INPUTS=${#FILES[@]}
@@ -47,10 +66,19 @@ jobs:
               mv ${{ inputs.coveragereports }} CodeCoverage.xcresult
             fi
       - uses: stanfordbdhg/xccov2lcov@v1
+        if: ${{ inputs.coveragereports != '' }}
         with:
           xcresult: CodeCoverage.xcresult
+      - name: Merge xcresult & lcov
+        if: ${{ inputs.coveragereports_lcov != '' && inputs.coveragereports != '' }}
+        run: |
+          if [ -n "${{ inputs.coveragereports_lcov }}" ]; then
+            lcov -a info.lcov $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }}/${{ inputs.coveragereports_lcov }}) -o coverage_combined.lcov
+            mv coverage_combined.lcov info.lcov
+          fi
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
+          files: info.lcov
           token: ${{ secrets.token }}
