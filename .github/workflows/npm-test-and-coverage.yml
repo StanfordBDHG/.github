@@ -16,7 +16,7 @@ on:
           Node version spec of the version to use in SemVer notation.
         required: false
         type: string
-        default: '22'
+        default: '24'
       working-directory:
         description: |
           The working directory where the project is located. Defaults to $GITHUB_WORKSPACE.
