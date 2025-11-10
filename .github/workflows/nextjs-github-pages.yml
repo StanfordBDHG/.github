@@ -17,7 +17,7 @@ on:
           Node version spec of the version to use in SemVer notation.
         required: false
         type: string
-        default: '22'
+        default: '24'
 
 permissions:
   contents: read
