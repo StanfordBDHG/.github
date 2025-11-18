@@ -83,6 +83,11 @@ on:
         required: false
         type: string
         default: ''
+      xcodebuild-extra-flags:
+        description: |
+          Additional flags that should be passed to xcodebuild
+        type: string
+        default: ''
       fastlanelane:
         description: |
           The lane of the fastlane command.
@@ -398,6 +403,7 @@ jobs:
               OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG $SWIFT_VERSION_FLAG" \
               -skipPackagePluginValidation \
               -skipMacroValidation \
+              ${{ inputs.xcodebuild-extra-flags }} \
             | xcbeautify
       - name: Fastlane
         if: ${{ inputs.fastlanelane != '' }}
