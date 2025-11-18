@@ -83,6 +83,11 @@ on:
         required: false
         type: string
         default: ''
+      spm-disable-prebuilts:
+        description: |
+          Disables package prebuilts when resolving SPM dependencies
+        type: boolean
+        default: false
       fastlanelane:
         description: |
           The lane of the fastlane command.
@@ -348,6 +353,7 @@ jobs:
               -scheme ${{ inputs.scheme }} \
               -resolvePackageDependencies \
               -derivedDataPath ".derivedData" \
+              ${{ inputs.spm-disable-prebuilts && '-IDEPackageEnablePrebuilts=NO' || '' }} \
             | xcbeautify \
             || true
       - name: Build and test (xcodebuild)
@@ -398,6 +404,7 @@ jobs:
               OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG $SWIFT_VERSION_FLAG" \
               -skipPackagePluginValidation \
               -skipMacroValidation \
+              ${{ inputs.spm-disable-prebuilts && '-IDEPackageEnablePrebuilts=NO' || '' }} \
             | xcbeautify
       - name: Fastlane
         if: ${{ inputs.fastlanelane != '' }}
