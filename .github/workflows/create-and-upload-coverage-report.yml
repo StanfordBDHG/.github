@@ -53,7 +53,7 @@ jobs:
       - name: Merge lcov coverage reports
         if: ${{ inputs.coveragereports_lcov != '' && inputs.coveragereports == '' }}
         run: |
-          lcov $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }}/${{ inputs.coveragereports_lcov }}) -o info.lcov
+          lcov $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }}) -o info.lcov
       - name: Merge xcresult coverage reports
         if: ${{ inputs.coveragereports != '' }}
         run: |
@@ -73,7 +73,7 @@ jobs:
         if: ${{ inputs.coveragereports_lcov != '' && inputs.coveragereports != '' }}
         run: |
           if [ -n "${{ inputs.coveragereports_lcov }}" ]; then
-            lcov -a info.lcov $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }}/${{ inputs.coveragereports_lcov }}) -o coverage_combined.lcov
+            lcov -a info.lcov $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }}) -o coverage_combined.lcov
             mv coverage_combined.lcov info.lcov
           fi
       - name: Upload coverage to Codecov
