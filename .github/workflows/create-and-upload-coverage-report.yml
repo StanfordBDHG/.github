@@ -76,7 +76,6 @@ jobs:
         if: ${{ inputs.coveragereports != '' }}
         with:
           xcresult: CodeCoverage.xcresult
-          output: xcresults.lcov
       - name: Merge xcresult & lcov
         if: ${{ inputs.coveragereports_lcov != '' && inputs.coveragereports != '' }}
         run: |
