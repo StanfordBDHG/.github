@@ -51,7 +51,7 @@ jobs:
             brew install lcov
           fi
       - name: Merge lcov coverage reports
-        if: ${{ inputs.coveragereports_lcov != '' && inputs.coveragereports == '' }}
+        if: ${{ inputs.coveragereports_lcov != '' }}
         run: |
           FILES=( ${{ inputs.coveragereports_lcov }} )
           args=()
@@ -76,20 +76,18 @@ jobs:
         if: ${{ inputs.coveragereports != '' }}
         with:
           xcresult: CodeCoverage.xcresult
-      - name: Merge xcresult & lcov
-        if: ${{ inputs.coveragereports_lcov != '' && inputs.coveragereports != '' }}
+          output: xcresults.lcov
+      - name: Assemble info.lcov
         run: |
-          FILES=( ${{ inputs.coveragereports_lcov }} )
-          NUM_INPUTS=${#FILES[@]}
-          if [ $NUM_INPUTS -gt 1 ]; then
-            args=()
-            for file in "${FILES[@]}"; do
-              # each x.lcov artifact gets downloaded to `x.lcov/x.lcov` (ie, into a folder with the same name);
-              # we need to take this into account when constructing the paths.
-              args+=(-a "$file/$(basename "$file")")
-            done
-            lcov -a info.lcov "${args[@]}" -o coverage_combined.lcov
-            mv coverage_combined.lcov info.lcov
+          if [ -n ${{ inputs.coveragereports }} -a -n ${{ inputs.coveragereports_lcov }} ]; then
+            # xcresult and lcov inputs
+            lcov -a info.lcov -a xcresults.lcov -o info.lcov
+          elif [ -n ${{ inputs.coveragereports }} -a -z ${{ inputs.coveragereports_lcov }} ]; then
+            # just xcresult inputs
+            mv xcresults.lcov info.lcov
+          elif [ -z ${{ inputs.coveragereports }} -a -n ${{ inputs.coveragereports_lcov }} ]; then
+            # just lcov inputs
+            # nothing to be done here
           fi
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
