@@ -75,10 +75,13 @@ jobs:
       - name: Merge xcresult & lcov
         if: ${{ inputs.coveragereports_lcov != '' && inputs.coveragereports != '' }}
         run: |
-          if [ -n "${{ inputs.coveragereports_lcov }}" ]; then
+          FILES=( ${{ inputs.coveragereports_lcov }} )
+          NUM_INPUTS=${#FILES[@]}
+          if [ $NUM_INPUTS -gt 1 ]; then
             echo ${{ inputs.coveragereports_lcov }}
             echo $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }})
-            lcov -a info.lcov $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }}) -o coverage_combined.lcov
+            echo $FILES
+            lcov -a info.lcov $(printf -- '-a %s ' $FILES) -o coverage_combined.lcov
             mv coverage_combined.lcov info.lcov
           fi
       - name: Upload coverage to Codecov
