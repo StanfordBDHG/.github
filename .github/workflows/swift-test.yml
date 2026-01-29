@@ -102,7 +102,7 @@ jobs:
         shell: bash
         run: |
           python3 -c "
-          import re, sys, os
+          import re, sys
           with open('tmp.lcov', 'r') as f:
               content = f.read()
           records = re.split(r'(?=^SF:)', content, flags=re.MULTILINE)
@@ -128,7 +128,6 @@ jobs:
                   if func_id in fnda_map:
                       result.append(f'DA:{line_num},{fnda_map[func_id]}')
               result.append('end_of_record')
-          print('os.cwd', os.getcwd())
           with open('${{ inputs.artifact_name }}', 'w') as f:
               f.write('\n'.join(result))
           "
