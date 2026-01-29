@@ -79,11 +79,11 @@ jobs:
           FILES=( ${{ inputs.coveragereports_lcov }} )
           NUM_INPUTS=${#FILES[@]}
           if [ $NUM_INPUTS -gt 1 ]; then
-            echo ${{ inputs.coveragereports_lcov }}
-            echo $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }})
-            echo $FILES
+            echo i1 ${{ inputs.coveragereports_lcov }}
+            echo i2 $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }})
+            echo i3 $FILES
             file info.lcov
-            cat info.lcov
+            # cat info.lcov
             lcov -a info.lcov $(printf -- '-a %s ' $FILES) -o coverage_combined.lcov
             mv coverage_combined.lcov info.lcov
           fi
