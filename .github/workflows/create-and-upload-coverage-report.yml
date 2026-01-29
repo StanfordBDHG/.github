@@ -43,9 +43,6 @@ jobs:
             xcodebuild -version
             swift --version
       - uses: actions/download-artifact@v4
-      - name: Tmp Show artifacts
-        run: |
-          ls -laR .
       - name: Install lcov
         if: ${{ inputs.coveragereports_lcov != '' }}
         run: |
