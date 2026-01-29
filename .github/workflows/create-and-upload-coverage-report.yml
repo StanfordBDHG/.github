@@ -79,14 +79,10 @@ jobs:
           FILES=( ${{ inputs.coveragereports_lcov }} )
           NUM_INPUTS=${#FILES[@]}
           if [ $NUM_INPUTS -gt 1 ]; then
-            echo i1 ${{ inputs.coveragereports_lcov }}
-            echo i2 $(printf -- '-a %s ' ${{ inputs.coveragereports_lcov }})
-            echo i3 ${FILES[@]}
-            file info.lcov
-            # cat info.lcov
+            echo FILES=${FILES[@]}
             args=()
             for file in "${FILES[@]}"; do
-                args+=(-a "$file")
+                args+=(-a "$file/$file")
             done
             lcov -a info.lcov "${args[@]}" -o coverage_combined.lcov
             mv coverage_combined.lcov info.lcov
