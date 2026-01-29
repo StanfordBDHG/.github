@@ -128,7 +128,7 @@ jobs:
                   if func_id in fnda_map:
                       result.append(f'DA:{line_num},{fnda_map[func_id]}')
               result.append('end_of_record')
-          with open('${{ inputs.path }}/${{ inputs.artifact_name }}', 'w') as f:
+          with open('${{ inputs.artifact_name }}', 'w') as f:
               f.write('\n'.join(result))
           "
       - name: Upload artifact
