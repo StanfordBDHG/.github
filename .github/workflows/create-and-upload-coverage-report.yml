@@ -84,7 +84,11 @@ jobs:
             echo i3 ${FILES[@]}
             file info.lcov
             # cat info.lcov
-            lcov -a info.lcov $(printf -- '-a %s ' ${FILES[@]}) -o coverage_combined.lcov
+            args=()
+            for file in "${FILES[@]}"; do
+                args+=(-a "$file")
+            done
+            lcov -a info.lcov "${args[@]}" -o coverage_combined.lcov
             mv coverage_combined.lcov info.lcov
           fi
       - name: Upload coverage to Codecov
