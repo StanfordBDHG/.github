@@ -56,7 +56,9 @@ jobs:
           FILES=( ${{ inputs.coveragereports_lcov }} )
           args=()
           for file in "${FILES[@]}"; do
-              args+=(-a "$file/$file")
+            # each x.lcov artifact gets downloaded to `x.lcov/x.lcov` (ie, into a folder with the same name);
+            # we need to take this into account when constructing the paths.
+            args+=(-a "$file/$(basename "$file")")
           done
           lcov "${args[@]}" -o info.lcov
       - name: Merge xcresult coverage reports
@@ -82,7 +84,9 @@ jobs:
           if [ $NUM_INPUTS -gt 1 ]; then
             args=()
             for file in "${FILES[@]}"; do
-                args+=(-a "$file/$(basename "$file")")
+              # each x.lcov artifact gets downloaded to `x.lcov/x.lcov` (ie, into a folder with the same name);
+              # we need to take this into account when constructing the paths.
+              args+=(-a "$file/$(basename "$file")")
             done
             lcov -a info.lcov "${args[@]}" -o coverage_combined.lcov
             mv coverage_combined.lcov info.lcov
