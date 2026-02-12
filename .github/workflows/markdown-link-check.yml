@@ -24,6 +24,10 @@ jobs:
     container: node:latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install Chromium (arm64)
+        run: |
+          apt-get update
+          apt-get install -y chromium
       - name: Check and Create Linkspector Configuration
         run: |
           CONFIG_FILE=".linkspector.yml"
@@ -47,6 +51,9 @@ jobs:
           cat $CONFIG_FILE
       - name: Linkspector
         uses: umbrelladocs/action-linkspector@v1
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
         with:
           filter_mode: nofilter
           reporter: github-pr-annotations
