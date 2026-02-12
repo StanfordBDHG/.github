@@ -54,6 +54,7 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
           PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+          PUPPETEER_ARGS: --no-sandbox --disable-setuid-sandbox
         with:
           filter_mode: nofilter
           reporter: github-pr-annotations
