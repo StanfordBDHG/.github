@@ -10,13 +10,18 @@ name: Check Links
 
 on:
   workflow_call:
+    inputs:
+      runs_on_labels:
+        description: |
+          JSON-based collection of labels indicating which type of github runner should be chosen.
+        required: false
+        type: string
+        default: '["macOS", "self-hosted"]'
 
 jobs:
   markdown_link_check:
     name: Check Links
-    runs-on:
-      - macOS
-      - self-hosted
+    runs-on: ${{ fromJson(inputs.runs_on_labels) }}
     steps:
       - uses: actions/checkout@v4
       - name: Check and Create Linkspector Configuration
