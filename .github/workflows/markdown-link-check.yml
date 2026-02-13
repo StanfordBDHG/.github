@@ -10,17 +10,20 @@ name: Check Links
 
 on:
   workflow_call:
+    inputs:
+      runs_on_labels:
+        description: |
+          JSON-based collection of labels indicating which type of github runner should be chosen.
+        required: false
+        type: string
+        default: '["macOS", "self-hosted"]'
 
 jobs:
   markdown_link_check:
     name: Check Links
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJson(inputs.runs_on_labels) }}
     steps:
       - uses: actions/checkout@v4
-      - name: Linkspector Ubuntu Workaround
-        run: |
-          echo "Linkspector Ubuntu Workaround for: https://github.com/UmbrellaDocs/action-linkspector/issues/32"
-          echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
       - name: Check and Create Linkspector Configuration
         run: |
           CONFIG_FILE=".linkspector.yml"
