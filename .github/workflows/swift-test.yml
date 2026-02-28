@@ -59,7 +59,7 @@ on:
             If not defined, the `Debug` configuration is used.
         required: false
         type: string
-        default: 'debug'
+        default: 'Debug'
     secrets:
       CHECKOUT_TOKEN:
         description: |
@@ -91,8 +91,8 @@ jobs:
       - name: Generate Coverage Report
         if: ${{ (success() || failure()) && inputs.artifact_name != '' }}
         run: |
-          COVERAGE_FILE=$(find .build/*/debug/codecov -name "*.profdata" -type f | head -1) && \
-          XCTEST_FILE=$(find .build/*/debug -name "*.xctest" -type f | head -1) && \
+          COVERAGE_FILE=$(find .build/*/${{ inputs.build_configuration }}/codecov -name "*.profdata" -type f | head -1) && \
+          XCTEST_FILE=$(find .build/*/${{ inputs.build_configuration }} -name "*.xctest" -type f | head -1) && \
           llvm-cov export \
             "$XCTEST_FILE" \
             --instr-profile="$COVERAGE_FILE" \
