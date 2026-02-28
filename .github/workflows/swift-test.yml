@@ -55,11 +55,11 @@ on:
       build_configuration:
         description: |
             The build configuration parameter that should be passed to xcodebuild.
-            Either use `debug` or `release` to build in the respective modes.
-            If not defined, the `debug` configuration is used.
+            Either use `Debug` or `Release` to build in the respective modes.
+            If not defined, the `Debug` configuration is used.
         required: false
         type: string
-        default: debug
+        default: Debug
     secrets:
       CHECKOUT_TOKEN:
         description: |
@@ -85,14 +85,15 @@ jobs:
         with:
           swift-version: ${{ inputs.swift_version || 'latest' }}
       - name: Build Package
-        run: swift build  --configuration ${{ inputs.build_configuration }}
+        run: swift build  --configuration $(${{ inputs.build_configuration }} | awk '{print tolower($0)}')
       - name: Run Tests
-        run: swift test --enable-code-coverage --configuration ${{ inputs.build_configuration }}
+        run: swift test --enable-code-coverage --configuration $(${{ inputs.build_configuration }} | awk '{print tolower($0)}')
       - name: Generate Coverage Report
         if: ${{ (success() || failure()) && inputs.artifact_name != '' }}
         run: |
-          COVERAGE_FILE=$(find .build/*/${{ inputs.build_configuration }}/codecov -name "*.profdata" -type f | head -1) && \
-          XCTEST_FILE=$(find .build/*/${{ inputs.build_configuration }} -name "*.xctest" -type f | head -1) && \
+          CONFIG=$(${{ inputs.build_configuration }} | awk '{print tolower($0)}')
+          COVERAGE_FILE=$(find .build/*/$CONFIG/codecov -name "*.profdata" -type f | head -1) && \
+          XCTEST_FILE=$(find .build/*/$CONFIG -name "*.xctest" -type f | head -1) && \
           llvm-cov export \
             "$XCTEST_FILE" \
             --instr-profile="$COVERAGE_FILE" \
