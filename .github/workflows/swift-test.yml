@@ -59,7 +59,7 @@ on:
             If not defined, the `Debug` configuration is used.
         required: false
         type: string
-        default: 'debug'
+        default: Debug
     secrets:
       CHECKOUT_TOKEN:
         description: |
@@ -85,14 +85,20 @@ jobs:
         with:
           swift-version: ${{ inputs.swift_version || 'latest' }}
       - name: Build Package
-        run: swift build  --configuration ${{ inputs.build_configuration }}
+        run: |
+          swift build \
+            --configuration $(echo -n ${{ inputs.build_configuration }} | awk '{print tolower($0)}')
       - name: Run Tests
-        run: swift test --enable-code-coverage --configuration ${{ inputs.build_configuration }}
+        run: |
+          swift test \
+            --enable-code-coverage \
+            --configuration $(echo -n ${{ inputs.build_configuration }} | awk '{print tolower($0)}')
       - name: Generate Coverage Report
         if: ${{ (success() || failure()) && inputs.artifact_name != '' }}
         run: |
-          COVERAGE_FILE=$(find .build/*/debug/codecov -name "*.profdata" -type f | head -1) && \
-          XCTEST_FILE=$(find .build/*/debug -name "*.xctest" -type f | head -1) && \
+          CONFIG=$(echo -n ${{ inputs.build_configuration }} | awk '{print tolower($0)}')
+          COVERAGE_FILE=$(find .build/*/$CONFIG/codecov -name "*.profdata" -type f | head -1) && \
+          XCTEST_FILE=$(find .build/*/$CONFIG -name "*.xctest" -type f | head -1) && \
           llvm-cov export \
             "$XCTEST_FILE" \
             --instr-profile="$COVERAGE_FILE" \
