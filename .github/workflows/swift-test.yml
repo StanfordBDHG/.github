@@ -60,6 +60,12 @@ on:
         required: false
         type: string
         default: Debug
+      test_flags:
+        description: |
+          Additional flags to pass to `swift test` (e.g. --no-parallel, --filter, --skip).
+        required: false
+        type: string
+        default: ''
     secrets:
       CHECKOUT_TOKEN:
         description: |
@@ -92,7 +98,8 @@ jobs:
         run: |
           swift test \
             --enable-code-coverage \
-            --configuration $(echo -n ${{ inputs.build_configuration }} | awk '{print tolower($0)}')
+            --configuration $(echo -n ${{ inputs.build_configuration }} | awk '{print tolower($0)}') \
+            ${{ inputs.test_flags }}
       - name: Generate Coverage Report
         if: ${{ (success() || failure()) && inputs.artifact_name != '' }}
         run: |
