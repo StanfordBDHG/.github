@@ -200,8 +200,8 @@ jobs:
               breakages=()
               while IFS= read -r breakage_line; do
                 [[ -n "$breakage_line" ]] || continue
-                breakages+=("$breakage_line")
-              done < <(grep '^API breakage:' "$log" || true)
+                breakages+=("$(printf '%s\n' "$breakage_line" | sed 's/^[[:space:]]*//')")
+              done < <(grep 'API breakage:' "$log" || true)
 
               if ((${#breakages[@]})); then
                 has_breaking_changes=true
@@ -227,6 +227,7 @@ jobs:
           echo "has_breaking_changes=$has_breaking_changes" >> "$GITHUB_OUTPUT"
           cat "$summary" >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
+
       - name: Update PR comment
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
