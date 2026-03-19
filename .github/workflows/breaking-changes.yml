@@ -12,22 +12,258 @@ on:
   workflow_call:
     inputs:
       branch:
-        description: 'The name of the branch to compare against'
+        description: The name of the branch to compare against
         required: false
         type: string
-        default: 'main'
+        default: main
       runsonlabels:
-        description: JSON-based collection of labels indicating which type of github runner should be chosen.
+        description: JSON-based collection of labels indicating which type of GitHub runner should be chosen.
         required: false
         type: string
         default: '["macos-26"]'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   diagnose:
+    name: Diagnose Breaking Changes
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
     steps:
       - uses: actions/checkout@v4
+
       - name: Fetch base branch
-        run: git fetch origin ${{ inputs['branch'] }}:${{ inputs['branch'] }}
-      - name: Run diagnose-api-breaking-changes
-        run: swift package diagnose-api-breaking-changes ${{ inputs['branch'] }}
+        run: git fetch origin "${{ inputs.branch }}:${{ inputs.branch }}"
+
+      - name: Diagnose API breaking changes
+        id: diagnose
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          temp_dir="$(mktemp -d)"
+          trap 'rm -rf "$temp_dir"' EXIT
+
+          summary="$RUNNER_TEMP/api-breakages.md"
+          dump_package_path="$temp_dir/package.json"
+          detect_products_script="$temp_dir/detect-products.swift"
+          select_platform_script="$temp_dir/select-platform.swift"
+          has_breaking_changes=false
+          status=0
+
+          {
+            echo "## API breaking changes"
+            echo
+          } > "$summary"
+
+          swift package dump-package > "$dump_package_path"
+
+          cat > "$detect_products_script" <<'SWIFT'
+          import Foundation
+
+          struct PackageDump: Decodable {
+              struct Product: Decodable {
+                  struct ProductType: Decodable {
+                      let library: [String]?
+                  }
+
+                  let name: String
+                  let type: ProductType
+              }
+
+              let products: [Product]
+          }
+
+          let path = CommandLine.arguments[1]
+          let data = try Data(contentsOf: URL(fileURLWithPath: path))
+          let packageDump = try JSONDecoder().decode(PackageDump.self, from: data)
+
+          for product in packageDump.products where product.type.library != nil {
+              print(product.name)
+          }
+          SWIFT
+
+          cat > "$select_platform_script" <<'SWIFT'
+          import Foundation
+
+          struct PackageDump: Decodable {
+              struct Platform: Decodable {
+                  let platformName: String
+                  let version: String
+              }
+
+              let platforms: [Platform]
+          }
+
+          let path = CommandLine.arguments[1]
+          let data = try Data(contentsOf: URL(fileURLWithPath: path))
+          let packageDump = try JSONDecoder().decode(PackageDump.self, from: data)
+          let platforms = packageDump.platforms
+
+          if platforms.isEmpty || platforms.contains(where: { $0.platformName == "macos" }) {
+              print("macos")
+              exit(0)
+          }
+
+          let preferredPlatforms = ["ios", "maccatalyst", "visionos", "tvos", "watchos"]
+          for platformName in preferredPlatforms {
+              if let platform = platforms.first(where: { $0.platformName == platformName }) {
+                  print(platform.platformName)
+                  print(platform.version)
+                  exit(0)
+              }
+          }
+
+          fputs("Package does not declare a supported Apple platform for this workflow.\n", stderr)
+          exit(1)
+          SWIFT
+
+          library_products=()
+          while IFS= read -r product; do
+            [[ -n "$product" ]] || continue
+            library_products+=("$product")
+          done < <(swift "$detect_products_script" "$dump_package_path")
+
+          if [[ "${#library_products[@]}" -eq 0 ]]; then
+            echo "No library products found in Package.swift"
+            exit 1
+          fi
+
+          selected_platform=()
+          while IFS= read -r platform_line; do
+            [[ -n "$platform_line" ]] || continue
+            selected_platform+=("$platform_line")
+          done < <(swift "$select_platform_script" "$dump_package_path")
+
+          if [[ "${#selected_platform[@]}" -eq 0 ]]; then
+            echo "Failed to determine the package platform from swift package dump-package"
+            exit 1
+          fi
+
+          platform_name="${selected_platform[0]:-}"
+          platform_version="${selected_platform[1]:-}"
+          swift_package_args=()
+
+          case "$platform_name" in
+            macos)
+              echo "Using host macOS SDK"
+              ;;
+            ios)
+              sdk_path="$(xcrun --sdk iphonesimulator --show-sdk-path)"
+              swift_package_args=(--sdk "$sdk_path" --triple "arm64-apple-ios${platform_version}-simulator")
+              echo "Using iOS simulator SDK: $platform_version"
+              ;;
+            maccatalyst)
+              sdk_path="$(xcrun --sdk macosx --show-sdk-path)"
+              swift_package_args=(--sdk "$sdk_path" --triple "arm64-apple-ios${platform_version}-macabi")
+              echo "Using Mac Catalyst SDK: $platform_version"
+              ;;
+            visionos)
+              sdk_path="$(xcrun --sdk xrsimulator --show-sdk-path)"
+              swift_package_args=(--sdk "$sdk_path" --triple "arm64-apple-xros${platform_version}-simulator")
+              echo "Using visionOS simulator SDK: $platform_version"
+              ;;
+            tvos)
+              sdk_path="$(xcrun --sdk appletvsimulator --show-sdk-path)"
+              swift_package_args=(--sdk "$sdk_path" --triple "arm64-apple-tvos${platform_version}-simulator")
+              echo "Using tvOS simulator SDK: $platform_version"
+              ;;
+            watchos)
+              sdk_path="$(xcrun --sdk watchsimulator --show-sdk-path)"
+              swift_package_args=(--sdk "$sdk_path" --triple "arm64-apple-watchos${platform_version}-simulator")
+              echo "Using watchOS simulator SDK: $platform_version"
+              ;;
+            *)
+              echo "Unsupported platform selection: $platform_name"
+              exit 1
+              ;;
+          esac
+
+          run_diagnose() {
+            local product="$1"
+
+            if [[ "${#swift_package_args[@]}" -gt 0 ]]; then
+              swift package "${swift_package_args[@]}" diagnose-api-breaking-changes "${{ inputs.branch }}" --products "$product"
+            else
+              swift package diagnose-api-breaking-changes "${{ inputs.branch }}" --products "$product"
+            fi
+          }
+
+          for product in "${library_products[@]}"; do
+            log="$RUNNER_TEMP/${product}-apidiff.log"
+
+            echo "::group::Diagnosing $product"
+            if run_diagnose "$product" 2>&1 | tee "$log"; then
+              echo "- ✅ \`$product\`: no breaking changes" >> "$summary"
+            else
+              breakages=()
+              while IFS= read -r breakage_line; do
+                [[ -n "$breakage_line" ]] || continue
+                breakages+=("$(printf '%s\n' "$breakage_line" | sed 's/^[[:space:]]*//')")
+              done < <(grep 'API breakage:' "$log" || true)
+
+              if ((${#breakages[@]})); then
+                has_breaking_changes=true
+                echo "- ❌ \`$product\`" >> "$summary"
+                for line in "${breakages[@]}"; do
+                  msg="$product: $line"
+                  esc=${msg//'%'/'%25'}
+                  esc=${esc//$'\n'/'%0A'}
+                  esc=${esc//$'\r'/'%0D'}
+                  echo "::error title=API breaking change::$esc"
+                  echo "  $line" >> "$summary"
+                done
+              else
+                echo "::error title=diagnose-api-breaking-changes failed::$product failed for a non-breakage reason; see logs"
+                echo "- ⚠️ \`$product\`: command failed for a non-breakage reason" >> "$summary"
+              fi
+
+              status=1
+            fi
+            echo "::endgroup::"
+          done
+
+          echo "has_breaking_changes=$has_breaking_changes" >> "$GITHUB_OUTPUT"
+          cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - name: Update PR comment
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        env:
+          HAS_BREAKING_CHANGES: ${{ steps.diagnose.outputs.has_breaking_changes }}
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- api-breaking-changes -->';
+            const hasBreakingChanges = process.env.HAS_BREAKING_CHANGES === 'true';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number
+            });
+
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes(marker));
+
+            if (!hasBreakingChanges) {
+              if (existing) {
+                await github.rest.issues.deleteComment({
+                  owner, repo, comment_id: existing.id
+                });
+              }
+              return;
+            }
+
+            const body = marker + '\n' + fs.readFileSync(process.env.RUNNER_TEMP + '/api-breakages.md', 'utf8');
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: existing.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number, body
+              });
+            }
