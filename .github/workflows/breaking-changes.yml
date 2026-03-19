@@ -32,8 +32,10 @@ jobs:
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
     steps:
       - uses: actions/checkout@v4
+
       - name: Fetch base branch
         run: git fetch origin "${{ inputs.branch }}:${{ inputs.branch }}"
+
       - name: Diagnose API breaking changes
         id: diagnose
         shell: bash
@@ -134,12 +136,17 @@ jobs:
             selected_platform+=("$platform_line")
           done < <(swift "$select_platform_script" "$dump_package_path")
 
+          if [[ "${#selected_platform[@]}" -eq 0 ]]; then
+            echo "Failed to determine the package platform from swift package dump-package"
+            exit 1
+          fi
+
           platform_name="${selected_platform[0]:-}"
           platform_version="${selected_platform[1]:-}"
           swift_package_args=()
 
           case "$platform_name" in
-            "" | macos)
+            macos)
               echo "Using host macOS SDK"
               ;;
             ios)
@@ -173,11 +180,21 @@ jobs:
               ;;
           esac
 
+          run_diagnose() {
+            local product="$1"
+
+            if [[ "${#swift_package_args[@]}" -gt 0 ]]; then
+              swift package "${swift_package_args[@]}" diagnose-api-breaking-changes "${{ inputs.branch }}" --products "$product"
+            else
+              swift package diagnose-api-breaking-changes "${{ inputs.branch }}" --products "$product"
+            fi
+          }
+
           for product in "${library_products[@]}"; do
             log="$RUNNER_TEMP/${product}-apidiff.log"
 
             echo "::group::Diagnosing $product"
-            if swift package "${swift_package_args[@]}" diagnose-api-breaking-changes "${{ inputs.branch }}" --products "$product" 2>&1 | tee "$log"; then
+            if run_diagnose "$product" 2>&1 | tee "$log"; then
               echo "- ✅ \`$product\`: no breaking changes" >> "$summary"
             else
               breakages=()
