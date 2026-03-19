@@ -22,12 +22,87 @@ on:
         type: string
         default: '["macos-26"]'
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   diagnose:
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
     steps:
       - uses: actions/checkout@v4
       - name: Fetch base branch
-        run: git fetch origin ${{ inputs['branch'] }}:${{ inputs['branch'] }}
-      - name: Run diagnose-api-breaking-changes
-        run: swift package diagnose-api-breaking-changes ${{ inputs['branch'] }}
+        run: git fetch origin "${{ inputs.branch }}:${{ inputs.branch }}"
+      - name: Diagnose API breaking changes
+        id: diagnose
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          summary="$RUNNER_TEMP/api-breakages.md"
+          status=0
+
+          {
+            echo "## API breaking changes"
+            echo
+          } > "$summary"
+
+          while IFS= read -r product; do
+            log="$RUNNER_TEMP/${product}-apidiff.log"
+
+            echo "::group::Diagnosing ${product}"
+            if swift package diagnose-api-breaking-changes "${{ inputs.branch }}" --products "$product" 2>&1 | tee "$log"; then
+              echo "- ✅ \`$product\`: no breaking changes" >> "$summary"
+            else
+              mapfile -t breakages < <(grep '^API breakage:' "$log" || true)
+
+              if ((${#breakages[@]})); then
+                echo "- ❌ \`$product\`" >> "$summary"
+                for line in "${breakages[@]}"; do
+                  msg="$product: $line"
+                  esc=${msg//'%'/'%25'}
+                  esc=${esc//$'\n'/'%0A'}
+                  esc=${esc//$'\r'/'%0D'}
+                  echo "::error title=API breaking change::$esc"
+                  echo "  $line" >> "$summary"
+                done
+              else
+                echo "::error title=diagnose-api-breaking-changes failed::$product failed for a non-breakage reason; see logs"
+                echo "- ⚠️ \`$product\`: command failed for a non-breakage reason" >> "$summary"
+              fi
+
+              status=1
+            fi
+            echo "::endgroup::"
+          done < <(
+            swift package dump-package | jq -r '.products[] | select(.type.library != null) | .name'
+          )
+
+          cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+      - name: Update PR comment
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- api-breaking-changes -->';
+            const body = marker + '\n' + fs.readFileSync(process.env.RUNNER_TEMP + '/api-breakages.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number
+            });
+
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: existing.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number, body
+              });
+            }
