@@ -47,6 +47,7 @@ jobs:
           dump_package_path="$temp_dir/package.json"
           detect_products_script="$temp_dir/detect-products.swift"
           select_platform_script="$temp_dir/select-platform.swift"
+          has_breaking_changes=false
           status=0
 
           {
@@ -116,16 +117,22 @@ jobs:
           exit(1)
           SWIFT
 
-          library_products_output="$(swift "$detect_products_script" "$dump_package_path")"
-          mapfile -t library_products <<<"$library_products_output"
+          library_products=()
+          while IFS= read -r product; do
+            [[ -n "$product" ]] || continue
+            library_products+=("$product")
+          done < <(swift "$detect_products_script" "$dump_package_path")
 
           if [[ "${#library_products[@]}" -eq 0 ]]; then
             echo "No library products found in Package.swift"
             exit 1
           fi
 
-          selected_platform_output="$(swift "$select_platform_script" "$dump_package_path")"
-          mapfile -t selected_platform <<<"$selected_platform_output"
+          selected_platform=()
+          while IFS= read -r platform_line; do
+            [[ -n "$platform_line" ]] || continue
+            selected_platform+=("$platform_line")
+          done < <(swift "$select_platform_script" "$dump_package_path")
 
           platform_name="${selected_platform[0]:-}"
           platform_version="${selected_platform[1]:-}"
@@ -173,9 +180,14 @@ jobs:
             if swift package "${swift_package_args[@]}" diagnose-api-breaking-changes "${{ inputs.branch }}" --products "$product" 2>&1 | tee "$log"; then
               echo "- ✅ \`$product\`: no breaking changes" >> "$summary"
             else
-              mapfile -t breakages < <(grep '^API breakage:' "$log" || true)
+              breakages=()
+              while IFS= read -r breakage_line; do
+                [[ -n "$breakage_line" ]] || continue
+                breakages+=("$breakage_line")
+              done < <(grep '^API breakage:' "$log" || true)
 
               if ((${#breakages[@]})); then
+                has_breaking_changes=true
                 echo "- ❌ \`$product\`" >> "$summary"
                 for line in "${breakages[@]}"; do
                   msg="$product: $line"
@@ -195,16 +207,19 @@ jobs:
             echo "::endgroup::"
           done
 
+          echo "has_breaking_changes=$has_breaking_changes" >> "$GITHUB_OUTPUT"
           cat "$summary" >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
       - name: Update PR comment
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
+        env:
+          HAS_BREAKING_CHANGES: ${{ steps.diagnose.outputs.has_breaking_changes }}
         with:
           script: |
             const fs = require('fs');
             const marker = '<!-- api-breaking-changes -->';
-            const body = marker + '\n' + fs.readFileSync(process.env.RUNNER_TEMP + '/api-breakages.md', 'utf8');
+            const hasBreakingChanges = process.env.HAS_BREAKING_CHANGES === 'true';
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
 
@@ -213,6 +228,17 @@ jobs:
             });
 
             const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes(marker));
+
+            if (!hasBreakingChanges) {
+              if (existing) {
+                await github.rest.issues.deleteComment({
+                  owner, repo, comment_id: existing.id
+                });
+              }
+              return;
+            }
+
+            const body = marker + '\n' + fs.readFileSync(process.env.RUNNER_TEMP + '/api-breakages.md', 'utf8');
 
             if (existing) {
               await github.rest.issues.updateComment({
