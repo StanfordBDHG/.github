@@ -1,0 +1,93 @@
+#
+# This source file is part of the Stanford Spezi open source project
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Test
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        type: string
+        required: true
+      platform_matrix:
+        type: string
+        required: true
+      ui_scheme:
+        type: string
+        required: true
+      linux_run_tests:
+        type: boolean
+        default: false
+      linux_runners:
+        type: string
+        default: '["blacksmith-4vcpu-ubuntu-2404"]'
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+
+jobs:
+  package_tests:
+    name: Build and Test Swift Package ${{ matrix.platform.name }} (${{ matrix.config }})
+    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
+    strategy:
+      matrix:
+        config: [Debug, Release]
+        platform: ${{ fromJSON(inputs.platform_matrix) }}
+      fail-fast: false
+    with:
+      runsonlabels: '["macOS", "self-hosted"]'
+      scheme: ${{ format('{0}-Package', inputs.package_name) }}
+      destination: ${{ matrix.platform.destination }}
+      buildConfig: ${{ matrix.config }}
+      resultBundle: ${{ format('{0}-{1}-{2}.xcresult', inputs.package_name, matrix.platform.name, matrix.config) }}
+      artifactname: ${{ format('{0}-{1}-{2}.xcresult', inputs.package_name, matrix.platform.name, matrix.config) }}
+
+  ui_tests:
+    name: Build and Test UI Tests ${{ matrix.platform.name }} (${{ matrix.config }})
+    if: inputs.ui_scheme != ''
+    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
+    strategy:
+      matrix:
+        config: [Debug, Release]
+        platform:
+          - name: iOS
+            destination: 'platform=iOS Simulator,name=iPhone 17 Pro Max'
+      fail-fast: false
+    with:
+      runsonlabels: '["macOS", "self-hosted"]'
+      path: 'Tests/UITests'
+      scheme: ${{ inputs.ui_scheme }}
+      destination: ${{ matrix.platform.destination }}
+      buildConfig: ${{ matrix.config }}
+      resultBundle: ${{ format('{0}-{1}-{2}.xcresult', inputs.ui_scheme, matrix.platform.name, matrix.config) }}
+      artifactname: ${{ format('{0}-{1}-{2}.xcresult', inputs.ui_scheme, matrix.platform.name, matrix.config) }}
+
+  package_tests_linux:
+    name: Build and Test Swift Package Linux (${{ matrix.config }})
+    if: inputs.linux_run_tests
+    uses: StanfordBDHG/.github/.github/workflows/swift-test.yml@v2
+    strategy:
+      matrix:
+        config: [Debug, Release]
+      fail-fast: false
+    with:
+      runs_on_labels: ${{ inputs.linux_runners }}
+      test_flags: '--no-parallel'
+      build_configuration: ${{ matrix.config }}
+      artifact_name: ${{ format('{0}-Package-Linux-{1}.lcov', inputs.package_name, matrix.config) }}
+
+  uploadcoveragereport:
+    name: Upload Coverage Report
+    needs: [package_tests, ui_tests, package_tests_linux]
+    if: always() && !cancelled() && !failure()
+    uses: StanfordBDHG/.github/.github/workflows/create-and-upload-coverage-report.yml@v2
+    with:
+      coveragereports: ${{ format('{0}-*.xcresult {1}-*.xcresult', inputs.package_name, inputs.ui_scheme) }}
+      coveragereports_lcov: ${{ inputs.linux_run_tests && format('{0}-Package-Linux-*.lcov', inputs.package_name) || '' }}
+    secrets:
+      token: ${{ secrets.CODECOV_TOKEN }}

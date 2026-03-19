@@ -1,0 +1,99 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: Setup
+
+on:
+  workflow_call:
+    outputs:
+      package_name:
+        value: ${{ jobs.parse.outputs.package_name }}
+      platform_matrix:
+        value: ${{ jobs.parse.outputs.platform_matrix }}
+      ui_scheme:
+        value: ${{ jobs.parse.outputs.ui_scheme }}
+      library_products:
+        value: ${{ jobs.parse.outputs.library_products }}
+      platform_name:
+        value: ${{ jobs.parse.outputs.platform_name }}
+      platform_version:
+        value: ${{ jobs.parse.outputs.platform_version }}
+
+jobs:
+  parse:
+    name: Parse Package Manifest
+    runs-on: macos-latest
+    outputs:
+      package_name: ${{ steps.parse.outputs.package_name }}
+      platform_matrix: ${{ steps.parse.outputs.platform_matrix }}
+      ui_scheme: ${{ steps.parse.outputs.ui_scheme }}
+      library_products: ${{ steps.parse.outputs.library_products }}
+      platform_name: ${{ steps.parse.outputs.platform_name }}
+      platform_version: ${{ steps.parse.outputs.platform_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse package manifest
+        id: parse
+        run: |
+          DUMP=$(swift package dump-package)
+
+          PACKAGE_NAME=$(echo "$DUMP" | jq -r '.name')
+          echo "package_name=$PACKAGE_NAME" >> "$GITHUB_OUTPUT"
+
+          PLATFORM_MATRIX=$(echo "$DUMP" | jq -c '
+            [.platforms[].platformName |
+              if . == "ios" then
+                {"name": "iOS", "destination": "platform=iOS Simulator,name=iPhone 17 Pro"}
+              elif . == "macos" then
+                {"name": "macOS", "destination": "platform=macOS,arch=arm64"}
+              elif . == "maccatalyst" then
+                {"name": "Mac Catalyst", "destination": "platform=macOS,arch=arm64,variant=Mac Catalyst"}
+              elif . == "watchos" then
+                {"name": "watchOS", "destination": "platform=watchOS Simulator,name=Apple Watch Series 11 (46mm)"}
+              elif . == "visionos" then
+                {"name": "visionOS", "destination": "platform=visionOS Simulator,name=Apple Vision Pro"}
+              elif . == "tvos" then
+                {"name": "tvOS", "destination": "platform=tvOS Simulator,name=Apple TV 4K (3rd generation)"}
+              else
+                empty
+              end
+            ]
+          ')
+          echo "platform_matrix=$PLATFORM_MATRIX" >> "$GITHUB_OUTPUT"
+
+          if [ -d "Tests/UITests" ]; then
+            UI_SCHEME=$(find Tests/UITests -name "*.xcscheme" | xargs -I{} basename {} .xcscheme | sort | head -1)
+            echo "ui_scheme=$UI_SCHEME" >> "$GITHUB_OUTPUT"
+          else
+            echo "ui_scheme=" >> "$GITHUB_OUTPUT"
+          fi
+
+          LIBRARY_PRODUCTS=$(echo "$DUMP" | jq -c '[.products[] | select(.type.library != null) | .name]')
+          echo "library_products=$LIBRARY_PRODUCTS" >> "$GITHUB_OUTPUT"
+
+          PLATFORMS_JSON=$(echo "$DUMP" | jq -c '.platforms')
+          PLATFORMS_COUNT=$(echo "$PLATFORMS_JSON" | jq 'length')
+          HAS_MACOS=$(echo "$PLATFORMS_JSON" | jq -r 'any(.[]; .platformName == "macos")')
+
+          if [ "$PLATFORMS_COUNT" -eq 0 ] || [ "$HAS_MACOS" = "true" ]; then
+            echo "platform_name=macos" >> "$GITHUB_OUTPUT"
+            echo "platform_version=" >> "$GITHUB_OUTPUT"
+          else
+            PLATFORM_NAME=""
+            PLATFORM_VERSION=""
+            for p in ios maccatalyst visionos tvos watchos; do
+              EXISTS=$(echo "$PLATFORMS_JSON" | jq -r --arg p "$p" 'any(.[]; .platformName == $p)')
+              if [ "$EXISTS" = "true" ]; then
+                PLATFORM_NAME="$p"
+                PLATFORM_VERSION=$(echo "$PLATFORMS_JSON" | jq -r --arg p "$p" 'map(select(.platformName == $p)) | first | .version // ""')
+                break
+              fi
+            done
+            echo "platform_name=$PLATFORM_NAME" >> "$GITHUB_OUTPUT"
+            echo "platform_version=$PLATFORM_VERSION" >> "$GITHUB_OUTPUT"
+          fi

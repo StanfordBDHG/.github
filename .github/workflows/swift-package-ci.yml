@@ -1,0 +1,52 @@
+#
+# This source file is part of the Stanford Biodesign Digital Health Group open-source organization
+#
+# SPDX-FileCopyrightText: 2026 Stanford University and the project authors (see CONTRIBUTORS.md)
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: CI
+
+on:
+  workflow_call:
+    inputs:
+      linux_run_tests:
+        type: boolean
+        default: false
+      linux_runners:
+        type: string
+        default: '["blacksmith-4vcpu-ubuntu-2404"]'
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  setup:
+    name: Setup
+    uses: ./.github/workflows/swift-package-setup.yml
+
+  build_and_test:
+    name: Build & Test
+    needs: setup
+    uses: ./.github/workflows/swift-package-test.yml
+    with:
+      package_name: ${{ needs.setup.outputs.package_name }}
+      platform_matrix: ${{ needs.setup.outputs.platform_matrix }}
+      ui_scheme: ${{ needs.setup.outputs.ui_scheme }}
+      linux_run_tests: ${{ inputs.linux_run_tests }}
+      linux_runners: ${{ inputs.linux_runners }}
+    secrets: inherit
+
+  static_analysis:
+    name: Static Analysis
+    needs: setup
+    uses: ./.github/workflows/swift-package-static-analysis.yml
+    with:
+      library_products: ${{ needs.setup.outputs.library_products }}
+      platform_name: ${{ needs.setup.outputs.platform_name }}
+      platform_version: ${{ needs.setup.outputs.platform_version }}
