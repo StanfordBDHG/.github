@@ -14,6 +14,9 @@ on:
       package_name:
         type: string
         required: true
+      scheme:
+        type: string
+        required: true
       platform_matrix:
         type: string
         required: true
@@ -41,7 +44,7 @@ jobs:
       fail-fast: false
     with:
       runsonlabels: '["macOS", "self-hosted"]'
-      scheme: ${{ format('{0}-Package', inputs.package_name) }}
+      scheme: ${{ inputs.scheme }}
       destination: ${{ matrix.platform.destination }}
       buildConfig: ${{ matrix.config }}
       resultBundle: ${{ format('{0}-{1}-{2}.xcresult', inputs.package_name, matrix.platform.name, matrix.config) }}

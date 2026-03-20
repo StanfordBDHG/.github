@@ -36,6 +36,7 @@ jobs:
     uses: ./.github/workflows/swift-package-test.yml
     with:
       package_name: ${{ needs.setup.outputs.package_name }}
+      scheme: ${{ needs.setup.outputs.scheme }}
       platform_matrix: ${{ needs.setup.outputs.platform_matrix }}
       ui_scheme: ${{ needs.setup.outputs.ui_scheme }}
       linux_run_tests: ${{ inputs.linux_run_tests }}
