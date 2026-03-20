@@ -35,7 +35,7 @@ on:
 
 jobs:
   package_tests:
-    name: Build and Test Swift Package ${{ matrix.platform.name }} (${{ matrix.config }})
+    name: ${{ matrix.platform.name }} (${{ matrix.config }})
     uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
     strategy:
       matrix:
@@ -51,7 +51,7 @@ jobs:
       artifactname: ${{ format('{0}-{1}-{2}.xcresult', inputs.package_name, matrix.platform.name, matrix.config) }}
 
   ui_tests:
-    name: Build and Test UI Tests ${{ matrix.platform.name }} (${{ matrix.config }})
+    name: UI ${{ matrix.platform.name }} (${{ matrix.config }})
     if: inputs.ui_scheme != ''
     uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
     strategy:
@@ -71,7 +71,7 @@ jobs:
       artifactname: ${{ format('{0}-{1}-{2}.xcresult', inputs.ui_scheme, matrix.platform.name, matrix.config) }}
 
   package_tests_linux:
-    name: Build and Test Swift Package Linux (${{ matrix.config }})
+    name: Linux (${{ matrix.config }})
     if: inputs.linux_run_tests
     uses: StanfordBDHG/.github/.github/workflows/swift-test.yml@v2
     strategy:
