@@ -13,6 +13,8 @@ on:
     outputs:
       package_name:
         value: ${{ jobs.parse.outputs.package_name }}
+      scheme:
+        value: ${{ jobs.parse.outputs.scheme }}
       platform_matrix:
         value: ${{ jobs.parse.outputs.platform_matrix }}
       ui_scheme:
@@ -30,6 +32,7 @@ jobs:
     runs-on: macos-latest
     outputs:
       package_name: ${{ steps.parse.outputs.package_name }}
+      scheme: ${{ steps.parse.outputs.scheme }}
       platform_matrix: ${{ steps.parse.outputs.platform_matrix }}
       ui_scheme: ${{ steps.parse.outputs.ui_scheme }}
       library_products: ${{ steps.parse.outputs.library_products }}
@@ -75,6 +78,13 @@ jobs:
 
           LIBRARY_PRODUCTS=$(echo "$DUMP" | jq -c '[.products[] | select(.type | tostring | test("library")) | .name]')
           echo "library_products=$LIBRARY_PRODUCTS" >> "$GITHUB_OUTPUT"
+
+          LIBRARY_PRODUCT_COUNT=$(echo "$LIBRARY_PRODUCTS" | jq 'length')
+          if [ "$LIBRARY_PRODUCT_COUNT" -gt 1 ]; then
+            echo "scheme=${PACKAGE_NAME}-Package" >> "$GITHUB_OUTPUT"
+          else
+            echo "scheme=$PACKAGE_NAME" >> "$GITHUB_OUTPUT"
+          fi
 
           PLATFORMS_JSON=$(echo "$DUMP" | jq -c '.platforms')
           PLATFORMS_COUNT=$(echo "$PLATFORMS_JSON" | jq 'length')

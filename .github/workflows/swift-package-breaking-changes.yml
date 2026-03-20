@@ -71,8 +71,8 @@ jobs:
           done < <(echo '${{ inputs.library_products }}' | jq -r '.[]')
 
           if [[ "${#library_products[@]}" -eq 0 ]]; then
-            echo "No library products found in inputs"
-            exit 1
+            echo "No library products found, skipping breaking changes check"
+            exit 0
           fi
 
           platform_name="${{ inputs.platform_name }}"
