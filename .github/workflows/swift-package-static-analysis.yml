@@ -40,7 +40,7 @@ jobs:
     uses: StanfordBDHG/.github/.github/workflows/markdown-link-check.yml@v2
   breaking_changes:
     name: Diagnose Breaking Changes
-    uses: ./.github/workflows/swift-package-breaking-changes.yml
+    uses: StanfordBDHG/.github/.github/workflows/swift-package-breaking-changes.yml@v2
     if: ${{ inputs.diagnose_breaking_changes && github.ref_name != 'main' }}
     with:
       library_products: ${{ inputs.library_products }}
