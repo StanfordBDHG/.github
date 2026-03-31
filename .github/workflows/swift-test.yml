@@ -66,6 +66,12 @@ on:
         required: false
         type: string
         default: ''
+      job_name:
+        description: |
+          The name of the job as it appears in the GitHub Actions UI.
+        required: false
+        type: string
+        default: 'Swift Test'
     secrets:
       CHECKOUT_TOKEN:
         description: |
@@ -73,7 +79,7 @@ on:
         required: false
 jobs:
   swift_test:
-    name: Swift Test
+    name: ${{ inputs.job_name }}
     runs-on: ${{ fromJson(inputs.runs_on_labels) }}
     defaults:
       run:

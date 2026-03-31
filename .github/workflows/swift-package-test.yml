@@ -43,6 +43,7 @@ jobs:
         platform: ${{ fromJSON(inputs.platform_matrix) }}
       fail-fast: false
     with:
+      job_name: ${{ format('{0} ({1})', matrix.platform.name, matrix.config) }}
       runsonlabels: '["macOS", "self-hosted"]'
       scheme: ${{ inputs.scheme }}
       destination: ${{ matrix.platform.destination }}
@@ -62,6 +63,7 @@ jobs:
             destination: 'platform=iOS Simulator,name=iPhone 17 Pro Max'
       fail-fast: false
     with:
+      job_name: ${{ format('UI {0} ({1})', matrix.platform.name, matrix.config) }}
       runsonlabels: '["macOS", "self-hosted"]'
       path: 'Tests/UITests'
       scheme: ${{ inputs.ui_scheme }}
@@ -79,6 +81,7 @@ jobs:
         config: [Debug, Release]
       fail-fast: false
     with:
+      job_name: ${{ format('Linux ({0})', matrix.config) }}
       runs_on_labels: ${{ inputs.linux_runners }}
       test_flags: '--no-parallel'
       build_configuration: ${{ matrix.config }}
