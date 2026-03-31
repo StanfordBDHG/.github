@@ -16,7 +16,7 @@ on:
           JSON array of platforms to run UI tests on. Defaults to iOS only.
         type: string
         required: false
-        default: '[{"name":"iOS","destination":"platform=iOS Simulator,name=iPhone 17 Pro Max"}]'
+        default: '[{"name":"iOS","destination":"platform=iOS Simulator,name=iPhone 17 Pro"}]'
       linux_run_tests:
         type: boolean
         default: false
