@@ -20,6 +20,9 @@ on:
       platform_matrix:
         type: string
         required: true
+      ui_platform_matrix:
+        type: string
+        required: true
       ui_scheme:
         type: string
         required: true
@@ -58,9 +61,7 @@ jobs:
     strategy:
       matrix:
         config: [Debug, Release]
-        platform:
-          - name: iOS
-            destination: 'platform=iOS Simulator,name=iPhone 17 Pro Max'
+        platform: ${{ fromJSON(inputs.ui_platform_matrix) }}
       fail-fast: false
     with:
       job_name: ${{ format('UI {0} ({1})', matrix.platform.name, matrix.config) }}
