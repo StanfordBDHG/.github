@@ -39,7 +39,7 @@ on:
 jobs:
   package_tests:
     name: ${{ matrix.platform.name }} (${{ matrix.config }})
-    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
+    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@feature/ci-workflow-inputs
     strategy:
       matrix:
         config: [Debug, Release]
@@ -57,7 +57,7 @@ jobs:
   ui_tests:
     name: UI ${{ matrix.platform.name }} (${{ matrix.config }})
     if: inputs.ui_scheme != ''
-    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
+    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@feature/ci-workflow-inputs
     strategy:
       matrix:
         config: [Debug, Release]
@@ -76,7 +76,7 @@ jobs:
   package_tests_linux:
     name: Linux (${{ matrix.config }})
     if: inputs.linux_run_tests
-    uses: StanfordBDHG/.github/.github/workflows/swift-test.yml@v2
+    uses: StanfordBDHG/.github/.github/workflows/swift-test.yml@feature/ci-workflow-inputs
     strategy:
       matrix:
         config: [Debug, Release]
@@ -92,7 +92,7 @@ jobs:
     name: Upload Coverage Report
     needs: [package_tests, ui_tests, package_tests_linux]
     if: always() && !cancelled() && !failure()
-    uses: StanfordBDHG/.github/.github/workflows/create-and-upload-coverage-report.yml@v2
+    uses: StanfordBDHG/.github/.github/workflows/create-and-upload-coverage-report.yml@feature/ci-workflow-inputs
     with:
       coveragereports: >-
         ${{ format('{0}-*.xcresult', inputs.package_name) }}
