@@ -17,6 +17,8 @@ on:
         value: ${{ jobs.parse.outputs.scheme }}
       platform_matrix:
         value: ${{ jobs.parse.outputs.platform_matrix }}
+      ui_platform_matrix:
+        value: ${{ jobs.parse.outputs.ui_platform_matrix }}
       ui_scheme:
         value: ${{ jobs.parse.outputs.ui_scheme }}
       library_products:
@@ -34,6 +36,7 @@ jobs:
       package_name: ${{ steps.parse.outputs.package_name }}
       scheme: ${{ steps.parse.outputs.scheme }}
       platform_matrix: ${{ steps.parse.outputs.platform_matrix }}
+      ui_platform_matrix: ${{ steps.parse.outputs.ui_platform_matrix }}
       ui_scheme: ${{ steps.parse.outputs.ui_scheme }}
       library_products: ${{ steps.parse.outputs.library_products }}
       platform_name: ${{ steps.parse.outputs.platform_name }}
@@ -43,37 +46,104 @@ jobs:
       - name: Parse package manifest
         id: parse
         run: |
+          DEVICE_IOS="iPhone 17 Pro"
+          DEVICE_IPADOS="iPad Pro 11-inch (M5)"
+          DEVICE_WATCHOS="Apple Watch Series 11 (46mm)"
+          DEVICE_VISIONOS="Apple Vision Pro"
+          DEVICE_TVOS="Apple TV 4K (3rd generation)"
+
           DUMP=$(swift package dump-package)
 
           PACKAGE_NAME=$(echo "$DUMP" | jq -r '.name')
           echo "package_name=$PACKAGE_NAME" >> "$GITHUB_OUTPUT"
 
-          PLATFORM_MATRIX=$(echo "$DUMP" | jq -c '
-            [.platforms[].platformName |
-              if . == "ios" then
-                {"name": "iOS", "destination": "platform=iOS Simulator,name=iPhone 17 Pro"}
-              elif . == "macos" then
-                {"name": "macOS", "destination": "platform=macOS,arch=arm64"}
-              elif . == "maccatalyst" then
-                {"name": "Mac Catalyst", "destination": "platform=macOS,arch=arm64,variant=Mac Catalyst"}
-              elif . == "watchos" then
-                {"name": "watchOS", "destination": "platform=watchOS Simulator,name=Apple Watch Series 11 (46mm)"}
-              elif . == "visionos" then
-                {"name": "visionOS", "destination": "platform=visionOS Simulator,name=Apple Vision Pro"}
-              elif . == "tvos" then
-                {"name": "tvOS", "destination": "platform=tvOS Simulator,name=Apple TV 4K (3rd generation)"}
-              else
-                empty
-              end
-            ]
-          ')
+          PLATFORM_MATRIX=$(echo "$DUMP" | jq -c \
+              --arg ios "$DEVICE_IOS" \
+              --arg watchos "$DEVICE_WATCHOS" \
+              --arg visionos "$DEVICE_VISIONOS" \
+              --arg tvos "$DEVICE_TVOS" \
+              '[.platforms[].platformName |
+                if . == "ios" then
+                  {"name": "iOS", "destination": "platform=iOS Simulator,name=\($ios)"}
+                elif . == "macos" then
+                  {"name": "macOS", "destination": "platform=macOS,arch=arm64"}
+                elif . == "maccatalyst" then
+                  {"name": "Mac Catalyst", "destination": "platform=macOS,arch=arm64,variant=Mac Catalyst"}
+                elif . == "watchos" then
+                  {"name": "watchOS", "destination": "platform=watchOS Simulator,name=\($watchos)"}
+                elif . == "visionos" then
+                  {"name": "visionOS", "destination": "platform=visionOS Simulator,name=\($visionos)"}
+                elif . == "tvos" then
+                  {"name": "tvOS", "destination": "platform=tvOS Simulator,name=\($tvos)"}
+                else
+                  empty
+                end
+              ]')
           echo "platform_matrix=$PLATFORM_MATRIX" >> "$GITHUB_OUTPUT"
 
           if [ -d "Tests/UITests" ]; then
-            UI_SCHEME=$(find Tests/UITests -name "*.xcscheme" | xargs -I{} basename {} .xcscheme | sort | head -1)
-            echo "ui_scheme=$UI_SCHEME" >> "$GITHUB_OUTPUT"
+              UI_SCHEME=$(find Tests/UITests -name "*.xcscheme" \
+                  | xargs -I{} basename {} .xcscheme | sort | head -1)
+              echo "ui_scheme=$UI_SCHEME" >> "$GITHUB_OUTPUT"
+
+              # Auto-detect UI test platforms from the UITests target's build settings
+              PBXPROJ=$(find Tests/UITests -name "project.pbxproj" | head -1)
+              if [ -z "$PBXPROJ" ]; then
+                  echo "::error::Tests/UITests exists but no project.pbxproj found."
+                  exit 1
+              fi
+
+              # Extract SUPPORTED_PLATFORMS and TARGETED_DEVICE_FAMILY from the UITests target (identified by TEST_TARGET_NAME)
+              UI_TEST_SETTINGS=$(python3 - "$PBXPROJ" << 'PYEOF'
+          import re, sys
+
+          with open(sys.argv[1]) as f:
+              content = f.read()
+
+          pattern = r'buildSettings\s*=\s*\{([^}]+TEST_TARGET_NAME[^}]+)\}'
+          m = re.search(pattern, content)
+          if not m:
+              sys.exit(1)
+
+          block = m.group(1)
+          sp = re.search(r'SUPPORTED_PLATFORMS\s*=\s*"([^"]+)"', block)
+          td = re.search(r'TARGETED_DEVICE_FAMILY\s*=\s*"([^"]+)"', block)
+          print(sp.group(1) if sp else "")
+          print(td.group(1) if td else "")
+          PYEOF
+              )
+
+              SUPPORTED=$(echo "$UI_TEST_SETTINGS" | sed -n '1p')
+              DEVICE_FAMILY=$(echo "$UI_TEST_SETTINGS" | sed -n '2p')
+
+              if [ -z "$SUPPORTED" ]; then
+                  echo "::error::SUPPORTED_PLATFORMS not found in the UITests target."
+                  exit 1
+              fi
+
+              UI_PLATFORM_MATRIX=$(jq -n -c \
+                  --arg supported "$SUPPORTED" \
+                  --arg family "$DEVICE_FAMILY" \
+                  --arg ios "$DEVICE_IOS" \
+                  --arg ipados "$DEVICE_IPADOS" \
+                  --arg visionos "$DEVICE_VISIONOS" \
+                  --arg tvos "$DEVICE_TVOS" \
+                  '($supported | split(" ") | unique) as $plats |
+                  ($family | split(",") | map(gsub("\\s*"; ""))) as $fam |
+                  (if ($plats | any(. == "iphonesimulator" or . == "iphoneos")) and ($fam | any(. == "1"))
+                      then [{"name": "iOS", "destination": "platform=iOS Simulator,name=\($ios)"}] else [] end) +
+                  (if ($plats | any(. == "iphonesimulator" or . == "iphoneos")) and ($fam | any(. == "2"))
+                      then [{"name": "iPadOS", "destination": "platform=iOS Simulator,name=\($ipados)"}] else [] end) +
+                  (if ($plats | any(. == "xrsimulator" or . == "xros"))
+                      then [{"name": "visionOS", "destination": "platform=visionOS Simulator,name=\($visionos)"}] else [] end) +
+                  (if ($plats | any(. == "appletvsimulator" or . == "appletvos"))
+                      then [{"name": "tvOS", "destination": "platform=tvOS Simulator,name=\($tvos)"}] else [] end) +
+                  (if ($plats | any(. == "macosx"))
+                      then [{"name": "macOS", "destination": "platform=macOS,arch=arm64"}] else [] end)')
+              echo "ui_platform_matrix=$UI_PLATFORM_MATRIX" >> "$GITHUB_OUTPUT"
           else
-            echo "ui_scheme=" >> "$GITHUB_OUTPUT"
+              echo "ui_scheme=" >> "$GITHUB_OUTPUT"
+              echo 'ui_platform_matrix=[]' >> "$GITHUB_OUTPUT"
           fi
 
           LIBRARY_PRODUCTS=$(echo "$DUMP" | jq -c '[.products[] | select(.type | tostring | test("library")) | .name]')
@@ -81,9 +151,9 @@ jobs:
 
           LIBRARY_PRODUCT_COUNT=$(echo "$LIBRARY_PRODUCTS" | jq 'length')
           if [ "$LIBRARY_PRODUCT_COUNT" -gt 1 ]; then
-            echo "scheme=${PACKAGE_NAME}-Package" >> "$GITHUB_OUTPUT"
+              echo "scheme=${PACKAGE_NAME}-Package" >> "$GITHUB_OUTPUT"
           else
-            echo "scheme=$PACKAGE_NAME" >> "$GITHUB_OUTPUT"
+              echo "scheme=$PACKAGE_NAME" >> "$GITHUB_OUTPUT"
           fi
 
           PLATFORMS_JSON=$(echo "$DUMP" | jq -c '.platforms')
@@ -91,19 +161,20 @@ jobs:
           HAS_MACOS=$(echo "$PLATFORMS_JSON" | jq -r 'any(.[]; .platformName == "macos")')
 
           if [ "$PLATFORMS_COUNT" -eq 0 ] || [ "$HAS_MACOS" = "true" ]; then
-            echo "platform_name=macos" >> "$GITHUB_OUTPUT"
-            echo "platform_version=" >> "$GITHUB_OUTPUT"
+              echo "platform_name=macos" >> "$GITHUB_OUTPUT"
+              echo "platform_version=" >> "$GITHUB_OUTPUT"
           else
-            PLATFORM_NAME=""
-            PLATFORM_VERSION=""
-            for p in ios maccatalyst visionos tvos watchos; do
-              EXISTS=$(echo "$PLATFORMS_JSON" | jq -r --arg p "$p" 'any(.[]; .platformName == $p)')
-              if [ "$EXISTS" = "true" ]; then
-                PLATFORM_NAME="$p"
-                PLATFORM_VERSION=$(echo "$PLATFORMS_JSON" | jq -r --arg p "$p" 'map(select(.platformName == $p)) | first | .version // ""')
-                break
-              fi
-            done
-            echo "platform_name=$PLATFORM_NAME" >> "$GITHUB_OUTPUT"
-            echo "platform_version=$PLATFORM_VERSION" >> "$GITHUB_OUTPUT"
+              PLATFORM_NAME=""
+              PLATFORM_VERSION=""
+              for p in ios maccatalyst visionos tvos watchos; do
+                  EXISTS=$(echo "$PLATFORMS_JSON" | jq -r --arg p "$p" 'any(.[]; .platformName == $p)')
+                  if [ "$EXISTS" = "true" ]; then
+                      PLATFORM_NAME="$p"
+                      PLATFORM_VERSION=$(echo "$PLATFORMS_JSON" | jq -r --arg p "$p" \
+                          'map(select(.platformName == $p)) | first | .version // ""')
+                      break
+                  fi
+              done
+              echo "platform_name=$PLATFORM_NAME" >> "$GITHUB_OUTPUT"
+              echo "platform_version=$PLATFORM_VERSION" >> "$GITHUB_OUTPUT"
           fi

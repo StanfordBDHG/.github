@@ -11,12 +11,6 @@ name: CI
 on:
   workflow_call:
     inputs:
-      ui_platform_matrix:
-        description: |
-          JSON array of platforms to run UI tests on. Defaults to iOS only.
-        type: string
-        required: false
-        default: '[{"name":"iOS","destination":"platform=iOS Simulator,name=iPhone 17 Pro"}]'
       linux_run_tests:
         type: boolean
         default: false
@@ -44,7 +38,7 @@ jobs:
       package_name: ${{ needs.setup.outputs.package_name }}
       scheme: ${{ needs.setup.outputs.scheme }}
       platform_matrix: ${{ needs.setup.outputs.platform_matrix }}
-      ui_platform_matrix: ${{ inputs.ui_platform_matrix }}
+      ui_platform_matrix: ${{ needs.setup.outputs.ui_platform_matrix }}
       ui_scheme: ${{ needs.setup.outputs.ui_scheme }}
       linux_run_tests: ${{ inputs.linux_run_tests }}
       linux_runners: ${{ inputs.linux_runners }}
