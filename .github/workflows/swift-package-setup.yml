@@ -21,6 +21,10 @@ on:
         value: ${{ jobs.parse.outputs.ui_platform_matrix }}
       ui_scheme:
         value: ${{ jobs.parse.outputs.ui_scheme }}
+      watchos_ui_scheme:
+        value: ${{ jobs.parse.outputs.watchos_ui_scheme }}
+      watchos_ui_destination:
+        value: ${{ jobs.parse.outputs.watchos_ui_destination }}
       library_products:
         value: ${{ jobs.parse.outputs.library_products }}
       platform_name:
@@ -38,6 +42,8 @@ jobs:
       platform_matrix: ${{ steps.parse.outputs.platform_matrix }}
       ui_platform_matrix: ${{ steps.parse.outputs.ui_platform_matrix }}
       ui_scheme: ${{ steps.parse.outputs.ui_scheme }}
+      watchos_ui_scheme: ${{ steps.parse.outputs.watchos_ui_scheme }}
+      watchos_ui_destination: ${{ steps.parse.outputs.watchos_ui_destination }}
       library_products: ${{ steps.parse.outputs.library_products }}
       platform_name: ${{ steps.parse.outputs.platform_name }}
       platform_version: ${{ steps.parse.outputs.platform_version }}
@@ -82,34 +88,31 @@ jobs:
           echo "platform_matrix=$PLATFORM_MATRIX" >> "$GITHUB_OUTPUT"
 
           if [ -d "Tests/UITests" ]; then
-              UI_SCHEME=$(find Tests/UITests -name "*.xcscheme" \
-                  | xargs -I{} basename {} .xcscheme | sort | head -1)
-              echo "ui_scheme=$UI_SCHEME" >> "$GITHUB_OUTPUT"
+              echo "ui_scheme=TestApp" >> "$GITHUB_OUTPUT"
 
-              # Auto-detect UI test platforms from the UITests target's build settings
               PBXPROJ=$(find Tests/UITests -name "project.pbxproj" | head -1)
               if [ -z "$PBXPROJ" ]; then
                   echo "::error::Tests/UITests exists but no project.pbxproj found."
                   exit 1
               fi
 
-              # Extract SUPPORTED_PLATFORMS and TARGETED_DEVICE_FAMILY from the UITests target (identified by TEST_TARGET_NAME)
+              # Extract SUPPORTED_PLATFORMS and TARGETED_DEVICE_FAMILY from the TestAppUITests target
               UI_TEST_SETTINGS=$(python3 - "$PBXPROJ" << 'PYEOF'
           import re, sys
 
           with open(sys.argv[1]) as f:
               content = f.read()
 
-          pattern = r'buildSettings\s*=\s*\{([^}]+TEST_TARGET_NAME[^}]+)\}'
-          m = re.search(pattern, content)
-          if not m:
-              sys.exit(1)
-
-          block = m.group(1)
-          sp = re.search(r'SUPPORTED_PLATFORMS\s*=\s*"([^"]+)"', block)
-          td = re.search(r'TARGETED_DEVICE_FAMILY\s*=\s*"([^"]+)"', block)
-          print(sp.group(1) if sp else "")
-          print(td.group(1) if td else "")
+          for block in re.findall(r'buildSettings\s*=\s*\{([^}]+)\}', content):
+              if 'TEST_TARGET_NAME' not in block:
+                  continue
+              if re.search(r'SDKROOT\s*=\s*watchos', block):
+                  continue
+              sp = re.search(r'SUPPORTED_PLATFORMS\s*=\s*"([^"]+)"', block)
+              td = re.search(r'TARGETED_DEVICE_FAMILY\s*=\s*"([^"]+)"', block)
+              print(sp.group(1) if sp else "")
+              print(td.group(1) if td else "")
+              break
           PYEOF
               )
 
@@ -141,9 +144,20 @@ jobs:
                   (if ($plats | any(. == "macosx"))
                       then [{"name": "macOS", "destination": "platform=macOS,arch=arm64"}] else [] end)')
               echo "ui_platform_matrix=$UI_PLATFORM_MATRIX" >> "$GITHUB_OUTPUT"
+
+              # watchOS UI tests (optional, detected by TestAppWatchApp scheme existence)
+              if [ -f "Tests/UITests/UITests.xcodeproj/xcshareddata/xcschemes/TestAppWatchApp.xcscheme" ]; then
+                  echo "watchos_ui_scheme=TestAppWatchApp" >> "$GITHUB_OUTPUT"
+                  echo "watchos_ui_destination=platform=watchOS Simulator,name=$DEVICE_WATCHOS" >> "$GITHUB_OUTPUT"
+              else
+                  echo "watchos_ui_scheme=" >> "$GITHUB_OUTPUT"
+                  echo "watchos_ui_destination=" >> "$GITHUB_OUTPUT"
+              fi
           else
               echo "ui_scheme=" >> "$GITHUB_OUTPUT"
               echo 'ui_platform_matrix=[]' >> "$GITHUB_OUTPUT"
+              echo "watchos_ui_scheme=" >> "$GITHUB_OUTPUT"
+              echo "watchos_ui_destination=" >> "$GITHUB_OUTPUT"
           fi
 
           LIBRARY_PRODUCTS=$(echo "$DUMP" | jq -c '[.products[] | select(.type | tostring | test("library")) | .name]')
