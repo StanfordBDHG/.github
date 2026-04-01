@@ -23,17 +23,6 @@ on:
       ui_platform_matrix:
         type: string
         required: true
-      ui_scheme:
-        type: string
-        required: true
-      watchos_ui_scheme:
-        type: string
-        required: false
-        default: ''
-      watchos_ui_destination:
-        type: string
-        required: false
-        default: ''
       linux_run_tests:
         type: boolean
         default: false
@@ -64,7 +53,7 @@ jobs:
 
   ui_tests:
     name: UI ${{ matrix.platform.name }} (${{ matrix.config }})
-    if: inputs.ui_scheme != ''
+    if: fromJSON(inputs.ui_platform_matrix)[0] != null
     uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@feature/ci-workflow-inputs
     strategy:
       matrix:
@@ -75,29 +64,11 @@ jobs:
       job_name: ${{ format('UI {0} ({1})', matrix.platform.name, matrix.config) }}
       runsonlabels: '["macOS", "self-hosted"]'
       path: 'Tests/UITests'
-      scheme: ${{ inputs.ui_scheme }}
+      scheme: ${{ matrix.platform.scheme }}
       destination: ${{ matrix.platform.destination }}
       buildConfig: ${{ matrix.config }}
-      resultBundle: ${{ format('{0}-{1}-{2}.xcresult', inputs.ui_scheme, matrix.platform.name, matrix.config) }}
-      artifactname: ${{ format('{0}-{1}-{2}.xcresult', inputs.ui_scheme, matrix.platform.name, matrix.config) }}
-
-  watchos_ui_tests:
-    name: UI watchOS (${{ matrix.config }})
-    if: inputs.watchos_ui_scheme != ''
-    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@feature/ci-workflow-inputs
-    strategy:
-      matrix:
-        config: [Debug, Release]
-      fail-fast: false
-    with:
-      job_name: ${{ format('UI watchOS ({0})', matrix.config) }}
-      runsonlabels: '["macOS", "self-hosted"]'
-      path: 'Tests/UITests'
-      scheme: ${{ inputs.watchos_ui_scheme }}
-      destination: ${{ inputs.watchos_ui_destination }}
-      buildConfig: ${{ matrix.config }}
-      resultBundle: ${{ format('{0}-watchOS-{1}.xcresult', inputs.watchos_ui_scheme, matrix.config) }}
-      artifactname: ${{ format('{0}-watchOS-{1}.xcresult', inputs.watchos_ui_scheme, matrix.config) }}
+      resultBundle: ${{ format('{0}-{1}-{2}.xcresult', matrix.platform.scheme, matrix.platform.name, matrix.config) }}
+      artifactname: ${{ format('{0}-{1}-{2}.xcresult', matrix.platform.scheme, matrix.platform.name, matrix.config) }}
 
   package_tests_linux:
     name: Linux (${{ matrix.config }})
@@ -116,14 +87,14 @@ jobs:
 
   uploadcoveragereport:
     name: Upload Coverage Report
-    needs: [package_tests, ui_tests, watchos_ui_tests, package_tests_linux]
+    needs: [package_tests, ui_tests, package_tests_linux]
     if: always() && !cancelled() && !failure()
     uses: StanfordBDHG/.github/.github/workflows/create-and-upload-coverage-report.yml@feature/ci-workflow-inputs
     with:
       coveragereports: >-
         ${{ format('{0}-*.xcresult', inputs.package_name) }}
-        ${{ inputs.ui_scheme != '' && format('{0}-*.xcresult', inputs.ui_scheme) || '' }}
-        ${{ inputs.watchos_ui_scheme != '' && format('{0}-*.xcresult', inputs.watchos_ui_scheme) || '' }}
+        TestApp-*.xcresult
+        TestAppWatchApp-*.xcresult
       coveragereports_lcov: ${{ inputs.linux_run_tests && format('{0}-Package-Linux-*.lcov', inputs.package_name) || '' }}
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}

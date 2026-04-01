@@ -19,12 +19,6 @@ on:
         value: ${{ jobs.parse.outputs.platform_matrix }}
       ui_platform_matrix:
         value: ${{ jobs.parse.outputs.ui_platform_matrix }}
-      ui_scheme:
-        value: ${{ jobs.parse.outputs.ui_scheme }}
-      watchos_ui_scheme:
-        value: ${{ jobs.parse.outputs.watchos_ui_scheme }}
-      watchos_ui_destination:
-        value: ${{ jobs.parse.outputs.watchos_ui_destination }}
       library_products:
         value: ${{ jobs.parse.outputs.library_products }}
       platform_name:
@@ -41,9 +35,6 @@ jobs:
       scheme: ${{ steps.parse.outputs.scheme }}
       platform_matrix: ${{ steps.parse.outputs.platform_matrix }}
       ui_platform_matrix: ${{ steps.parse.outputs.ui_platform_matrix }}
-      ui_scheme: ${{ steps.parse.outputs.ui_scheme }}
-      watchos_ui_scheme: ${{ steps.parse.outputs.watchos_ui_scheme }}
-      watchos_ui_destination: ${{ steps.parse.outputs.watchos_ui_destination }}
       library_products: ${{ steps.parse.outputs.library_products }}
       platform_name: ${{ steps.parse.outputs.platform_name }}
       platform_version: ${{ steps.parse.outputs.platform_version }}
@@ -88,8 +79,6 @@ jobs:
           echo "platform_matrix=$PLATFORM_MATRIX" >> "$GITHUB_OUTPUT"
 
           if [ -d "Tests/UITests" ]; then
-              echo "ui_scheme=TestApp" >> "$GITHUB_OUTPUT"
-
               PBXPROJ=$(find Tests/UITests -name "project.pbxproj" | head -1)
               if [ -z "$PBXPROJ" ]; then
                   echo "::error::Tests/UITests exists but no project.pbxproj found."
@@ -124,6 +113,7 @@ jobs:
                   exit 1
               fi
 
+              # Build UI platform matrix with scheme baked into each entry
               UI_PLATFORM_MATRIX=$(jq -n -c \
                   --arg supported "$SUPPORTED" \
                   --arg family "$DEVICE_FAMILY" \
@@ -134,30 +124,24 @@ jobs:
                   '($supported | split(" ") | unique) as $plats |
                   ($family | split(",") | map(gsub("\\s*"; ""))) as $fam |
                   (if ($plats | any(. == "iphonesimulator" or . == "iphoneos")) and ($fam | any(. == "1"))
-                      then [{"name": "iOS", "destination": "platform=iOS Simulator,name=\($ios)"}] else [] end) +
+                      then [{"name": "iOS", "scheme": "TestApp", "destination": "platform=iOS Simulator,name=\($ios)"}] else [] end) +
                   (if ($plats | any(. == "iphonesimulator" or . == "iphoneos")) and ($fam | any(. == "2"))
-                      then [{"name": "iPadOS", "destination": "platform=iOS Simulator,name=\($ipados)"}] else [] end) +
+                      then [{"name": "iPadOS", "scheme": "TestApp", "destination": "platform=iOS Simulator,name=\($ipados)"}] else [] end) +
                   (if ($plats | any(. == "xrsimulator" or . == "xros"))
-                      then [{"name": "visionOS", "destination": "platform=visionOS Simulator,name=\($visionos)"}] else [] end) +
+                      then [{"name": "visionOS", "scheme": "TestApp", "destination": "platform=visionOS Simulator,name=\($visionos)"}] else [] end) +
                   (if ($plats | any(. == "appletvsimulator" or . == "appletvos"))
-                      then [{"name": "tvOS", "destination": "platform=tvOS Simulator,name=\($tvos)"}] else [] end) +
-                  (if ($plats | any(. == "macosx"))
-                      then [{"name": "macOS", "destination": "platform=macOS,arch=arm64"}] else [] end)')
-              echo "ui_platform_matrix=$UI_PLATFORM_MATRIX" >> "$GITHUB_OUTPUT"
+                      then [{"name": "tvOS", "scheme": "TestApp", "destination": "platform=tvOS Simulator,name=\($tvos)"}] else [] end)')
 
-              # watchOS UI tests (optional, detected by TestAppWatchApp scheme existence)
+              # Append watchOS UI tests if TestAppWatchApp scheme exists
               if [ -f "Tests/UITests/UITests.xcodeproj/xcshareddata/xcschemes/TestAppWatchApp.xcscheme" ]; then
-                  echo "watchos_ui_scheme=TestAppWatchApp" >> "$GITHUB_OUTPUT"
-                  echo "watchos_ui_destination=platform=watchOS Simulator,name=$DEVICE_WATCHOS" >> "$GITHUB_OUTPUT"
-              else
-                  echo "watchos_ui_scheme=" >> "$GITHUB_OUTPUT"
-                  echo "watchos_ui_destination=" >> "$GITHUB_OUTPUT"
+                  UI_PLATFORM_MATRIX=$(echo "$UI_PLATFORM_MATRIX" | jq -c \
+                      --arg watchos "$DEVICE_WATCHOS" \
+                      '. + [{"name": "watchOS", "scheme": "TestAppWatchApp", "destination": "platform=watchOS Simulator,name=\($watchos)"}]')
               fi
+
+              echo "ui_platform_matrix=$UI_PLATFORM_MATRIX" >> "$GITHUB_OUTPUT"
           else
-              echo "ui_scheme=" >> "$GITHUB_OUTPUT"
               echo 'ui_platform_matrix=[]' >> "$GITHUB_OUTPUT"
-              echo "watchos_ui_scheme=" >> "$GITHUB_OUTPUT"
-              echo "watchos_ui_destination=" >> "$GITHUB_OUTPUT"
           fi
 
           LIBRARY_PRODUCTS=$(echo "$DUMP" | jq -c '[.products[] | select(.type | tostring | test("library")) | .name]')

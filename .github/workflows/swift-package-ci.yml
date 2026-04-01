@@ -39,9 +39,6 @@ jobs:
       scheme: ${{ needs.setup.outputs.scheme }}
       platform_matrix: ${{ needs.setup.outputs.platform_matrix }}
       ui_platform_matrix: ${{ needs.setup.outputs.ui_platform_matrix }}
-      ui_scheme: ${{ needs.setup.outputs.ui_scheme }}
-      watchos_ui_scheme: ${{ needs.setup.outputs.watchos_ui_scheme }}
-      watchos_ui_destination: ${{ needs.setup.outputs.watchos_ui_destination }}
       linux_run_tests: ${{ inputs.linux_run_tests }}
       linux_runners: ${{ inputs.linux_runners }}
     secrets: inherit
