@@ -20,7 +20,7 @@ on:
       platform_matrix:
         type: string
         required: true
-      ui_scheme:
+      ui_platform_matrix:
         type: string
         required: true
       linux_run_tests:
@@ -43,6 +43,7 @@ jobs:
         platform: ${{ fromJSON(inputs.platform_matrix) }}
       fail-fast: false
     with:
+      job_name: ${{ format('{0} ({1})', matrix.platform.name, matrix.config) }}
       runsonlabels: '["macOS", "self-hosted"]'
       scheme: ${{ inputs.scheme }}
       destination: ${{ matrix.platform.destination }}
@@ -52,23 +53,22 @@ jobs:
 
   ui_tests:
     name: UI ${{ matrix.platform.name }} (${{ matrix.config }})
-    if: inputs.ui_scheme != ''
+    if: fromJSON(inputs.ui_platform_matrix)[0] != null
     uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
     strategy:
       matrix:
         config: [Debug, Release]
-        platform:
-          - name: iOS
-            destination: 'platform=iOS Simulator,name=iPhone 17 Pro Max'
+        platform: ${{ fromJSON(inputs.ui_platform_matrix) }}
       fail-fast: false
     with:
+      job_name: ${{ format('UI {0} ({1})', matrix.platform.name, matrix.config) }}
       runsonlabels: '["macOS", "self-hosted"]'
       path: 'Tests/UITests'
-      scheme: ${{ inputs.ui_scheme }}
+      scheme: ${{ matrix.platform.scheme }}
       destination: ${{ matrix.platform.destination }}
       buildConfig: ${{ matrix.config }}
-      resultBundle: ${{ format('{0}-{1}-{2}.xcresult', inputs.ui_scheme, matrix.platform.name, matrix.config) }}
-      artifactname: ${{ format('{0}-{1}-{2}.xcresult', inputs.ui_scheme, matrix.platform.name, matrix.config) }}
+      resultBundle: ${{ format('{0}-{1}-{2}.xcresult', matrix.platform.scheme, matrix.platform.name, matrix.config) }}
+      artifactname: ${{ format('{0}-{1}-{2}.xcresult', matrix.platform.scheme, matrix.platform.name, matrix.config) }}
 
   package_tests_linux:
     name: Linux (${{ matrix.config }})
@@ -79,6 +79,7 @@ jobs:
         config: [Debug, Release]
       fail-fast: false
     with:
+      job_name: ${{ format('Linux ({0})', matrix.config) }}
       runs_on_labels: ${{ inputs.linux_runners }}
       test_flags: '--no-parallel'
       build_configuration: ${{ matrix.config }}
@@ -92,7 +93,8 @@ jobs:
     with:
       coveragereports: >-
         ${{ format('{0}-*.xcresult', inputs.package_name) }}
-        ${{ inputs.ui_scheme != '' && format('{0}-*.xcresult', inputs.ui_scheme) || '' }}
+        TestApp-*.xcresult
+        TestAppWatchApp-*.xcresult
       coveragereports_lcov: ${{ inputs.linux_run_tests && format('{0}-Package-Linux-*.lcov', inputs.package_name) || '' }}
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}

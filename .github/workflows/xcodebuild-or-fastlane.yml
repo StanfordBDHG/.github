@@ -11,6 +11,13 @@ name: Test using xcodebuild or run fastlane
 on:
   workflow_call:
     inputs:
+      job_name:
+        description: |
+          Custom name for the job displayed in the GitHub Actions UI.
+          Useful to override the default name when called from other reusable workflows.
+        required: false
+        type: string
+        default: 'Test using xcodebuild or run fastlane'
       path:
         description: |
           The path where the project is located. Defaults to $GITHUB_WORKSPACE.
@@ -225,7 +232,7 @@ on:
 
 jobs:
   build_and_test:
-    name: Test using xcodebuild or run fastlane
+    name: ${{ inputs.job_name }}
     runs-on: ${{ fromJson(inputs.runsonlabels) }}
     defaults:
       run:
