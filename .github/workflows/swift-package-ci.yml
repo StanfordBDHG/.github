@@ -28,12 +28,12 @@ permissions:
 jobs:
   setup:
     name: Setup
-    uses: StanfordBDHG/.github/.github/workflows/swift-package-setup.yml@feature/ci-workflow-inputs
+    uses: StanfordBDHG/.github/.github/workflows/swift-package-setup.yml@v2
 
   build_and_test:
     name: Build & Test
     needs: setup
-    uses: StanfordBDHG/.github/.github/workflows/swift-package-test.yml@feature/ci-workflow-inputs
+    uses: StanfordBDHG/.github/.github/workflows/swift-package-test.yml@v2
     with:
       package_name: ${{ needs.setup.outputs.package_name }}
       scheme: ${{ needs.setup.outputs.scheme }}
@@ -47,7 +47,7 @@ jobs:
   static_analysis:
     name: Static Analysis
     needs: setup
-    uses: StanfordBDHG/.github/.github/workflows/swift-package-static-analysis.yml@feature/ci-workflow-inputs
+    uses: StanfordBDHG/.github/.github/workflows/swift-package-static-analysis.yml@v2
     with:
       library_products: ${{ needs.setup.outputs.library_products }}
       platform_name: ${{ needs.setup.outputs.platform_name }}
