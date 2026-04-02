@@ -93,8 +93,8 @@ jobs:
     with:
       coveragereports: >-
         ${{ format('{0}-*.xcresult', inputs.package_name) }}
-        ${{ contains(inputs.ui_platform_matrix, '"scheme": "TestApp"') && 'TestApp-*.xcresult' || '' }}
-        ${{ contains(inputs.ui_platform_matrix, '"scheme": "TestAppWatchApp"') && 'TestAppWatchApp-*.xcresult' || '' }}
+        ${{ contains(inputs.ui_platform_matrix, '"scheme":"TestApp"') && 'TestApp-*.xcresult' || '' }}
+        ${{ contains(inputs.ui_platform_matrix, '"scheme":"TestAppWatchApp"') && 'TestAppWatchApp-*.xcresult' || '' }}
       coveragereports_lcov: ${{ inputs.linux_run_tests && format('{0}-Package-Linux-*.lcov', inputs.package_name) || '' }}
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
