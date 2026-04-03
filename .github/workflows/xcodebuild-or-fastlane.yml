@@ -264,25 +264,49 @@ jobs:
           set -euo pipefail
 
           METAL_SMOKE_TEST_DIR="${RUNNER_TEMP}/metal-toolchain-smoke-test"
-          METAL_BIN="$(xcodebuild -sdk iphoneos -find-executable metal)"
-          IPHONEOS_SDKROOT="$(xcrun --sdk iphoneos --show-sdk-path)"
+          rm -rf "$METAL_SMOKE_TEST_DIR"
+          mkdir -p "$METAL_SMOKE_TEST_DIR/Sources/MetalToolchainSmokeTest"
 
-          mkdir -p "$METAL_SMOKE_TEST_DIR"
-          cat > "$METAL_SMOKE_TEST_DIR/smoke_test.metal" <<'EOF'
-          #include <metal_stdlib>
-          using namespace metal;
+          cat > "$METAL_SMOKE_TEST_DIR/Package.swift" <<'EOF'
+          // swift-tools-version: 6.0
+          import PackageDescription
 
-          kernel void smoke_test(device float *output [[buffer(0)]], uint id [[thread_position_in_grid]]) {
-            output[id] = 0.0;
-          }
+          let package = Package(
+              name: "MetalToolchainSmokeTest",
+              products: [
+                  .executable(name: "MetalToolchainSmokeTest", targets: ["MetalToolchainSmokeTest"])
+              ],
+              dependencies: [
+                  .package(url: "https://github.com/ml-explore/mlx-swift.git", exact: "0.25.1")
+              ],
+              targets: [
+                  .executableTarget(
+                      name: "MetalToolchainSmokeTest",
+                      dependencies: [
+                          .product(name: "MLX", package: "mlx-swift")
+                      ]
+                  )
+              ]
+          )
           EOF
 
-          echo "xcodebuild located metal at: $METAL_BIN"
-          SDKROOT="$IPHONEOS_SDKROOT" "$METAL_BIN" \
-            -c "$METAL_SMOKE_TEST_DIR/smoke_test.metal" \
-            -o "$METAL_SMOKE_TEST_DIR/smoke_test.air"
+          cat > "$METAL_SMOKE_TEST_DIR/Sources/MetalToolchainSmokeTest/main.swift" <<'EOF'
+          import MLX
 
-          test -f "$METAL_SMOKE_TEST_DIR/smoke_test.air"
+          print("MetalToolchainSmokeTest")
+          EOF
+
+          pushd "$METAL_SMOKE_TEST_DIR"
+          xcodebuild \
+            -scheme MetalToolchainSmokeTest-Package \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$METAL_SMOKE_TEST_DIR/.derivedData" \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            build
+          popd
+
+          test -d "$METAL_SMOKE_TEST_DIR/.derivedData/SourcePackages/checkouts/mlx-swift"
       - name: Check environment
         run: |
             xcodebuild -version
