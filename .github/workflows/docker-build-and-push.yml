@@ -78,7 +78,7 @@ jobs:
     steps:
       - name: Check environment
         run: |
-          echo "env.selfhosted: ${{ env.selfhosted }}"
+          echo "github-hosted: ${{ runner.environment == 'github-hosted' }}"
           echo "environment: ${{ inputs.environment }}"
       - uses: actions/checkout@v4
       - name: Docker meta
