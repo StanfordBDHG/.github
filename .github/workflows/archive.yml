@@ -77,59 +77,20 @@ jobs:
           set -euo pipefail
 
           XCODE_BUILD_VERSION="$(xcodebuild -version | awk '/Build version/{print $3}')"
-          XCODE_TOOLCHAIN_PATH="$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain"
-          METAL_EXPORT_PATH="${RUNNER_TEMP}/metal-toolchain-export"
-
-          rm -rf "$METAL_EXPORT_PATH"
-          xcodebuild -downloadComponent MetalToolchain -exportPath "$METAL_EXPORT_PATH"
-
-          EXPORTED_BUNDLE="$(find "$METAL_EXPORT_PATH" -maxdepth 1 -type d -name 'MetalToolchain-*.exportedBundle' -print -quit)"
-          if [[ -z "$EXPORTED_BUNDLE" ]]; then
-            echo "Could not find exported Metal toolchain bundle in $METAL_EXPORT_PATH" >&2
-            exit 1
+          SHOW_COMPONENT_OUTPUT="$(xcodebuild -showComponent MetalToolchain 2>&1 || true)"
+          CURRENT_BUILD_VERSION="$(printf '%s\n' "$SHOW_COMPONENT_OUTPUT" | sed -E -n 's/^Build Version: (.*)$/\1/p' | head -n 1)"
+          if [[ "$CURRENT_BUILD_VERSION" != "$XCODE_BUILD_VERSION" ]]; then
+            xcodebuild -deleteComponent MetalToolchain || true
+            xcodebuild -downloadComponent MetalToolchain -buildVersion "$XCODE_BUILD_VERSION"
           fi
 
-          EXPORT_METADATA_PLIST="$EXPORTED_BUNDLE/ExportMetadata.plist"
-          DOWNLOADED_BUILD_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :buildUpdateVersion' "$EXPORT_METADATA_PLIST" 2>/dev/null || true)"
-          if [[ -n "$DOWNLOADED_BUILD_VERSION" && "$DOWNLOADED_BUILD_VERSION" != "$XCODE_BUILD_VERSION" ]]; then
-            /usr/libexec/PlistBuddy -c "Set :buildUpdateVersion $XCODE_BUILD_VERSION" "$EXPORT_METADATA_PLIST"
-          fi
-
-          xcodebuild -deleteComponent MetalToolchain || true
-          xcodebuild -importComponent MetalToolchain -importPath "$EXPORTED_BUNDLE"
-
-          EXPORTED_TOOLCHAIN_USR_PATH="$(find "$EXPORTED_BUNDLE" -type d -path '*/Metal.xctoolchain/usr' -print -quit)"
           SHOW_COMPONENT_OUTPUT="$(xcodebuild -showComponent MetalToolchain 2>&1 || true)"
           echo "$SHOW_COMPONENT_OUTPUT"
 
-          TOOLCHAIN_USR_PATH=""
-          if [[ -n "$EXPORTED_TOOLCHAIN_USR_PATH" ]]; then
-            TOOLCHAIN_USR_PATH="$EXPORTED_TOOLCHAIN_USR_PATH"
-          fi
-
-          TOOLCHAIN_SEARCH_PATH="$(printf '%s\n' "$SHOW_COMPONENT_OUTPUT" | sed -E -n 's/^Toolchain Search Path: (.*)$/\1/p' | head -n 1)"
-          if [[ -n "$TOOLCHAIN_SEARCH_PATH" ]]; then
-            TOOLCHAIN_USR_PATH="$TOOLCHAIN_SEARCH_PATH/Metal.xctoolchain/usr"
-          elif [[ -z "$TOOLCHAIN_USR_PATH" ]]; then
-            xcrun --kill-cache
-            METAL_BIN="$(xcrun --no-cache --find metal 2>/dev/null || true)"
-            if [[ -n "$METAL_BIN" ]]; then
-              TOOLCHAIN_USR_PATH="$(cd "$(dirname "$METAL_BIN")/.." && pwd)"
-            else
-              echo "Could not determine the installed Metal toolchain path" >&2
-              exit 1
-            fi
-          fi
-
-          if [[ ! -d "$TOOLCHAIN_USR_PATH" ]]; then
-            echo "Resolved Metal toolchain path does not exist: $TOOLCHAIN_USR_PATH" >&2
+          INSTALLED_BUILD_VERSION="$(printf '%s\n' "$SHOW_COMPONENT_OUTPUT" | sed -E -n 's/^Build Version: (.*)$/\1/p' | head -n 1)"
+          if [[ "$INSTALLED_BUILD_VERSION" != "$XCODE_BUILD_VERSION" ]]; then
+            echo "Expected Metal toolchain build $XCODE_BUILD_VERSION but found ${INSTALLED_BUILD_VERSION:-<none>}" >&2
             exit 1
-          fi
-
-          if [[ "$TOOLCHAIN_USR_PATH" == "$XCODE_TOOLCHAIN_PATH/usr" ]]; then
-            echo "Metal toolchain source already matches XcodeDefault.xctoolchain; skipping copy"
-          else
-            sudo ditto "$TOOLCHAIN_USR_PATH" "$XCODE_TOOLCHAIN_PATH/usr"
           fi
 
           xcrun --kill-cache
