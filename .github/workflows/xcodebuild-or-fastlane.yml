@@ -298,7 +298,7 @@ jobs:
 
           pushd "$METAL_SMOKE_TEST_DIR"
           xcodebuild \
-            -scheme MetalToolchainSmokeTest-Package \
+            -scheme MetalToolchainSmokeTest \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$METAL_SMOKE_TEST_DIR/.derivedData" \
             -skipPackagePluginValidation \
