@@ -51,9 +51,41 @@ jobs:
       - name: Install Metal toolchain
         if: ${{ runner.environment == 'github-hosted' && runner.os == 'macOS' }}
         run: |
-          xcodebuild -downloadComponent MetalToolchain
-          xcodebuild -showComponent MetalToolchain
-          rm -f "$(getconf DARWIN_USER_TEMP_DIR)/xcrun_db"
+          set -euo pipefail
+
+          XCODE_BUILD_VERSION="$(xcodebuild -version | awk '/Build version/{print $3}')"
+          XCODE_TOOLCHAIN_PATH="$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain"
+          METAL_EXPORT_PATH="${RUNNER_TEMP}/metal-toolchain-export"
+
+          rm -rf "$METAL_EXPORT_PATH"
+          xcodebuild -downloadComponent MetalToolchain -exportPath "$METAL_EXPORT_PATH"
+
+          EXPORTED_BUNDLE="$(find "$METAL_EXPORT_PATH" -maxdepth 1 -type d -name 'MetalToolchain-*.exportedBundle' -print -quit)"
+          if [[ -z "$EXPORTED_BUNDLE" ]]; then
+            echo "Could not find exported Metal toolchain bundle in $METAL_EXPORT_PATH" >&2
+            exit 1
+          fi
+
+          EXPORT_METADATA_PLIST="$EXPORTED_BUNDLE/ExportMetadata.plist"
+          DOWNLOADED_BUILD_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :buildUpdateVersion' "$EXPORT_METADATA_PLIST" 2>/dev/null || true)"
+          if [[ -n "$DOWNLOADED_BUILD_VERSION" && "$DOWNLOADED_BUILD_VERSION" != "$XCODE_BUILD_VERSION" ]]; then
+            /usr/libexec/PlistBuddy -c "Set :buildUpdateVersion $XCODE_BUILD_VERSION" "$EXPORT_METADATA_PLIST"
+          fi
+
+          xcodebuild -deleteComponent MetalToolchain || true
+          xcodebuild -importComponent MetalToolchain -importPath "$EXPORTED_BUNDLE"
+
+          TOOLCHAIN_SEARCH_PATH="$(xcodebuild -showComponent MetalToolchain | sed -E -n 's/^Toolchain Search Path: (.*)$/\1/p')"
+          if [[ -z "$TOOLCHAIN_SEARCH_PATH" ]]; then
+            echo "Could not determine the installed Metal toolchain path" >&2
+            exit 1
+          fi
+
+          sudo ditto "$TOOLCHAIN_SEARCH_PATH/Metal.xctoolchain/usr" "$XCODE_TOOLCHAIN_PATH/usr"
+
+          xcrun --kill-cache
+          xcrun --no-cache --find metal
+          xcrun --no-cache metal --version
       - name: Check environment
         run: |
             xcodebuild -version
