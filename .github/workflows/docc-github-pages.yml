@@ -96,13 +96,29 @@ jobs:
           xcodebuild -deleteComponent MetalToolchain || true
           xcodebuild -importComponent MetalToolchain -importPath "$EXPORTED_BUNDLE"
 
-          TOOLCHAIN_SEARCH_PATH="$(xcodebuild -showComponent MetalToolchain | sed -E -n 's/^Toolchain Search Path: (.*)$/\1/p')"
-          if [[ -z "$TOOLCHAIN_SEARCH_PATH" ]]; then
-            echo "Could not determine the installed Metal toolchain path" >&2
+          SHOW_COMPONENT_OUTPUT="$(xcodebuild -showComponent MetalToolchain 2>&1 || true)"
+          echo "$SHOW_COMPONENT_OUTPUT"
+
+          TOOLCHAIN_SEARCH_PATH="$(printf '%s\n' "$SHOW_COMPONENT_OUTPUT" | sed -E -n 's/^Toolchain Search Path: (.*)$/\1/p' | head -n 1)"
+          if [[ -n "$TOOLCHAIN_SEARCH_PATH" ]]; then
+            TOOLCHAIN_USR_PATH="$TOOLCHAIN_SEARCH_PATH/Metal.xctoolchain/usr"
+          else
+            xcrun --kill-cache
+            METAL_BIN="$(xcrun --no-cache --find metal 2>/dev/null || true)"
+            if [[ -n "$METAL_BIN" ]]; then
+              TOOLCHAIN_USR_PATH="$(cd "$(dirname "$METAL_BIN")/.." && pwd)"
+            else
+              echo "Could not determine the installed Metal toolchain path" >&2
+              exit 1
+            fi
+          fi
+
+          if [[ ! -d "$TOOLCHAIN_USR_PATH" ]]; then
+            echo "Resolved Metal toolchain path does not exist: $TOOLCHAIN_USR_PATH" >&2
             exit 1
           fi
 
-          sudo ditto "$TOOLCHAIN_SEARCH_PATH/Metal.xctoolchain/usr" "$XCODE_TOOLCHAIN_PATH/usr"
+          sudo ditto "$TOOLCHAIN_USR_PATH" "$XCODE_TOOLCHAIN_PATH/usr"
 
           xcrun --kill-cache
           xcrun --no-cache --find metal
