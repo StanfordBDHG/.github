@@ -286,6 +286,31 @@ jobs:
           xcrun --kill-cache
           xcrun --no-cache --find metal
           xcrun --no-cache metal --version
+      - name: Verify Metal toolchain
+        if: ${{ runner.environment == 'github-hosted' && runner.os == 'macOS' }}
+        run: |
+          set -euo pipefail
+
+          METAL_SMOKE_TEST_DIR="${RUNNER_TEMP}/metal-toolchain-smoke-test"
+          METAL_BIN="$(xcodebuild -sdk iphoneos -find-executable metal)"
+          IPHONEOS_SDKROOT="$(xcrun --sdk iphoneos --show-sdk-path)"
+
+          mkdir -p "$METAL_SMOKE_TEST_DIR"
+          cat > "$METAL_SMOKE_TEST_DIR/smoke_test.metal" <<'EOF'
+          #include <metal_stdlib>
+          using namespace metal;
+
+          kernel void smoke_test(device float *output [[buffer(0)]], uint id [[thread_position_in_grid]]) {
+            output[id] = 0.0;
+          }
+          EOF
+
+          echo "xcodebuild located metal at: $METAL_BIN"
+          SDKROOT="$IPHONEOS_SDKROOT" "$METAL_BIN" \
+            -c "$METAL_SMOKE_TEST_DIR/smoke_test.metal" \
+            -o "$METAL_SMOKE_TEST_DIR/smoke_test.air"
+
+          test -f "$METAL_SMOKE_TEST_DIR/smoke_test.air"
       - name: Check environment
         run: |
             xcodebuild -version
