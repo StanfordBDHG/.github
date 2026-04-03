@@ -251,9 +251,14 @@ jobs:
       - name: Install Metal toolchain
         if: ${{ runner.environment == 'github-hosted' && runner.os == 'macOS' }}
         run: |
-          xcodebuild -downloadComponent MetalToolchain
-          xcodebuild -showComponent MetalToolchain
-          rm -f "$(getconf DARWIN_USER_TEMP_DIR)/xcrun_db"
+          set -euo pipefail
+
+          xcodebuild -downloadComponent metalToolchain
+          xcodebuild -showComponent metalToolchain
+
+          xcrun --kill-cache
+          xcrun --no-cache --find metal
+          xcrun --no-cache metal --version
       - name: Check environment
         run: |
             xcodebuild -version
