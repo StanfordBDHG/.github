@@ -98,13 +98,19 @@ jobs:
           xcodebuild -deleteComponent MetalToolchain || true
           xcodebuild -importComponent MetalToolchain -importPath "$EXPORTED_BUNDLE"
 
+          EXPORTED_TOOLCHAIN_USR_PATH="$(find "$EXPORTED_BUNDLE" -type d -path '*/Metal.xctoolchain/usr' -print -quit)"
           SHOW_COMPONENT_OUTPUT="$(xcodebuild -showComponent MetalToolchain 2>&1 || true)"
           echo "$SHOW_COMPONENT_OUTPUT"
+
+          TOOLCHAIN_USR_PATH=""
+          if [[ -n "$EXPORTED_TOOLCHAIN_USR_PATH" ]]; then
+            TOOLCHAIN_USR_PATH="$EXPORTED_TOOLCHAIN_USR_PATH"
+          fi
 
           TOOLCHAIN_SEARCH_PATH="$(printf '%s\n' "$SHOW_COMPONENT_OUTPUT" | sed -E -n 's/^Toolchain Search Path: (.*)$/\1/p' | head -n 1)"
           if [[ -n "$TOOLCHAIN_SEARCH_PATH" ]]; then
             TOOLCHAIN_USR_PATH="$TOOLCHAIN_SEARCH_PATH/Metal.xctoolchain/usr"
-          else
+          elif [[ -z "$TOOLCHAIN_USR_PATH" ]]; then
             xcrun --kill-cache
             METAL_BIN="$(xcrun --no-cache --find metal 2>/dev/null || true)"
             if [[ -n "$METAL_BIN" ]]; then
@@ -120,7 +126,11 @@ jobs:
             exit 1
           fi
 
-          sudo ditto "$TOOLCHAIN_USR_PATH" "$XCODE_TOOLCHAIN_PATH/usr"
+          if [[ "$TOOLCHAIN_USR_PATH" == "$XCODE_TOOLCHAIN_PATH/usr" ]]; then
+            echo "Metal toolchain source already matches XcodeDefault.xctoolchain; skipping copy"
+          else
+            sudo ditto "$TOOLCHAIN_USR_PATH" "$XCODE_TOOLCHAIN_PATH/usr"
+          fi
 
           xcrun --kill-cache
           xcrun --no-cache --find metal
