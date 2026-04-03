@@ -48,6 +48,12 @@ jobs:
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ inputs.xcodeversion }}
+      - name: Install Metal toolchain
+        if: ${{ runner.environment == 'github-hosted' && runner.os == 'macOS' }}
+        run: |
+          xcodebuild -downloadComponent MetalToolchain
+          xcodebuild -showComponent MetalToolchain
+          rm -f "$(getconf DARWIN_USER_TEMP_DIR)/xcrun_db"
       - name: Check environment
         run: |
             xcodebuild -version
