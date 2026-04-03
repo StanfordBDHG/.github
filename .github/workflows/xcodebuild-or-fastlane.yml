@@ -253,23 +253,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          XCODE_BUILD_VERSION="$(xcodebuild -version | awk '/Build version/{print $3}')"
-          SHOW_COMPONENT_OUTPUT="$(xcodebuild -showComponent MetalToolchain 2>&1 || true)"
-          CURRENT_BUILD_VERSION="$(printf '%s\n' "$SHOW_COMPONENT_OUTPUT" | sed -E -n 's/^Build Version: (.*)$/\1/p' | head -n 1)"
-          if [[ "$CURRENT_BUILD_VERSION" != "$XCODE_BUILD_VERSION" ]]; then
-            xcodebuild -deleteComponent MetalToolchain || true
-            xcodebuild -downloadComponent MetalToolchain -buildVersion "$XCODE_BUILD_VERSION"
-          fi
-
-          SHOW_COMPONENT_OUTPUT="$(xcodebuild -showComponent MetalToolchain 2>&1 || true)"
-          echo "$SHOW_COMPONENT_OUTPUT"
-
-          INSTALLED_BUILD_VERSION="$(printf '%s\n' "$SHOW_COMPONENT_OUTPUT" | sed -E -n 's/^Build Version: (.*)$/\1/p' | head -n 1)"
-          if [[ "$INSTALLED_BUILD_VERSION" != "$XCODE_BUILD_VERSION" ]]; then
-            echo "Expected Metal toolchain build $XCODE_BUILD_VERSION but found ${INSTALLED_BUILD_VERSION:-<none>}" >&2
-            exit 1
-          fi
-
+          xcodebuild -downloadComponent MetalToolchain
+          xcodebuild -showComponent MetalToolchain
           xcrun --kill-cache
           xcrun --no-cache --find metal
           xcrun --no-cache metal --version
