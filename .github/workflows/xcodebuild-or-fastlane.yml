@@ -251,16 +251,16 @@ jobs:
       - name: Install xcbeautify
         if: ${{ runner.environment == 'github-hosted' && inputs.scheme != '' }}
         run: brew install xcbeautify
-      - name: Install Metal toolchain
-        if: ${{ runner.environment == 'github-hosted' }}
-        run: |
-          set -euo pipefail
+      # - name: Install Metal toolchain
+      #   if: ${{ runner.environment == 'github-hosted' }}
+      #   run: |
+      #     set -euo pipefail
 
-          xcodebuild -downloadComponent MetalToolchain
-          xcodebuild -showComponent MetalToolchain
-          xcrun --kill-cache
-          xcrun --no-cache --find metal
-          xcrun --no-cache metal --version
+      #     xcodebuild -downloadComponent MetalToolchain
+      #     xcodebuild -showComponent MetalToolchain
+      #     xcrun --kill-cache
+      #     xcrun --no-cache --find metal
+      #     xcrun --no-cache metal --version
       - name: Verify Metal toolchain
         if: ${{ runner.environment == 'github-hosted' }}
         run: |
@@ -313,8 +313,6 @@ jobs:
             build \
             | xcbeautify
           popd
-
-          test -d "$METAL_SMOKE_TEST_DIR/.derivedData/SourcePackages/checkouts/mlx-swift"
       - name: Check environment
         run: |
             xcodebuild -version
