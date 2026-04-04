@@ -73,10 +73,10 @@ jobs:
         run: |
           xcodebuild -version
           swift --version
-          echo "env.selfhosted: ${{ env.selfhosted }}"
+          echo "github-hosted: ${{ runner.environment == 'github-hosted' }}"
           echo "environment: ${{ !inputs.dryrun && 'github-pages' || '' }}"
       - name: Install xcbeautify
-        if: ${{ !env.selfhosted }}
+        if: ${{ runner.environment == 'github-hosted' }}
         run: brew install xcbeautify
       - name: Build DocC
         run: |

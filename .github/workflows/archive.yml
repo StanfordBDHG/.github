@@ -75,10 +75,12 @@ jobs:
         run: |
             xcodebuild -version
             swift --version
+            echo "github-hosted: ${{ runner.environment == 'github-hosted' }}"
+            xcrun simctl list
             echo Release version: ${{ inputs.version }}
             echo SDK: ${{ matrix.sdk }}
       - name: Install xcbeautify
-        if: ${{ !env.selfhosted && inputs.scheme != '' }}
+        if: ${{ runner.environment == 'github-hosted' && inputs.scheme != '' }}
         run: brew install xcbeautify
       - name: Archive for ${{ matrix.sdk }} SDK
         run: |
