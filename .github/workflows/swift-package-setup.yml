@@ -97,8 +97,8 @@ jobs:
                   continue
               if re.search(r'SDKROOT\s*=\s*watchos', block):
                   continue
-              sp = re.search(r'SUPPORTED_PLATFORMS\s*=\s*"([^"]+)"', block)
-              td = re.search(r'TARGETED_DEVICE_FAMILY\s*=\s*"([^"]+)"', block)
+              sp = re.search(r'SUPPORTED_PLATFORMS\s*=\s*"?([^";\n]+?)"?\s*;', block)
+              td = re.search(r'TARGETED_DEVICE_FAMILY\s*=\s*"?([^";\n]+?)"?\s*;', block)
               print(sp.group(1) if sp else "")
               print(td.group(1) if td else "")
               break
