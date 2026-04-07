@@ -39,8 +39,8 @@ jobs:
     uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
     strategy:
       matrix:
-        config: [Debug, Release]
         platform: ${{ fromJSON(inputs.platform_matrix) }}
+        config: [Debug, Release]
       fail-fast: false
     with:
       job_name: ${{ format('{0} ({1})', matrix.platform.name, matrix.config) }}
@@ -57,8 +57,8 @@ jobs:
     uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
     strategy:
       matrix:
-        config: [Debug, Release]
         platform: ${{ fromJSON(inputs.ui_platform_matrix) }}
+        config: [Debug, Release]
       fail-fast: false
     with:
       job_name: ${{ format('UI {0} ({1})', matrix.platform.name, matrix.config) }}
