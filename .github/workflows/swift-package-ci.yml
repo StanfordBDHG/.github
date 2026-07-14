@@ -17,6 +17,9 @@ on:
       linux_runners:
         type: string
         default: '["blacksmith-4vcpu-ubuntu-2404"]'
+      downloadMetalToolchain:
+        type: boolean
+        default: false
     secrets:
       CODECOV_TOKEN:
         required: false
@@ -41,6 +44,7 @@ jobs:
       ui_platform_matrix: ${{ needs.setup.outputs.ui_platform_matrix }}
       linux_run_tests: ${{ inputs.linux_run_tests }}
       linux_runners: ${{ inputs.linux_runners }}
+      downloadMetalToolchain: ${{ inputs.downloadMetalToolchain }}
     secrets: inherit
 
   static_analysis:

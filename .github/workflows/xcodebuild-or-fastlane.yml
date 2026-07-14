@@ -95,6 +95,15 @@ on:
           Disables package prebuilts when resolving SPM dependencies
         type: boolean
         default: false
+      downloadMetalToolchain:
+        description: |
+          Download the Metal Toolchain before building.
+          Required for packages that compile Metal shaders (e.g., via mlx-swift), as recent Xcode
+          versions no longer bundle the Metal Toolchain and fail with "missing Metal Toolchain".
+          Defaults to false so builds that do not use Metal are unaffected.
+        required: false
+        type: boolean
+        default: false
       fastlanelane:
         description: |
           The lane of the fastlane command.
@@ -255,6 +264,9 @@ jobs:
             echo "github-hosted: ${{ runner.environment == 'github-hosted' }}"
             echo "environment: ${{ inputs.environment }}"
             xcrun simctl list
+      - name: Download Metal Toolchain
+        if: ${{ inputs.downloadMetalToolchain }}
+        run: xcodebuild -downloadComponent MetalToolchain
       - name: Install xcbeautify
         if: ${{ runner.environment == 'github-hosted' && inputs.scheme != '' }}
         run: brew install xcbeautify
