@@ -20,6 +20,9 @@ on:
       platform_version:
         type: string
         default: ""
+      # Deprecated: the API breaking-changes check has been removed from this workflow. This input is
+      # retained so existing callers that set it (e.g. `diagnose_breaking_changes: false`) do not fail,
+      # but it no longer has any effect.
       diagnose_breaking_changes:
         type: boolean
         default: true
@@ -38,12 +41,3 @@ jobs:
   markdown_link_check:
     name: Markdown Link Check
     uses: StanfordBDHG/.github/.github/workflows/markdown-link-check.yml@v2
-  breaking_changes:
-    name: Diagnose Breaking Changes
-    uses: StanfordBDHG/.github/.github/workflows/swift-package-breaking-changes.yml@v2
-    if: ${{ inputs.diagnose_breaking_changes && github.ref_name != 'main' }}
-    with:
-      library_products: ${{ inputs.library_products }}
-      platform_name: ${{ inputs.platform_name }}
-      platform_version: ${{ inputs.platform_version }}
-      runsonlabels: '["macOS", "self-hosted"]'
