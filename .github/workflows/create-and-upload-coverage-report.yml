@@ -60,7 +60,7 @@ jobs:
             # we need to take this into account when constructing the paths.
             args+=(-a "$file/$(basename "$file")")
           done
-          lcov "${args[@]}" -o info.lcov
+          lcov "${args[@]}" -o info.lcov --ignore-errors empty
       - name: Merge xcresult coverage reports
         if: ${{ inputs.coveragereports != '' }}
         run: |
@@ -86,7 +86,7 @@ jobs:
             # we need to take this into account when constructing the paths.
             args+=(-a "$file/$(basename "$file")")
           done
-          lcov -a info.lcov "${args[@]}" -o coverage_combined.lcov
+          lcov -a info.lcov "${args[@]}" -o coverage_combined.lcov --ignore-errors empty
           mv coverage_combined.lcov info.lcov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
