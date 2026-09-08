@@ -14,9 +14,11 @@ on:
       runs_on_labels:
         description: |
           JSON-based collection of labels indicating which type of github runner should be chosen.
+          Must select a Linux runner: the linkspector action sources /etc/os-release and installs
+          Chromium through a Linux package manager, so it exits 1 immediately on macOS.
         required: false
         type: string
-        default: '["macOS", "self-hosted"]'
+        default: '["ubuntu-latest"]'
 
 jobs:
   markdown_link_check:
