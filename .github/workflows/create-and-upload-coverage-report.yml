@@ -63,15 +63,28 @@ jobs:
           lcov "${args[@]}" -o info.lcov --ignore-errors empty
       - name: Merge xcresult coverage reports
         if: ${{ inputs.coveragereports != '' }}
+        shell: bash
         run: |
             FILES=( ${{ inputs.coveragereports }} )
-            NUM_INPUTS=${#FILES[@]}
-            if [ $NUM_INPUTS -gt 1 ]; then
-              xcrun xcresulttool merge ${{ inputs.coveragereports }} --output-path CodeCoverage.xcresult
-              rm -rf ${{ inputs.coveragereports }}
+            # Some result bundles contain no readable coverage data, e.g., UI test runs on Xcode 27 that recorded no coverage.
+            # A single such bundle makes `xccov` fail on the merged result, so we skip these bundles with a warning instead.
+            REPORTS=()
+            for FILE in "${FILES[@]}"; do
+              if xcrun xccov view --report --json "$FILE" > /dev/null 2>&1; then
+                REPORTS+=("$FILE")
+              else
+                echo "::warning::Skipping '$FILE' as it does not contain readable code coverage data."
+              fi
+            done
+            if [ ${#REPORTS[@]} -eq 0 ]; then
+              echo "::error::None of the result bundles (${{ inputs.coveragereports }}) contain readable code coverage data."
+              exit 1
+            elif [ ${#REPORTS[@]} -gt 1 ]; then
+              xcrun xcresulttool merge "${REPORTS[@]}" --output-path CodeCoverage.xcresult
             else
-              mv ${{ inputs.coveragereports }} CodeCoverage.xcresult
+              mv "${REPORTS[0]}" CodeCoverage.xcresult
             fi
+            rm -rf "${FILES[@]}"
       - uses: stanfordbdhg/xccov2lcov@v1
         if: ${{ inputs.coveragereports != '' }}
         with:
