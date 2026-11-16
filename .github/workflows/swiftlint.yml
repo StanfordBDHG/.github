@@ -27,7 +27,8 @@ on:
 jobs:
   swiftlint:
     name: SwiftLint
-    runs-on: ubuntu-latest
+    # The SwiftLint Linux binary links against libxml2.so.2, which ubuntu-latest (Ubuntu 26.04) no longer provides.
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: ${{ inputs.path }}
