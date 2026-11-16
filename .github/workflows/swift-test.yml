@@ -108,12 +108,33 @@ jobs:
             ${{ inputs.test_flags }}
       - name: Generate Coverage Report
         if: ${{ (success() || failure()) && inputs.artifact_name != '' }}
+        shell: bash
         run: |
           CONFIG=$(echo -n ${{ inputs.build_configuration }} | awk '{print tolower($0)}')
-          COVERAGE_FILE=$(find .build/*/$CONFIG/codecov -name "*.profdata" -type f | head -1) && \
-          XCTEST_FILE=$(find .build/*/$CONFIG -name "*.xctest" -type f | head -1) && \
+          # Ask SwiftPM for the paths instead of assuming a build directory layout, which changed with Swift 6.4.
+          COVERAGE_FILE="$(dirname "$(swift test --configuration "$CONFIG" --show-codecov-path)")/default.profdata"
+          BIN_PATH=$(swift build --configuration "$CONFIG" --show-bin-path)
+          # Swift 6.3 and earlier build a single `<Package>PackageTests.xctest` executable.
+          # Swift 6.4 and later build one `<TestTarget>.so` per test target, each launched by a `<TestTarget>-test-runner`.
+          TEST_BINARIES=()
+          for FILE in "$BIN_PATH"/*.xctest "$BIN_PATH"/*-test-runner; do
+            if [[ "$FILE" == *.xctest && -f "$FILE" ]]; then
+              TEST_BINARIES+=("$FILE")
+            elif [[ "$FILE" == *-test-runner && -f "${FILE%-test-runner}.so" ]]; then
+              TEST_BINARIES+=("${FILE%-test-runner}.so")
+            fi
+          done
+          if [[ ! -f "$COVERAGE_FILE" || ${#TEST_BINARIES[@]} -eq 0 ]]; then
+            echo "::error::Unable to locate the coverage data ('$COVERAGE_FILE') or any test binaries in '$BIN_PATH'."
+            exit 1
+          fi
+          OBJECT_ARGS=()
+          for FILE in "${TEST_BINARIES[@]:1}"; do
+            OBJECT_ARGS+=("-object=$FILE")
+          done
           llvm-cov export \
-            "$XCTEST_FILE" \
+            "${TEST_BINARIES[0]}" \
+            "${OBJECT_ARGS[@]}" \
             --instr-profile="$COVERAGE_FILE" \
             --format=lcov > tmp.lcov
       - name: Convert LCOV format
