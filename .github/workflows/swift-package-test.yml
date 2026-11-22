@@ -32,6 +32,11 @@ on:
       downloadMetalToolchain:
         type: boolean
         default: false
+      setupfirebaseemulator:
+        description: |
+          Start the Firebase Emulator (using the `firebase.json` in `Tests/UITests`) while running the UI tests.
+        type: boolean
+        default: false
     secrets:
       CODECOV_TOKEN:
         required: false
@@ -72,6 +77,7 @@ jobs:
       destination: ${{ matrix.platform.destination }}
       buildConfig: ${{ matrix.config }}
       downloadMetalToolchain: ${{ inputs.downloadMetalToolchain }}
+      setupfirebaseemulator: ${{ inputs.setupfirebaseemulator }}
       resultBundle: ${{ format('{0}-{1}-{2}.xcresult', matrix.platform.scheme, matrix.platform.name, matrix.config) }}
       artifactname: ${{ format('{0}-{1}-{2}.xcresult', matrix.platform.scheme, matrix.platform.name, matrix.config) }}
 

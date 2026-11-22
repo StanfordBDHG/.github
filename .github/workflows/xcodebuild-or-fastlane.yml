@@ -145,7 +145,7 @@ on:
         default: false
       setupfirebaseemulator:
         description: |
-          Setup the Firebase Emulator & automatically use it for the automated fastlane commands.
+          Setup the Firebase Emulator & automatically use it for the automated xcodebuild and fastlane commands.
         required: false
         type: boolean
         default: false
@@ -275,22 +275,22 @@ jobs:
         run: |
           echo "::warning::Caching of the .derivedData folder was removed and is deprecated. Plase stop using this option."
       - name: Cache Firebase Emulators
-        if: ${{ runner.environment == 'github-hosted' && inputs.setupfirebaseemulator }}
+        if: ${{ inputs.setupfirebaseemulator }}
         uses: actions/cache@v4
         with:
           path: ~/.cache/firebase/emulators
           key: ${{ runner.os }}-${{ runner.arch }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
       - name: Setup NodeJS
-        if: ${{ runner.environment == 'github-hosted' && inputs.setupfirebaseemulator }}
+        if: ${{ inputs.setupfirebaseemulator }}
         uses: actions/setup-node@v4
       - name: Setup Java
-        if: ${{ runner.environment == 'github-hosted' && inputs.setupfirebaseemulator }}
+        if: ${{ inputs.setupfirebaseemulator }}
         uses: actions/setup-java@v4
         with:
           distribution: 'microsoft'
-          java-version: '17'
+          java-version: '25'
       - name: Install Firebase CLI Tools
-        if: ${{ runner.environment == 'github-hosted' && inputs.setupfirebaseemulator }}
+        if: ${{ inputs.setupfirebaseemulator }}
         run: npm install -g firebase-tools
       - name: Install the Apple certificate and provisioning profile
         if: ${{ inputs.setupsigning }}
@@ -380,9 +380,10 @@ jobs:
         run: |
             if ${{ inputs.test }}; then
                 XCODECOMMAND="test"
-                CODECOVERAGEFLAG="-enableCodeCoverage YES"
+                CODECOVERAGEFLAG=(-enableCodeCoverage YES)
             else
                 XCODECOMMAND="build"
+                CODECOVERAGEFLAG=()
             fi
 
             if [ -z "${{ inputs.resultBundle }}" ]; then
@@ -409,22 +410,47 @@ jobs:
                 TESTPLAN=()
             fi
 
-            set -o pipefail \
-            && xcodebuild $XCODECOMMAND \
-              -scheme "${{ inputs.scheme }}" \
-              -configuration "${{ inputs.buildConfig }}" \
-              -destination "${{ inputs.destination }}" \
-              "${TESTPLAN[@]}" \
-              $CODECOVERAGEFLAG \
-              -derivedDataPath ".derivedData" \
-              -resultBundlePath "$RESULTBUNDLE" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGN_IDENTITY="" \
-              OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG $SWIFT_VERSION_FLAG" \
-              -skipPackagePluginValidation \
-              -skipMacroValidation \
-              ${{ inputs.spm-disable-prebuilts && '-IDEPackageEnablePrebuilts=NO' || '' }} \
-            | xcbeautify
+            XCODEBUILD=(
+              xcodebuild "$XCODECOMMAND"
+              -scheme "${{ inputs.scheme }}"
+              -configuration "${{ inputs.buildConfig }}"
+              -destination "${{ inputs.destination }}"
+              "${TESTPLAN[@]}"
+              "${CODECOVERAGEFLAG[@]}"
+              -derivedDataPath ".derivedData"
+              -resultBundlePath "$RESULTBUNDLE"
+              CODE_SIGNING_REQUIRED=NO
+              CODE_SIGN_IDENTITY=""
+              OTHER_SWIFT_FLAGS="\$(inherited) $ENABLE_TESTING_FLAG $SWIFT_VERSION_FLAG"
+              -skipPackagePluginValidation
+              -skipMacroValidation
+              ${{ inputs.spm-disable-prebuilts && '-IDEPackageEnablePrebuilts=NO' || '' }}
+            )
+
+            if ${{ inputs.setupfirebaseemulator }}; then
+                # We try to do an npm install in the functions directory.
+                npm --prefix ./functions install || true
+
+                if [ -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" ]; then
+                    echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
+                    export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
+                    echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
+                fi
+
+                FIREBASE_IMPORT=()
+                if [ -n "${{ inputs.firebaseemulatorimport }}" ]; then
+                    echo "Importing firebase emulator data from ${{ inputs.firebaseemulatorimport }}"
+                    FIREBASE_IMPORT=(--import="${{ inputs.firebaseemulatorimport }}")
+                fi
+
+                # `firebase emulators:exec` runs a single shell command string, so we quote each xcodebuild argument.
+                firebase emulators:exec -c "${{ inputs.firebasejsonpath }}" "${FIREBASE_IMPORT[@]}" \
+                  "set -o pipefail && $(printf '%q ' "${XCODEBUILD[@]}") | xcbeautify"
+            else
+                set -o pipefail \
+                && "${XCODEBUILD[@]}" \
+                | xcbeautify
+            fi
       - name: Fastlane
         if: ${{ inputs.fastlanelane != '' }}
         run: |
@@ -466,6 +492,6 @@ jobs:
           security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
           rm -rf ~/Library/MobileDevice/Provisioning\ Profiles || true
       - name: Clean up Google application credentials
-        if: ${{ inputs.fastlanelane != '' || failure() }}
+        if: ${{ inputs.fastlanelane != '' || inputs.setupfirebaseemulator || failure() }}
         run: |
           rm -rf $RUNNER_TEMP/google-application-credentials.json || true

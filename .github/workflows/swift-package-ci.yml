@@ -20,6 +20,11 @@ on:
       downloadMetalToolchain:
         type: boolean
         default: false
+      setupfirebaseemulator:
+        description: |
+          Start the Firebase Emulator (using the `firebase.json` in `Tests/UITests`) while running the UI tests.
+        type: boolean
+        default: false
     secrets:
       CODECOV_TOKEN:
         required: false
@@ -45,6 +50,7 @@ jobs:
       linux_run_tests: ${{ inputs.linux_run_tests }}
       linux_runners: ${{ inputs.linux_runners }}
       downloadMetalToolchain: ${{ inputs.downloadMetalToolchain }}
+      setupfirebaseemulator: ${{ inputs.setupfirebaseemulator }}
     secrets: inherit
 
   static_analysis:
